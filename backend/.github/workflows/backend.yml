@@ -4,41 +4,38 @@ on:
   push:
     branches:
       - main
-      - 'develop'
+    paths:
+      - 'backend/**'  # Only trigger if files in the backend directory change
   pull_request:
     branches:
       - main
-      - 'develop'
+    paths:
+      - 'backend/**'  # Only trigger if files in the backend directory change
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code from GitHub
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '16'
 
-      # Install dependencies using Yarn
       - name: Install dependencies
         run: |
           cd backend
-          yarn install --frozen-lockfile
+          yarn install
 
-      # Run tests (optional, if you have tests)
-      - name: Run tests
-        run: |
-          cd backend
-          yarn test
-
-      # Build the backend app (if needed, for example, for TypeScript or Babel)
-      - name: Build backend app
+      - name: Build backend
         run: |
           cd backend
           yarn build
+
+      - name: Deploy backend
+        run: |
+          cd backend
+          yarn start

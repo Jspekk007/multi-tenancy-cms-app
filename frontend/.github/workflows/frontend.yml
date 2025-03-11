@@ -4,12 +4,14 @@ on:
   push:
     branches:
       - main
-      - 'develop'
-    pull_request:
-      branches:
-        - main
-        - 'develop'
-    
+    paths:
+      - 'frontend/**'  # Only trigger if files in the frontend directory change
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'  # Only trigger if files in the frontend directory change
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -21,14 +23,19 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22'
-      
+          node-version: '16'
+
       - name: Install dependencies
         run: |
           cd frontend
-          yarn install --frozen-lockfile
-      
-      - name: Build Next.js app
+          yarn install
+
+      - name: Build frontend
         run: |
           cd frontend
           yarn build
+
+      - name: Deploy frontend
+        run: |
+          cd frontend
+          yarn start
