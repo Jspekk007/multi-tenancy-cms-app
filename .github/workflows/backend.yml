@@ -20,6 +20,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v2
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -28,14 +36,9 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          yarn install
+          yarn install --frozen-lockfile
 
       - name: Build backend
         run: |
           cd backend
           yarn build
-
-      - name: Deploy backend
-        run: |
-          cd backend
-          yarn start
