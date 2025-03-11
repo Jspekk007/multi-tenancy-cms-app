@@ -1,0 +1,9 @@
+{
+  "name": "multi-tenant-cms",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "infrastructure"
+  ]
+}
