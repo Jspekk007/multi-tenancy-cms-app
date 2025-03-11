@@ -1,0 +1,44 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'  # Only trigger if files in the backend directory change
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'backend/**'  # Only trigger if files in the backend directory change
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          yarn install --frozen-lockfile
+
+      - name: Build backend
+        run: |
+          cd backend
+          yarn build
