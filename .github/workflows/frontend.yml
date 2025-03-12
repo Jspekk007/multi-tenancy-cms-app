@@ -4,18 +4,20 @@ on:
   push:
     branches:
       - main
+      - develop
     paths:
-      - 'frontend/**'  # Only trigger if files in the frontend directory change
+      - 'frontend/**'
   pull_request:
     branches:
       - main
+      - develop
     paths:
-      - 'frontend/**'  # Only trigger if files in the frontend directory change
+      - 'frontend/**'
 
 jobs:
-  build:
+  setup:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -27,17 +29,38 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('frontend/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-
+      
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '22'
-
+        
       - name: Install dependencies
         run: |
           cd frontend
           yarn install --frozen-lockfile
 
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      
+      - name: Run ESLint
+        run: |
+          cd frontend
+          yarn lint
+  
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+    
       - name: Build frontend
         run: |
           cd frontend

@@ -13,7 +13,8 @@ on:
       - 'backend/**'  # Only trigger if files in the backend directory change
 
 jobs:
-  build:
+  # Job to install dependencies and cache them
+  setup:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,6 +38,27 @@ jobs:
         run: |
           cd backend
           yarn install --frozen-lockfile
+
+  lint:
+    needs: setup  # Ensure this runs after the setup job
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run ESLint
+        run: |
+          cd backend
+          yarn lint  # assuming you have the lint script in package.json
+
+  build:
+    needs: lint  # Ensures the build will only happen if linting passes
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Build backend
         run: |
