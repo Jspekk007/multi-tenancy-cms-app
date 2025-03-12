@@ -26,9 +26,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            frontend/node_modules
-            backend/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
+            node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
       
@@ -39,9 +38,10 @@ jobs:
         
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile  # Install for all workspaces (root install)
-          yarn --version  # Verify Yarn version (for debugging)
-          ls -la node_modules  # List files in node_modules for debugging
+          pwd
+          yarn install --frozen-lockfile  # Install all dependencies at the root level
+          yarn --version  # Verify Yarn version
+          ls -la node_modules  # Verify node_modules exists
 
   lint:
     needs: setup
