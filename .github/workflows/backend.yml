@@ -1,4 +1,4 @@
-name: Frontend CI/CD
+name: Backend CI/CD
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
-          path: frontend/node_modules
+          path: backend/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
@@ -37,7 +37,7 @@ jobs:
         
       - name: Install dependencies
         run: |
-          cd frontend
+          cd backend
           yarn install --frozen-lockfile
 
   lint:
