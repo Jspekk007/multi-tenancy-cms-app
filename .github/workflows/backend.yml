@@ -1,22 +1,23 @@
-name: Backend CI/CD
+name: Frontend CI/CD
 
 on:
   push:
     branches:
       - main
+      - develop
     paths:
-      - 'backend/**'  # Only trigger if files in the backend directory change
+      - 'backend/**'
   pull_request:
     branches:
       - main
+      - develop
     paths:
-      - 'backend/**'  # Only trigger if files in the backend directory change
+      - 'backend/**'
 
 jobs:
-  # Job to install dependencies and cache them
   setup:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -24,42 +25,42 @@ jobs:
       - name: Cache Yarn dependencies
         uses: actions/cache@v4
         with:
-          path: backend/node_modules
+          path: frontend/node_modules
           key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-
+      
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '22'
-
+        
       - name: Install dependencies
         run: |
-          cd backend
+          cd frontend
           yarn install --frozen-lockfile
 
   lint:
-    needs: setup  # Ensure this runs after the setup job
+    needs: setup
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
-
+      
       - name: Run ESLint
         run: |
           cd backend
-          yarn lint  # assuming you have the lint script in package.json
-
+          yarn lint
+  
   build:
-    needs: lint  # Ensures the build will only happen if linting passes
+    needs: lint
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
+    
       - name: Build backend
         run: |
           cd backend
