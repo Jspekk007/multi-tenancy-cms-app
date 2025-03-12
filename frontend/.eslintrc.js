@@ -1,7 +1,23 @@
 module.exports = {
-    extends: ['next/core-web-vitals', 'plugin:prettier/recommended'],
+    parser: '@typescript-eslint/parser',
+    extends: [
+      'plugin:@typescript-eslint/recommended',
+      'plugin:react/recommended',
+      'plugin:prettier/recommended',
+      'next/core-web-vitals'
+    ],
+    ignorePatterns: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/coverage/**',
+      '**/public/**',
+      '**/*.log',
+      '**/yarn.lock'
+    ],
     rules: {
-        'react/react-in-jsx-scope': 'off',
-        'prettier/prettier': ['error', { semi: false, singleQuote: true }]
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      'prettier/prettier': ['error', { semi: false, singleQuote: true }],
     }
-}
+  }
+  
