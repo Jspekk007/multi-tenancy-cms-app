@@ -1,5 +1,7 @@
 services:
   frontend:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -12,10 +14,10 @@ services:
       - backend
     networks:
       - app-network
-    environment:
-      - NODE_ENV=development
 
   backend:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -28,8 +30,6 @@ services:
       - postgres
     networks:
       - app-network
-    environment:
-      - NODE_ENV=development
 
   postgres:
     image: postgres:14
