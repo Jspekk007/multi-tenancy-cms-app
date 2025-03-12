@@ -51,8 +51,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v2
 
-      - name: Check installed packages
+      - name: Check ESLint installation
         run: |
+          pwd
+          ls -ltr
           yarn list --pattern eslint
           ls -la node_modules
       
