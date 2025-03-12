@@ -60,8 +60,7 @@ jobs:
       # Run ESLint to lint the backend code
       - name: Run ESLint
         run: |
-          cd backend
-          yarn lint  # Run linting (ensure this is correctly configured in backend/package.json)
+          yarn workspace backend lint
 
   build:
     needs: lint
