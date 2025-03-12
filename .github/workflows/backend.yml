@@ -4,65 +4,71 @@ on:
   push:
     branches:
       - main
-      - develop
     paths:
-      - 'backend/**'
+      - 'backend/**'  # Trigger if files in the backend directory change
   pull_request:
     branches:
       - main
-      - develop
     paths:
-      - 'backend/**'
+      - 'backend/**'  # Trigger if files in the backend directory change
 
 jobs:
   setup:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            frontend/node_modules
-            backend/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '22'
-        
+
+      # Install dependencies at the root level
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile
+          yarn install --frozen-lockfile  # Install all dependencies (including frontend and backend)
+          yarn --version  # Verify Yarn version
+          ls -la node_modules  # Check if node_modules is created
 
-  lint:
+  cache:
     needs: setup
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-      
-      - name: Run ESLint
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules  # Cache the node_modules folder at the root
+          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Verify Cache and Node Modules
         run: |
-          cd backend
-          yarn lint
-  
-  build:
-    needs: lint
+          ls -la node_modules  # Verify if node_modules is present after caching
+
+  lint:
+    needs: cache
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-    
-      - name: Build backend
+
+      # Run ESLint to lint the backend code
+      - name: Run ESLint
         run: |
           cd backend
-          yarn build
+          yarn lint  # Run linting (ensure this is correctly configured in backend/package.json)
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Build Backend
+        run: |
+          cd backend
+          yarn build  # Build the backend after passing linting
