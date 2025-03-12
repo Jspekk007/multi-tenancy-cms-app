@@ -39,7 +39,9 @@ jobs:
         
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile
+          yarn install --frozen-lockfile  # Install for all workspaces (root install)
+          yarn --version  # Verify Yarn version (for debugging)
+          ls -la node_modules  # List files in node_modules for debugging
 
   lint:
     needs: setup
@@ -48,6 +50,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
+
+      - name: Check installed packages
+        run: |
+          yarn list --pattern eslint
+          ls -la node_modules
       
       - name: Run ESLint
         run: |
