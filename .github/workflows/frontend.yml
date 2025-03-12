@@ -6,72 +6,41 @@ on:
       - main
       - develop
     paths:
-      - 'frontend/**'
+      - 'frontend/**'  # Trigger if files in the frontend directory change
   pull_request:
     branches:
       - main
       - develop
     paths:
-      - 'frontend/**'
+      - 'frontend/**'  # Trigger if files in the frontend directory change
 
 jobs:
-  setup:
+  frontend:
     runs-on: ubuntu-latest
-    
     steps:
+      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '22'
-        
+
+      # Install dependencies for the entire monorepo
       - name: Install dependencies
         run: |
-          pwd
-          yarn install --frozen-lockfile  # Install all dependencies at the root level
-          yarn --version  # Verify Yarn version
-          ls -la node_modules  # Verify node_modules exists
+          yarn install --frozen-lockfile
 
-  lint:
-    needs: setup
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
-
-      - name: Check ESLint installation
-        run: |
-          pwd
-          ls -ltr
-          yarn list --pattern eslint
-          ls -la node_modules
-      
-      - name: Run ESLint
+      # Run eslint on the frontend workspace
+      - name: Run ESLint on Frontend
         run: |
           cd frontend
           yarn lint
-  
-  build:
-    needs: lint
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-    
-      - name: Build frontend
+
+      # Build the frontend app
+      - name: Build Frontend
         run: |
           cd frontend
           yarn build

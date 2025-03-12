@@ -15,9 +15,10 @@ on:
       - 'backend/**'  # Trigger if files in the backend directory change
 
 jobs:
-  setup:
+  backend:
     runs-on: ubuntu-latest
     steps:
+      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -27,49 +28,19 @@ jobs:
         with:
           node-version: '22'
 
-      # Install dependencies at the root level
+      # Install dependencies for the entire monorepo
       - name: Install dependencies
         run: |
-          yarn install --frozen-lockfile  # Install all dependencies (including frontend and backend)
-          yarn --version  # Verify Yarn version
-          ls -la node_modules  # Check if node_modules is created
+          yarn install --frozen-lockfile
 
-  cache:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: node_modules  # Cache the node_modules folder at the root
-          key: ${{ runner.os }}-yarn-${{ hashFiles('yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Verify Cache and Node Modules
+      # Run eslint on the backend workspace
+      - name: Run ESLint on Backend
         run: |
-          ls -la node_modules  # Verify if node_modules is present after caching
+          cd backend
+          yarn lint
 
-  lint:
-    needs: cache
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      # Run ESLint to lint the backend code
-      - name: Run ESLint
-        run: |
-          yarn workspace backend lint
-
-  build:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
+      # Build the backend app
       - name: Build Backend
         run: |
           cd backend
-          yarn build  # Build the backend after passing linting
+          yarn build
