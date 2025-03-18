@@ -32,7 +32,7 @@ services:
       - app-network
 
   postgres:
-    image: postgres:14
+    image: postgres:latest
     container_name: backend-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -42,6 +42,19 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  
+  create-admin-user:
+    build: .
+    command: ./scripts/create-admin-user.sh
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+    depends_on:
+      - postgres
     networks:
       - app-network
 
