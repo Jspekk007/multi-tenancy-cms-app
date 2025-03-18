@@ -10,7 +10,7 @@ ADMIN_PASSWORD=${ADMIN_PASSWORD:-"password123"}
 ADMIN_TENANT_ID=${ADMIN_TENANT_ID:-"tenant123"}
 
 # Insert the admin user
-PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USERNAME -d $DB_DATABASE << EOF
+PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_DATABASE << EOF
 INSERT INTO users (id, email, password, tenantId, createdAt, updatedAt)
 VALUES (
   'admin-uuid', 
