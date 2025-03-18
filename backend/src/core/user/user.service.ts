@@ -15,7 +15,7 @@ export class UserService {
   async createUser(
     email: string,
     password: string,
-    tenantDomain: string
+    tenantDomain?: string
   ): Promise<User> {
     const tenant = await this.tenantService.findTenantByDomain(tenantDomain)
     if (!tenant) throw new BadRequestException('Tenant not found')
@@ -31,5 +31,9 @@ export class UserService {
 
   async findByEmail(email: string): Promise<User | undefined> {
     return this.userRepo.findOne({ where: { email } })
+  }
+
+  async findByUserId(id: string): Promise<User | undefined> {
+    return this.userRepo.findOne({ where: { id } })
   }
 }

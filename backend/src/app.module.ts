@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { TypeOrmModule } from '@nestjs/typeorm'
-import { TenantModule } from './core/tenant/tenant.module'
+import { CoreModule } from './core/core.module'
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { TenantModule } from './core/tenant/tenant.module'
         synchronize: true,
       }),
     }),
-    TenantModule,
+    CoreModule,
   ],
   controllers: [AppController],
   providers: [AppService],
