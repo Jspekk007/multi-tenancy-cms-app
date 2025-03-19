@@ -1,15 +1,15 @@
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsUUID } from 'class-validator'
 
 export class AssignRoleDto {
   @IsUUID('4')
   @IsNotEmpty()
-  userId: string;
+  userId: string
 
   @IsUUID('4')
   @IsNotEmpty()
-  roleId: string;
+  roleId: string
 
   @IsString()
   @IsNotEmpty()
-  tenantId: string;
-} 
+  tenantId: string
+}

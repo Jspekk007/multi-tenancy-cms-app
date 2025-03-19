@@ -32,10 +32,10 @@ export class User {
   @Column()
   tenantId: string
 
-  @ManyToOne(() => Tenant, tenant => tenant.users, { eager: true })
+  @ManyToOne(() => Tenant, (tenant) => tenant.users, { eager: true })
   tenant: Tenant
 
-  @OneToMany(() => UserRole, userRole => userRole.user)
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
   userRoles: UserRole[]
 
   @ManyToMany(() => Role)

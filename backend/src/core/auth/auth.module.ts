@@ -1,15 +1,15 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from '../user/user.entity';
-import { Role } from './entities/role.entity';
-import { RefreshToken } from './entities/refresh-token.entity';
+import { Module } from '@nestjs/common'
+import { JwtModule } from '@nestjs/jwt'
+import { PassportModule } from '@nestjs/passport'
+import { TypeOrmModule } from '@nestjs/typeorm'
+import { AuthService } from './auth.service'
+import { AuthController } from './auth.controller'
+import { JwtStrategy } from './strategies/jwt.strategy'
+import { RefreshTokenStrategy } from './strategies/refresh-token.strategy'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { User } from '../user/user.entity'
+import { Role } from './entities/role.entity'
+import { RefreshToken } from './entities/refresh-token.entity'
 
 @Module({
   imports: [
@@ -30,4 +30,4 @@ import { RefreshToken } from './entities/refresh-token.entity';
   providers: [AuthService, JwtStrategy, RefreshTokenStrategy],
   exports: [AuthService, JwtStrategy, PassportModule],
 })
-export class AuthModule {} 
+export class AuthModule {}

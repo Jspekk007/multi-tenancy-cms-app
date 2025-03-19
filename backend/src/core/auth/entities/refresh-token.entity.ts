@@ -1,25 +1,31 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm'
 
 @Entity('refresh_tokens')
 export class RefreshToken {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string
 
   @Column({ unique: true })
-  token: string;
+  token: string
 
   @Column()
-  userId: string;
+  userId: string
 
   @Column()
-  tenantId: string;
+  tenantId: string
 
   @Column()
-  expiresAt: Date;
+  expiresAt: Date
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt: Date
 
   @UpdateDateColumn()
-  updatedAt: Date;
-} 
+  updatedAt: Date
+}

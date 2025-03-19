@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
 import { User } from './user.entity'
@@ -12,7 +16,7 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
+    private readonly roleRepository: Repository<Role>
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<User> {
@@ -24,7 +28,9 @@ export class UserService {
     })
 
     if (existingUser) {
-      throw new BadRequestException('User already exists with this email in the tenant')
+      throw new BadRequestException(
+        'User already exists with this email in the tenant'
+      )
     }
 
     // Hash password

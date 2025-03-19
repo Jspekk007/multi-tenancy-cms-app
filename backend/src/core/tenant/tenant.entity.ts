@@ -26,7 +26,7 @@ export class Tenant {
   @IsDomain({ message: 'Please provide a valid domain (eg., example.com' })
   domain: string
 
-  @OneToMany(() => User, user => user.tenant)
+  @OneToMany(() => User, (user) => user.tenant)
   users: User[]
 
   @CreateDateColumn()
