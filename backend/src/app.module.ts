@@ -24,7 +24,7 @@ import { Tenant } from './core/tenant/tenant.entity'
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [User, Tenant, Role, UserRole],
-        synchronize: process.env.NODE_ENV !== 'production',
+        synchronize: false,
       }),
       inject: [ConfigService],
     }),
