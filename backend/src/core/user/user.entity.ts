@@ -4,6 +4,7 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   ManyToMany,
   JoinTable,
   PrimaryGeneratedColumn,
@@ -11,6 +12,7 @@ import {
 } from 'typeorm'
 import { Tenant } from '../tenant/tenant.entity'
 import { Role } from '../auth/entities/role.entity'
+import { UserRole } from '../auth/entities/user-role.entity'
 
 @Entity('users')
 export class User {
@@ -32,6 +34,9 @@ export class User {
 
   @ManyToOne(() => Tenant, tenant => tenant.users, { eager: true })
   tenant: Tenant
+
+  @OneToMany(() => UserRole, userRole => userRole.user)
+  userRoles: UserRole[]
 
   @ManyToMany(() => Role)
   @JoinTable({

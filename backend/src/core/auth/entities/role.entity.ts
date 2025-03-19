@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { User } from './user.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { UserRole } from './user-role.entity';
 
 @Entity('roles')
 export class Role {
@@ -9,8 +9,11 @@ export class Role {
   @Column({ unique: true })
   name: string;
 
-  @ManyToMany(() => User, user => user.roles)
-  users: User[];
+  @Column({ nullable: true })
+  description: string;
+
+  @OneToMany(() => UserRole, userRole => userRole.role)
+  userRoles: UserRole[];
 
   @CreateDateColumn()
   createdAt: Date;

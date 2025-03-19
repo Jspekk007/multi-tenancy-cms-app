@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
+import { User } from '../user/user.entity';
 import { Role } from './entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import * as bcrypt from 'bcrypt';
@@ -24,8 +24,8 @@ export class AuthService {
 
   async validateUser(email: string, password: string, tenantId: string) {
     const user = await this.userRepository.findOne({
-      where: { email, tenantId },
-      relations: ['roles'],
+      where: { email, tenant: { id: tenantId } },
+      relations: ['roles', 'tenant'],
     });
 
     if (user && await bcrypt.compare(password, user.password)) {
@@ -101,8 +101,8 @@ export class AuthService {
       const newPayload = {
         email: user.email,
         sub: user.id,
-        tenantId: user.tenantId,
-        roles: user.roles.map(role => role.name),
+        tenantId: user.tenant.id,
+        roles: user.roles?.map(role => role.name) || [],
       };
 
       const [newAccessToken, newRefreshToken] = await Promise.all([
@@ -139,7 +139,7 @@ export class AuthService {
     const user = await this.userRepository.save({
       email,
       password: hashedPassword,
-      tenantId,
+      tenant: { id: tenantId },
       roles,
     });
 
@@ -149,8 +149,8 @@ export class AuthService {
 
   async assignRole(userId: string, roleId: string, tenantId: string) {
     const user = await this.userRepository.findOne({
-      where: { id: userId, tenantId },
-      relations: ['roles'],
+      where: { id: userId, tenant: { id: tenantId } },
+      relations: ['roles', 'tenant'],
     });
 
     if (!user) {

@@ -27,7 +27,8 @@ services:
       - .:/app
       - /app/backend/node_modules  # Prevent overwriting installed dependencies
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
     environment:
@@ -42,7 +43,7 @@ services:
       - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
 
   db:
-    image: postgres:16-alpine
+    image: postgres:latest
     container_name: backend-postgres
     environment:
       - POSTGRES_USER=${DB_USERNAME}
@@ -54,24 +55,30 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   create-admin:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: ./scripts/create-admin-user.sh
+    command: sh -c "sleep 10 && ./scripts/create-admin-user.sh"
     environment:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=${DB_DATABASE}
-      - ADMIN_ID=${ADMIN_ID}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - ADMIN_TENANT_ID=${ADMIN_TENANT_ID}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - ADMIN_TENANT_ID=${ADMIN_TENANT_ID:-admin-tenant}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
 

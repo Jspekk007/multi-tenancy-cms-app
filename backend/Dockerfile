@@ -1,5 +1,5 @@
 # Step 1: Use an official Node.js runtime as a parent image
-FROM node:22-alpine
+FROM node:latest
 
 # Step 2: Set the working directory inside the container
 WORKDIR /app
@@ -12,11 +12,12 @@ RUN yarn install --frozen-lockfile
 
 # Step 5: Copy the rest of the backend application code
 COPY src/ ./src/
+COPY scripts/ ./scripts/
 COPY tsconfig*.json ./
 COPY nest-cli.json ./
 
 # Step 6: Build the application
-RUN npm run build
+RUN yarn build
 
 # Step 7: Expose the port that the backend app will run on
 EXPOSE 3000

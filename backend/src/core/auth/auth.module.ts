@@ -7,7 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from './entities/user.entity';
+import { User } from '../user/user.entity';
 import { Role } from './entities/role.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 
