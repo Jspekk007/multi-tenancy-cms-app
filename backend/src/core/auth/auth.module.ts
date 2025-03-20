@@ -10,6 +10,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { User } from '../user/user.entity'
 import { Role } from './entities/role.entity'
 import { RefreshToken } from './entities/refresh-token.entity'
+import { Tenant } from '../tenant/tenant.entity'
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { RefreshToken } from './entities/refresh-token.entity'
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, Role, RefreshToken]),
+    TypeOrmModule.forFeature([User, Role, RefreshToken, Tenant]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, RefreshTokenStrategy],

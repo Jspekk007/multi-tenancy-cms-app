@@ -9,6 +9,7 @@ import { Repository } from 'typeorm'
 import { User } from '../user/user.entity'
 import { Role } from './entities/role.entity'
 import { RefreshToken } from './entities/refresh-token.entity'
+import { Tenant } from '../tenant/tenant.entity'
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config'
 import { MoreThan } from 'typeorm'
@@ -22,13 +23,31 @@ export class AuthService {
     private roleRepository: Repository<Role>,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(Tenant)
+    private tenantRepository: Repository<Tenant>,
     private jwtService: JwtService,
     private configService: ConfigService
   ) {}
 
   async validateUser(email: string, password: string, tenantId: string) {
+    // First, try to find tenant by domain if tenantId looks like a domain
+    let tenant
+    if (tenantId.includes('.')) {
+      tenant = await this.tenantRepository.findOne({
+        where: { domain: tenantId },
+      })
+    } else {
+      tenant = await this.tenantRepository.findOne({
+        where: { id: tenantId },
+      })
+    }
+
+    if (!tenant) {
+      throw new BadRequestException('Tenant not found')
+    }
+
     const user = await this.userRepository.findOne({
-      where: { email, tenant: { id: tenantId } },
+      where: { email, tenant: { id: tenant.id } },
       relations: ['roles', 'tenant'],
     })
 
@@ -178,5 +197,14 @@ export class AuthService {
     await this.userRepository.save(user)
 
     return user
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt()
+    return bcrypt.hash(password, salt)
+  }
+
+  async comparePassword(password: string, hash: string): Promise<boolean> {
+    return bcrypt.compare(password, hash)
   }
 }

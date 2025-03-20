@@ -7,9 +7,6 @@ services:
       dockerfile: frontend/Dockerfile
     ports:
       - "3001:3001"
-    volumes:
-      - .:/app
-      - /app/frontend/node_modules  # Prevent overwriting installed dependencies
     depends_on:
       - backend
     networks:
@@ -18,72 +15,34 @@ services:
   backend:
     env_file:
       - .env
+    environment:
+      - DOCKER=true
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     ports:
       - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/backend/node_modules  # Prevent overwriting installed dependencies
     depends_on:
-      db:
-        condition: service_healthy
+      - postgres
     networks:
       - app-network
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_DATABASE=${DB_DATABASE}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-      - JWT_REFRESH_EXPIRATION=${JWT_REFRESH_EXPIRATION}
 
-  db:
+  postgres:
     image: postgres:latest
     container_name: backend-postgres
     environment:
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  create-admin:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: sh -c "sleep 10 && ./scripts/create-admin-user.sh"
-    environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_DATABASE=${DB_DATABASE}
-      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@example.com}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
-      - ADMIN_TENANT_ID=${ADMIN_TENANT_ID:-admin-tenant}
-    depends_on:
-      db:
-        condition: service_healthy
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - app-network
 
 volumes:
-  postgres_data:
+  postgres-data:
 
 networks:
   app-network:
