@@ -25,7 +25,6 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    this.logger.log(`Login request received: ${JSON.stringify(loginDto)}`)
     const user = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
