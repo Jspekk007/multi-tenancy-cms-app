@@ -14,6 +14,8 @@ COPY backend/package.json ./
 RUN apt-get update && \
     apt-get install -y --no-install-recommends make gcc g++ python3 && \
     yarn install --frozen-lockfile && \
+    yarn cache clean &&  \
+    yarn add nodemon ts-node -D && \
     npm rebuild bcrypt --build-from-source && \
     apt-get remove -y make gcc g++ python3 && \
     apt-get autoremove -y && \
@@ -26,5 +28,5 @@ COPY backend ./
 # Step 7: Expose the port that the backend app will run on
 EXPOSE 3000
 
-# Step 8: Start the backend app
-CMD ["yarn", "start"]
+# Step 8: Start the backend app with nodemon for development
+CMD ["yarn", "start:debug"]

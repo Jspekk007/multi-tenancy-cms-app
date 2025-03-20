@@ -17,15 +17,22 @@ services:
       - .env
     environment:
       - DOCKER=true
+      - NODE_ENV=development # Set development environment
     build:
       context: .
       dockerfile: backend/Dockerfile
     ports:
       - "3000:3000"
+      - "9229:9229" # Expose debugger port
     depends_on:
       - postgres
     networks:
       - app-network
+    volumes:
+      - ./backend/src:/app/backend/src # Mount backend source for hot reloading
+      - ./backend/package.json:/app/backend/package.json # Mount package.json
+      - ./backend/yarn.lock:/app/backend/yarn.lock # Mount yarn.lock
+      - ./backend/tsconfig.json:/app/backend/tsconfig.json # Mount tsconfig.json
 
   postgres:
     image: postgres:latest

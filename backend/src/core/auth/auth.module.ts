@@ -17,12 +17,14 @@ import { Tenant } from '../tenant/tenant.entity'
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.get('JWT_EXPIRATION', '15m'),
-        },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        return {
+          secret: configService.get('JWT_SECRET'),
+          signOptions: {
+            expiresIn: configService.get('JWT_EXPIRATION'),
+          },
+        }
+      },
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([User, Role, RefreshToken, Tenant]),

@@ -7,6 +7,7 @@ import {
   UseGuards,
   ValidationPipe,
   UsePipes,
+  Logger,
 } from '@nestjs/common'
 import { TenantService } from './tenant.service'
 import { CreateTenantDto } from './create-tenant.dto'
@@ -17,29 +18,30 @@ import { Roles } from '../auth/decorators/roles.decorator'
 @Controller('tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TenantController {
+  private readonly logger = new Logger(TenantController.name)
   constructor(private readonly tenantService: TenantService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @Roles('Admin')
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async create(@Body() createTenantDto: CreateTenantDto) {
     return this.tenantService.createTenant(createTenantDto)
   }
 
   @Get()
-  @Roles('ADMIN')
+  @Roles('Admin')
   async findAll() {
     return this.tenantService.getAllTenants()
   }
 
   @Get(':id')
-  @Roles('ADMIN')
+  @Roles('Admin')
   async findById(@Param('id') id: string) {
     return this.tenantService.findById(id)
   }
 
   @Get('domain/:domain')
-  @Roles('ADMIN')
+  @Roles('Admin')
   async findByDomain(@Param('domain') domain: string) {
     return this.tenantService.findByDomain(domain)
   }
