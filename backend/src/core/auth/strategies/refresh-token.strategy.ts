@@ -7,6 +7,7 @@ import { Repository } from 'typeorm'
 import { User } from '../../user/user.entity'
 import { RefreshToken } from '../entities/refresh-token.entity'
 import { MoreThan } from 'typeorm'
+import { JwtPayload } from '../types/jwt-payload.type'
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -27,7 +28,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     })
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     const refreshToken = await this.refreshTokenRepository.findOne({
       where: {
         token: payload.token,
@@ -50,8 +51,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
       throw new UnauthorizedException('User not found')
     }
 
+    const userId = typeof user.id === 'string' ? user.id : String(user.id)
+
     return {
-      id: user.id,
+      id: userId,
       email: user.email,
       tenantId: user.tenantId,
       roles: user.roles,

@@ -16,6 +16,7 @@ import { RolesGuard } from './guards/roles.guard'
 import { Roles } from './decorators/roles.decorator'
 import { CreateUserDto } from './dto/create-user.dto'
 import { AssignRoleDto } from './dto/assign-role.dto'
+import { User } from '../user/user.entity'
 
 @Controller('auth')
 export class AuthController {
@@ -35,7 +36,7 @@ export class AuthController {
       throw new UnauthorizedException('Invalid credentials')
     }
 
-    return this.authService.login(user, loginDto.tenantId)
+    return this.authService.login(user as User, loginDto.tenantId)
   }
 
   @UseGuards(RefreshTokenGuard)
@@ -46,7 +47,7 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
-  async logout(@Req() req) {
+  async logout(@Req() req: Request & { user: User }) {
     return this.authService.logout(req.user.id, req.user.tenantId)
   }
 

@@ -5,6 +5,11 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
+import { User } from '../../../core/user/user.entity'
+
+interface RequestWithUser extends Request {
+  user?: User
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,7 +23,7 @@ export class RolesGuard implements CanActivate {
       context.getHandler()
     )
 
-    const request = context.switchToHttp().getRequest()
+    const request: RequestWithUser = context.switchToHttp().getRequest()
     const user = request.user
 
     this.logger.log('Full request.user object:', JSON.stringify(user, null, 2)) // Pretty-print

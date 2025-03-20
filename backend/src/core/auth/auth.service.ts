@@ -13,6 +13,7 @@ import { Tenant } from '../tenant/tenant.entity'
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config'
 import { MoreThan } from 'typeorm'
+import { JwtPayload } from './types/jwt-payload.type'
 
 @Injectable()
 export class AuthService {
@@ -29,9 +30,13 @@ export class AuthService {
     private configService: ConfigService
   ) {}
 
-  async validateUser(email: string, password: string, tenantId: string) {
+  async validateUser(
+    email: string,
+    password: string,
+    tenantId: string
+  ): Promise<Partial<User>> {
     // First, try to find tenant by domain if tenantId looks like a domain
-    let tenant
+    let tenant: Tenant | undefined
     if (tenantId.includes('.')) {
       tenant = await this.tenantRepository.findOne({
         where: { domain: tenantId },
@@ -52,18 +57,25 @@ export class AuthService {
     })
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { password, ...result } = user
+      const { ...result } = user
       return result
     }
     return null
   }
 
-  async login(user: any, tenantId: string) {
-    const payload = {
+  async login(
+    user: User,
+    tenantId: string
+  ): Promise<{
+    accessToken: string
+    refreshToken: string
+    user: Partial<User>
+  }> {
+    const payload: JwtPayload = {
       email: user.email,
       sub: user.id,
       tenantId,
-      roles: user.roles.map((role) => role.name),
+      roles: user.roles.map((role) => role.name), // Keep this for the *payload*
     }
 
     const [accessToken, refreshToken] = await Promise.all([
@@ -89,13 +101,14 @@ export class AuthService {
         id: user.id,
         email: user.email,
         roles: user.roles,
+        tenantId: user.tenantId,
       },
     }
   }
 
   async refreshToken(token: string) {
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
+      const payload: JwtPayload = await this.jwtService.verifyAsync(token, {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
       })
 
@@ -146,8 +159,8 @@ export class AuthService {
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
       }
-    } catch (error) {
-      throw new UnauthorizedException('Invalid refresh token')
+    } catch (error: unknown) {
+      throw new UnauthorizedException('Invalid refresh token: ', error)
     }
   }
 
@@ -171,7 +184,7 @@ export class AuthService {
       roles,
     })
 
-    const { password: _, ...result } = user
+    const { ...result } = user
     return result
   }
 
