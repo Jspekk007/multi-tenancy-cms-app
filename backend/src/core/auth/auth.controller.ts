@@ -51,7 +51,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('Admin')
   @Post('users')
   async createUser(@Body() createUserDto: CreateUserDto) {
     return this.authService.createUser(
@@ -63,7 +63,7 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles('Admin')
   @Post('users/:userId/roles')
   async assignRole(@Body() assignRoleDto: AssignRoleDto) {
     return this.authService.assignRole(

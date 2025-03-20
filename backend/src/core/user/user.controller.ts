@@ -20,20 +20,20 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @Roles('ADMIN')
+  @Roles('Admin')
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto)
   }
 
   @Get(':id')
-  @Roles('ADMIN')
+  @Roles('Admin')
   async findById(@Param('id') id: string) {
     return this.userService.findById(id)
   }
 
   @Post(':id/roles')
-  @Roles('ADMIN')
+  @Roles('Admin')
   async assignRoles(
     @Param('id') userId: string,
     @Body('roleIds') roleIds: string[]
