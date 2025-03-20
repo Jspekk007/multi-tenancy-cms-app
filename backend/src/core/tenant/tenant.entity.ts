@@ -3,9 +3,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 import { IsDomain } from '../../utils/validators/is-domain.validator'
+import { User } from '../user/user.entity'
 
 @Entity('tenants')
 export class Tenant {
@@ -23,6 +26,12 @@ export class Tenant {
   @IsDomain({ message: 'Please provide a valid domain (eg., example.com' })
   domain: string
 
+  @OneToMany(() => User, (user) => user.tenant)
+  users: User[]
+
   @CreateDateColumn()
   createdAt: Date
+
+  @UpdateDateColumn()
+  updatedAt: Date
 }

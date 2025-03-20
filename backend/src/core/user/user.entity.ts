@@ -4,9 +4,15 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm'
 import { Tenant } from '../tenant/tenant.entity'
+import { Role } from '../auth/entities/role.entity'
+import { UserRole } from '../auth/entities/user-role.entity'
 
 @Entity('users')
 export class User {
@@ -23,9 +29,26 @@ export class User {
   @MinLength(8, { message: 'Password must be at least 8 characters long.' })
   password: string
 
-  @ManyToOne(() => Tenant, { eager: true })
+  @Column()
+  tenantId: string
+
+  @ManyToOne(() => Tenant, (tenant) => tenant.users, { eager: true })
   tenant: Tenant
+
+  @OneToMany(() => UserRole, (userRole) => userRole.user)
+  userRoles: UserRole[]
+
+  @ManyToMany(() => Role)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
+  })
+  roles: Role[]
 
   @CreateDateColumn()
   createdAt: Date
+
+  @UpdateDateColumn()
+  updatedAt: Date
 }

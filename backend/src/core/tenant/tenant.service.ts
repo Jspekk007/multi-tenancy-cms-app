@@ -1,21 +1,69 @@
-import { Injectable } from '@nestjs/common'
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Tenant } from './tenant.entity'
 import { Repository } from 'typeorm'
+import { CreateTenantDto } from './create-tenant.dto'
 
 @Injectable()
 export class TenantService {
   constructor(
     @InjectRepository(Tenant)
-    private tenantRepo: Repository<Tenant>
+    private readonly tenantRepository: Repository<Tenant>
   ) {}
 
-  async createTenant(name: string, domain: string): Promise<Tenant> {
-    const tenant = this.tenantRepo.create({ name, domain })
-    return this.tenantRepo.save(tenant)
+  async createTenant(createTenantDto: CreateTenantDto): Promise<Tenant> {
+    const { name, domain } = createTenantDto
+
+    // Check if tenant with domain already exists
+    const existingTenant = await this.tenantRepository.findOne({
+      where: { domain },
+    })
+
+    if (existingTenant) {
+      throw new BadRequestException('Tenant already exists with this domain')
+    }
+
+    const tenant = this.tenantRepository.create({
+      name,
+      domain,
+    })
+
+    return this.tenantRepository.save(tenant)
   }
 
-  async findTenantByDomain(domain: string): Promise<Tenant | undefined> {
-    return this.tenantRepo.findOne({ where: { domain } })
+  async findById(id: string): Promise<Tenant> {
+    const tenant = await this.tenantRepository.findOne({
+      where: { id },
+      relations: ['users'],
+    })
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found')
+    }
+
+    return tenant
+  }
+
+  async findByDomain(domain: string): Promise<Tenant> {
+    const tenant = await this.tenantRepository.findOne({
+      where: { domain },
+      relations: ['users'],
+    })
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found')
+    }
+
+    return tenant
+  }
+
+  async getAllTenants(): Promise<Tenant[]> {
+    return this.tenantRepository.find({
+      relations: ['users'],
+    })
   }
 }
