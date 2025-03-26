@@ -5,5 +5,22 @@
     "frontend",
     "backend",
     "infrastructure"
-  ]
+  ],
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "eslint": "^9.22.0",
+    "eslint-config-next": "^15.2.2",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.5.3"
+  },
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx,ts,tsx}": ["cd frontend && yarn lint:fix", "yarn prettier --write"],
+    "backend/**/*.{js,ts}": ["cd backend && yarn lint:fix", "yarn prettier --write"]
+  }
 }

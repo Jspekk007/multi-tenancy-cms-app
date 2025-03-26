@@ -4,41 +4,43 @@ on:
   push:
     branches:
       - main
+      - develop
     paths:
-      - 'backend/**'  # Only trigger if files in the backend directory change
+      - 'backend/**'  # Trigger if files in the backend directory change
   pull_request:
     branches:
       - main
+      - develop
     paths:
-      - 'backend/**'  # Only trigger if files in the backend directory change
+      - 'backend/**'  # Trigger if files in the backend directory change
 
 jobs:
-  build:
+  backend:
     runs-on: ubuntu-latest
-
     steps:
+      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Cache Yarn dependencies
-        uses: actions/cache@v4
-        with:
-          path: backend/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('backend/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '22'
 
+      # Install dependencies for the entire monorepo
       - name: Install dependencies
         run: |
-          cd backend
           yarn install --frozen-lockfile
 
-      - name: Build backend
+      # Run eslint on the backend workspace
+      - name: Run ESLint on Backend
+        run: |
+          cd backend
+          yarn lint
+
+      # Build the backend app
+      - name: Build Backend
         run: |
           cd backend
           yarn build
