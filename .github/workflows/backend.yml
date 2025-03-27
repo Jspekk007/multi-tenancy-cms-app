@@ -58,7 +58,7 @@ jobs:
 
       - name: Lint the code
         run: |
-          yarn lint
+          yarn workspace backend lint:fix
 
   # Job to run tests
   test:
