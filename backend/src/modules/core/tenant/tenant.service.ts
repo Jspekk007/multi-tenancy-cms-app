@@ -15,23 +15,13 @@ export class TenantService {
     private readonly tenantRepository: Repository<Tenant>
   ) {}
 
-  async createTenant(createTenantDto: CreateTenantDto): Promise<Tenant> {
-    const { name, domain } = createTenantDto
-
-    // Check if tenant with domain already exists
-    const existingTenant = await this.tenantRepository.findOne({
-      where: { domain },
-    })
-
+  async createTenant(dto: CreateTenantDto): Promise<Tenant> {
+    const existingTenant = await this.tenantRepository.findOne({ where: { domain: dto.domain } })
     if (existingTenant) {
-      throw new BadRequestException('Tenant already exists with this domain')
+      throw new BadRequestException(`Tenant with domain ${dto.domain} already exists`)
     }
 
-    const tenant = this.tenantRepository.create({
-      name,
-      domain,
-    })
-
+    const tenant = this.tenantRepository.create(dto)
     return this.tenantRepository.save(tenant)
   }
 
@@ -42,25 +32,15 @@ export class TenantService {
     })
 
     if (!tenant) {
-      throw new NotFoundException('Tenant not found')
+      throw new NotFoundException(`Tenant with ID ${id} not found`)
     }
 
     return tenant
   }
 
   async findByDomain(domain: string): Promise<Tenant | null> {
-    // If domain is empty or undefined, return null
-    if (!domain) {
-      return null;
-    }
-
-    // Try to find tenant by exact domain match
-    const tenant = await this.tenantRepository.findOne({
-      where: { domain },
-      relations: ['users'],
-    })
-
-    return tenant;
+    if (!domain) return null
+    return this.tenantRepository.findOne({ where: { domain }, relations: ['users'] })
   }
 
   async getAllTenants(): Promise<Tenant[]> {

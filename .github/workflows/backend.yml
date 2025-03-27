@@ -1,46 +1,101 @@
-name: Backend CI/CD
+name: Build and Test Pipeline
 
 on:
   push:
     branches:
       - main
-      - develop
-    paths:
-      - 'backend/**'  # Trigger if files in the backend directory change
   pull_request:
     branches:
       - main
-      - develop
-    paths:
-      - 'backend/**'  # Trigger if files in the backend directory change
 
 jobs:
-  backend:
+  # Job to set up dependencies and caching
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      cache-hit: ${{ steps.cache.outputs.cache-hit }}
     steps:
-      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '22'
 
-      # Install dependencies for the entire monorepo
+      - name: Cache yarn dependencies
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.yarn/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          yarn install --frozen-lockfile
+
+  # Job to lint the code
+  lint:
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
+
       - name: Install dependencies
         run: |
           yarn install --frozen-lockfile
 
-      # Run eslint on the backend workspace
-      - name: Run ESLint on Backend
+      - name: Lint the code
         run: |
-          cd backend
           yarn lint
 
-      # Build the backend app
-      - name: Build Backend
+  # Job to run tests
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
         run: |
-          cd backend
+          yarn install --frozen-lockfile
+
+      - name: Run tests
+        run: |
+          yarn test
+
+  # Job to build the app
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: |
+          yarn install --frozen-lockfile
+
+      - name: Build the app
+        run: |
           yarn build
