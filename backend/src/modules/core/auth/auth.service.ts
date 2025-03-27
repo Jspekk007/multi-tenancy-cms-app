@@ -14,95 +14,54 @@ import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config'
 import { MoreThan } from 'typeorm'
 import { JwtPayload } from './types/jwt-payload.type'
+import { TenantContext } from '../tenant/tenant.context'
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private readonly userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
     @InjectRepository(Tenant)
     private tenantRepository: Repository<Tenant>,
-    private jwtService: JwtService,
-    private configService: ConfigService
+    private readonly jwtService: JwtService,
+    private configService: ConfigService,
+    private readonly tenantContext: TenantContext
   ) {}
 
-  async validateUser(
-    email: string,
-    password: string,
-    tenantId: string
-  ): Promise<Partial<User>> {
-    // First, try to find tenant by domain if tenantId looks like a domain
-    let tenant: Tenant | undefined
-    if (tenantId.includes('.')) {
-      tenant = await this.tenantRepository.findOne({
-        where: { domain: tenantId },
-      })
-    } else {
-      tenant = await this.tenantRepository.findOne({
-        where: { id: tenantId },
-      })
-    }
-
-    if (!tenant) {
-      throw new BadRequestException('Tenant not found')
-    }
-
+  async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userRepository.findOne({
-      where: { email, tenant: { id: tenant.id } },
-      relations: ['roles', 'tenant'],
+      where: { email },
+      relations: ['tenant'],
     })
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const { ...result } = user
+      const { password, ...result } = user
       return result
     }
     return null
   }
 
-  async login(
-    user: User,
-    tenantId: string
-  ): Promise<{
-    accessToken: string
-    refreshToken: string
-    user: Partial<User>
-  }> {
-    const payload: JwtPayload = {
-      email: user.email,
-      sub: user.id,
-      tenantId,
-      roles: user.roles.map((role) => role.name), // Keep this for the *payload*
+  async login(user: any) {
+    const tenant = this.tenantContext.getTenant()
+    if (!tenant) {
+      throw new UnauthorizedException('Tenant not found')
     }
 
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload),
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get('JWT_REFRESH_SECRET'),
-        expiresIn: this.configService.get('JWT_REFRESH_EXPIRATION', '7d'),
-      }),
-    ])
-
-    // Store refresh token in database
-    await this.refreshTokenRepository.save({
-      token: refreshToken,
-      userId: user.id,
-      tenantId,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-    })
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      tenantId: tenant.id,
+    }
 
     return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        roles: user.roles,
-        tenantId: user.tenantId,
-      },
+      access_token: this.jwtService.sign(payload),
+      refresh_token: this.jwtService.sign(payload, {
+        expiresIn: process.env.JWT_REFRESH_EXPIRATION,
+      }),
     }
   }
 

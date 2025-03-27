@@ -14,12 +14,16 @@ import { CreateTenantDto } from './create-tenant.dto'
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 import { RolesGuard } from '../auth/guards/roles.guard'
 import { Roles } from '../auth/decorators/roles.decorator'
+import { TenantContext } from './tenant.context'
 
 @Controller('tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class TenantController {
   private readonly logger = new Logger(TenantController.name)
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly tenantContext: TenantContext
+  ) {}
 
   @Post()
   @Roles('Admin')
@@ -44,5 +48,14 @@ export class TenantController {
   @Roles('Admin')
   async findByDomain(@Param('domain') domain: string) {
     return this.tenantService.findByDomain(domain)
+  }
+
+  @Get('current')
+  getCurrentTenant() {
+    const tenant = this.tenantContext.getTenant()
+    return {
+      tenant,
+      message: `Current tenant: ${tenant?.name || 'No tenant found'}`,
+    }
   }
 }
