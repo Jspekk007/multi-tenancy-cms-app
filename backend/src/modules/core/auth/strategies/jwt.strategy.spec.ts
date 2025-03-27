@@ -1,15 +1,15 @@
-import { JwtStrategy } from './jwt.strategy';
-import { ConfigService } from '@nestjs/config';
-import { Repository } from 'typeorm';
-import { User } from '../../user/user.entity';
-import { UnauthorizedException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { getRepositoryToken } from '@nestjs/typeorm';
+import { JwtStrategy } from './jwt.strategy'
+import { ConfigService } from '@nestjs/config'
+import { Repository } from 'typeorm'
+import { User } from '../../user/user.entity'
+import { UnauthorizedException } from '@nestjs/common'
+import { Test, TestingModule } from '@nestjs/testing'
+import { getRepositoryToken } from '@nestjs/typeorm'
 
 describe('JwtStrategy', () => {
-  let jwtStrategy: JwtStrategy;
-  let userRepository: Repository<User>;
-  let configService: ConfigService;
+  let jwtStrategy: JwtStrategy
+  let userRepository: Repository<User>
+  let configService: ConfigService
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,37 +26,50 @@ describe('JwtStrategy', () => {
           },
         },
       ],
-    }).compile();
+    }).compile()
 
-    jwtStrategy = module.get<JwtStrategy>(JwtStrategy);
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    configService = module.get<ConfigService>(ConfigService);
-  });
+    jwtStrategy = module.get<JwtStrategy>(JwtStrategy)
+    userRepository = module.get<Repository<User>>(getRepositoryToken(User))
+    configService = module.get<ConfigService>(ConfigService)
+  })
 
   it('should be defined', () => {
-    expect(jwtStrategy).toBeDefined();
-  });
+    expect(jwtStrategy).toBeDefined()
+  })
 
   it('should validate and return user data', async () => {
-    const payload = { sub: '123' };
-    const user = { id: '123', email: 'test@example.com', tenantId: 'tenant-1', roles: ['admin'] };
+    const payload = { sub: '123' }
+    const user = {
+      id: '123',
+      email: 'test@example.com',
+      tenantId: 'tenant-1',
+      roles: ['admin'],
+    }
 
-    (userRepository.findOne as jest.Mock).mockResolvedValue(user);
+    ;(userRepository.findOne as jest.Mock).mockResolvedValue(user)
 
-    const result = await jwtStrategy.validate(payload);
+    const result = await jwtStrategy.validate(payload)
     expect(result).toEqual({
       id: '123',
       email: 'test@example.com',
       tenantId: 'tenant-1',
       roles: ['admin'],
-    });
-    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: '123' }, relations: ['roles'] });
-  });
+    })
+    expect(userRepository.findOne).toHaveBeenCalledWith({
+      where: { id: '123' },
+      relations: ['roles'],
+    })
+  })
 
   it('should throw UnauthorizedException if user is not found', async () => {
-    (userRepository.findOne as jest.Mock).mockResolvedValue(null);
-    
-    await expect(jwtStrategy.validate({ sub: '123' })).rejects.toThrow(UnauthorizedException);
-    expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: '123' }, relations: ['roles'] });
-  });
-});
+    ;(userRepository.findOne as jest.Mock).mockResolvedValue(null)
+
+    await expect(jwtStrategy.validate({ sub: '123' })).rejects.toThrow(
+      UnauthorizedException
+    )
+    expect(userRepository.findOne).toHaveBeenCalledWith({
+      where: { id: '123' },
+      relations: ['roles'],
+    })
+  })
+})

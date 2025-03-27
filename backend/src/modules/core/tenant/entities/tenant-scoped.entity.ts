@@ -1,11 +1,11 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
-import { TenantScoped } from '../decorators/tenant-scoped.decorator';
+import { Column, PrimaryGeneratedColumn } from 'typeorm'
+import { TenantScoped } from '../decorators/tenant-scoped.decorator'
 
 @TenantScoped()
 export abstract class TenantScopedEntity {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: string
 
   @Column()
-  tenantId: string;
-} 
+  tenantId: string
+}

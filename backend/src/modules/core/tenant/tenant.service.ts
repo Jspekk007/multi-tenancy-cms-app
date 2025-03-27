@@ -16,9 +16,13 @@ export class TenantService {
   ) {}
 
   async createTenant(dto: CreateTenantDto): Promise<Tenant> {
-    const existingTenant = await this.tenantRepository.findOne({ where: { domain: dto.domain } })
+    const existingTenant = await this.tenantRepository.findOne({
+      where: { domain: dto.domain },
+    })
     if (existingTenant) {
-      throw new BadRequestException(`Tenant with domain ${dto.domain} already exists`)
+      throw new BadRequestException(
+        `Tenant with domain ${dto.domain} already exists`
+      )
     }
 
     const tenant = this.tenantRepository.create(dto)
@@ -40,7 +44,10 @@ export class TenantService {
 
   async findByDomain(domain: string): Promise<Tenant | null> {
     if (!domain) return null
-    return this.tenantRepository.findOne({ where: { domain }, relations: ['users'] })
+    return this.tenantRepository.findOne({
+      where: { domain },
+      relations: ['users'],
+    })
   }
 
   async getAllTenants(): Promise<Tenant[]> {

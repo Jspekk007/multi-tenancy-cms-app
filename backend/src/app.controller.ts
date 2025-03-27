@@ -12,7 +12,7 @@ export class AppController {
     private readonly appService: AppService,
     private readonly tenantService: TenantService,
     @InjectRepository(Content)
-    private readonly contentRepository: Repository<Content>,
+    private readonly contentRepository: Repository<Content>
   ) {}
 
   @Get()
@@ -25,7 +25,7 @@ export class AppController {
     const tenants = await this.tenantService.getAllTenants()
     return {
       tenants,
-      message: `Found ${tenants.length} tenants in database`
+      message: `Found ${tenants.length} tenants in database`,
     }
   }
 
