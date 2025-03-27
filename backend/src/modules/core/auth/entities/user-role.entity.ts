@@ -1,25 +1,25 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
-  JoinColumn,
+  PrimaryColumn,
 } from 'typeorm'
 import { User } from '../../user/user.entity'
 import { Role } from './role.entity'
 
 @Entity('user_roles')
 export class UserRole {
-  @PrimaryGeneratedColumn('uuid')
-  id: string
+  @PrimaryColumn()
+  userId: string
+
+  @PrimaryColumn()
+  roleId: string
 
   @ManyToOne(() => User, (user) => user.userRoles)
-  @JoinColumn({ name: 'userId' })
   user: User
 
   @ManyToOne(() => Role, (role) => role.userRoles)
-  @JoinColumn({ name: 'roleId' })
   role: Role
 
   @CreateDateColumn()

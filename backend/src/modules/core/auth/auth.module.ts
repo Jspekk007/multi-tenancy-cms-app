@@ -11,6 +11,7 @@ import { User } from '../user/user.entity'
 import { Role } from './entities/role.entity'
 import { RefreshToken } from './entities/refresh-token.entity'
 import { Tenant } from '../tenant/tenant.entity'
+import { TenantContext } from '../tenant/tenant.context'
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { Tenant } from '../tenant/tenant.entity'
     TypeOrmModule.forFeature([User, Role, RefreshToken, Tenant]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshTokenStrategy],
+  providers: [AuthService, JwtStrategy, RefreshTokenStrategy, TenantContext],
   exports: [AuthService, JwtStrategy, PassportModule],
 })
 export class AuthModule {}

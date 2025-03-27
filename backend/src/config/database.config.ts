@@ -4,6 +4,7 @@ import { Tenant } from '../modules/core/tenant/tenant.entity'
 import { Role } from '../modules/core/auth/entities/role.entity'
 import { UserRole } from '../modules/core/auth/entities/user-role.entity'
 import { RefreshToken } from '../modules/core/auth/entities/refresh-token.entity'
+import { Content } from '../modules/content/entities/content.entity'
 
 const isDocker = process.env.DOCKER === 'true'
 
@@ -15,7 +16,7 @@ const typeOrmConfig: TypeOrmModuleOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   synchronize: false,
-  entities: [User, Tenant, Role, UserRole, RefreshToken],
+  entities: [User, Tenant, Role, UserRole, RefreshToken, Content],
   migrations: ['dist/migrations/*.js'],
   logging: true,
   logger: 'advanced-console',

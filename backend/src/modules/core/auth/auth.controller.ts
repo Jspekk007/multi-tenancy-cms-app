@@ -28,14 +28,13 @@ export class AuthController {
     const user = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
-      loginDto.tenantId
     )
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials')
     }
 
-    return this.authService.login(user as User, loginDto.tenantId)
+    return this.authService.login(user)
   }
 
   @UseGuards(RefreshTokenGuard)

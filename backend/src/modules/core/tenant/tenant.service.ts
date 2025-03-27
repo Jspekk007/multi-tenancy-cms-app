@@ -48,17 +48,19 @@ export class TenantService {
     return tenant
   }
 
-  async findByDomain(domain: string): Promise<Tenant> {
+  async findByDomain(domain: string): Promise<Tenant | null> {
+    // If domain is empty or undefined, return null
+    if (!domain) {
+      return null;
+    }
+
+    // Try to find tenant by exact domain match
     const tenant = await this.tenantRepository.findOne({
       where: { domain },
       relations: ['users'],
     })
 
-    if (!tenant) {
-      throw new NotFoundException('Tenant not found')
-    }
-
-    return tenant
+    return tenant;
   }
 
   async getAllTenants(): Promise<Tenant[]> {
