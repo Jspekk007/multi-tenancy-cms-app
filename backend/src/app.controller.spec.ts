@@ -1,7 +1,6 @@
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { TenantService } from './modules/core/tenant/tenant.service'
-import { JwtAuthGuard } from './modules/core/auth/guards/jwt-auth.guard'
 import { Repository } from 'typeorm'
 import { Content } from './modules/content/entities/content.entity'
 import { Test, TestingModule } from '@nestjs/testing'
