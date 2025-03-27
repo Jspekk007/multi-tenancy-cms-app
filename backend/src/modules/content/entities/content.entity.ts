@@ -1,14 +1,14 @@
-import { Entity, Column } from 'typeorm';
-import { TenantScopedEntity } from '../../core/tenant/entities/tenant-scoped.entity';
+import { Entity, Column } from 'typeorm'
+import { TenantScopedEntity } from '../../core/tenant/entities/tenant-scoped.entity'
 
 @Entity('contents')
 export class Content extends TenantScopedEntity {
   @Column()
-  title: string;
+  title: string
 
   @Column('text')
-  body: string;
+  body: string
 
   @Column({ default: true })
-  isPublished: boolean;
-} 
+  isPublished: boolean
+}
