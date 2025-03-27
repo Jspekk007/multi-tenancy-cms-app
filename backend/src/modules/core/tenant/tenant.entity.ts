@@ -7,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm'
-import { IsDomain } from '../../utils/validators/is-domain.validator'
+import { IsDomain } from '../../../utils/validators/is-domain.validator'
 import { User } from '../user/user.entity'
 
 @Entity('tenants')

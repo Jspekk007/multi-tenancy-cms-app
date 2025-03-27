@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
-import { User } from '../../../core/user/user.entity'
+import { User } from '../../user/user.entity'
 
 interface RequestWithUser extends Request {
   user?: User

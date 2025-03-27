@@ -1,9 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm'
-import { User } from '../core/user/user.entity'
-import { Tenant } from '../core/tenant/tenant.entity'
-import { Role } from '../core/auth/entities/role.entity'
-import { UserRole } from '../core/auth/entities/user-role.entity'
-import { RefreshToken } from '../core/auth/entities/refresh-token.entity'
+import { User } from '../modules/core/user/user.entity'
+import { Tenant } from '../modules/core/tenant/tenant.entity'
+import { Role } from '../modules/core/auth/entities/role.entity'
+import { UserRole } from '../modules/core/auth/entities/user-role.entity'
+import { RefreshToken } from '../modules/core/auth/entities/refresh-token.entity'
 
 const isDocker = process.env.DOCKER === 'true'
 
