@@ -6181,10 +6181,10 @@ nest-commander@^3.17.0:
     cosmiconfig "8.3.6"
     inquirer "8.2.6"
 
-nestjs-cls@^5.4.0:
-  version "5.4.0"
-  resolved "https://registry.npmjs.org/nestjs-cls/-/nestjs-cls-5.4.0.tgz"
-  integrity sha512-XkD1mxctTdtlzC+4LR+7amvCGfIWghRjRBG1twczERPDUETg7Mw6RsruQoF3QrL/LKaOpMmm5OsJesTHt+hWCA==
+nestjs-cls@^5.4.1:
+  version "5.4.1"
+  resolved "https://registry.yarnpkg.com/nestjs-cls/-/nestjs-cls-5.4.1.tgz#e2ecf95762130cc07cb333ab27c4050e1e633de8"
+  integrity sha512-hm0CQE6hRjr07yqSTcj50eQwNuZhlOHocX1W0CHpsYo9aDqsEysGkshegvAlC/4NVedTeAU6J0dVjAvNPTMrjQ==
 
 next@15.2.2:
   version "15.2.2"

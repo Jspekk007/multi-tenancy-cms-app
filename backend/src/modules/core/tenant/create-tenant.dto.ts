@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, Length } from 'class-validator'
-import { IsDomain } from '../../utils/validators/is-domain.validator'
+import { IsDomain } from '../../../utils/validators/is-domain.validator'
 
 export class CreateTenantDto {
   @IsString()
