@@ -79,7 +79,7 @@ jobs:
 
       - name: Run tests
         run: |
-          yarn test
+          yarn workspace backend test
 
   # Job to build the app
   build:
