@@ -18,10 +18,10 @@ jobs:
       cache-hit: ${{ steps.cache.outputs.cache-hit }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
 
@@ -45,10 +45,10 @@ jobs:
     needs: setup
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
 
@@ -66,10 +66,10 @@ jobs:
     needs: setup
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
 
@@ -79,7 +79,13 @@ jobs:
 
       - name: Run tests
         run: |
-          yarn workspace backend test
+          yarn workspace backend test:cov
+
+      - name: Upload results to Codecov
+        uses: codecov/codecov-actions@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: Jspek007/multi-tenancy-cms-app
 
   # Job to build the app
   build:
