@@ -3,8 +3,7 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend",
-    "infrastructure"
+    "backend"
   ],
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -20,7 +19,13 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "frontend/**/*.{js,jsx,ts,tsx}": ["cd frontend && yarn lint:fix", "yarn prettier --write"],
-    "backend/**/*.{js,ts}": ["cd backend && yarn lint:fix", "yarn prettier --write"]
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+      "cd frontend && yarn lint:fix",
+      "yarn prettier --write"
+    ],
+    "backend/**/*.{js,ts}": [
+      "cd backend && yarn lint:fix",
+      "yarn prettier --write"
+    ]
   }
 }
