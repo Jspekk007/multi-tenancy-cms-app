@@ -82,41 +82,31 @@ jobs:
           set -e
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           COMMENT=""
-          VULNS_FOUND=false # Reset flag for this summary job
+          VULNS_FOUND=false
 
-          # --- Adapt your process_report function here ---
-          # It should now read from the downloaded file, e.g., ./sca-reports/frontend/retire-report-frontend.json
           process_report() {
             local REPORT_FILE="$1"
             local REPORT_NAME="$2"
-            # ... (rest of your existing process_report function) ...
           }
 
-          # Process the downloaded report
-          # Adjust path and name as needed
           process_report "./sca-reports/frontend/retire-report-frontend.json" "frontend"
 
-          # --- Adapt your final commenting logic here ---
           if $VULNS_FOUND; then
-             printf -v FINAL_SUMMARY '\n---\n%s' "*Please review the vulnerabilities listed above and update the dependencies.*"
-             COMMENT+="$FINAL_SUMMARY"
-             echo "Vulnerabilities found in frontend SCA. Setting output."
-             echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
+            printf -v FINAL_SUMMARY '\n---\n%s' "*Please review the vulnerabilities listed above and update the dependencies.*"
+            COMMENT+="$FINAL_SUMMARY"
+            echo "Vulnerabilities found in frontend SCA. Setting output."
+            echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
           else
-             # Handle no vulnerabilities found case for the comment
-             printf -v success_message '✅ Frontend SCA scan passed — no vulnerabilities found.\n\n'
-             COMMENT+="$success_message" # Append the string that now contains actual newlines
-             printf -v FINAL_SUMMARY '\n---\n%s' "*Retire.js scan completed for frontend. No vulnerabilities detected.*"
-             COMMENT+="$FINAL_SUMMARY" # Or construct a combined comment if needed
-             echo "No vulnerabilities found in frontend SCA."
-             echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT"
+            printf -v FINAL_SUMMARY '\n---\n%s' "*Retire.js scan completed for frontend. No vulnerabilities detected.*"
+            COMMENT+="$FINAL_SUMMARY"
+            echo "No vulnerabilities found in frontend SCA."
+            echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT"
           fi
 
           echo "--- Generated Comment (Frontend SCA) ---"
           printf '%s\n' "$COMMENT"
           echo "--- End Comment ---"
 
-          # Post comment (or append if other scans also comment)
           gh api --method POST -H "Accept: application/vnd.github+json" \
             "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
             -f body="$COMMENT"
