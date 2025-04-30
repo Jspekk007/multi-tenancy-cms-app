@@ -184,7 +184,7 @@ jobs:
               # Filter report data using jq, excluding common non-app paths
               FILTERED_RESULTS=$(jq --exit-status '
                   .data
-                  | map(select(.file | test("/(node_modules|bower_components|vendor|dist|build|test|spec|public)/") | not))
+                  | map(select(.file | test("/(bower_components|vendor|dist|build|test|spec|public)/") | not))
                   | map(.file as $f | . + {results: [.results[] | select(.vulnerabilities | length > 0)] } )
                   | map(select(.results | length > 0))
               ' "$REPORT_FILE")
