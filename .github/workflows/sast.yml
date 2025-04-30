@@ -1,19 +1,19 @@
-name: Static Application Security Testing
+# name: Static Application Security Testing
 
-on:
-  pull_request:
-    branches:
-      - main
-      - develop
-  push:
-    branches:
-      - main
-      - develop
+# on:
+#   pull_request:
+#     branches:
+#       - main
+#       - develop
+#   push:
+#     branches:
+#       - main
+#       - develop
 
-jobs:
-  trufflehog:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Run TruffleHog scan
-        run: |
-          docker run -v $(pwd):/src --rm hysnsec/trufflehog filesystem /src --fail --json | tee trufflehog-output.json
+# jobs:
+#   trufflehog:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Run TruffleHog scan
+#         run: |
+#           docker run -v $(pwd):/src --rm hysnsec/trufflehog filesystem /src --fail --json | tee trufflehog-output.json

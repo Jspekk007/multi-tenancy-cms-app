@@ -1,133 +1,153 @@
 # .github/workflows/sca.yml
+# Reusable workflow to run Retire.js SCA scan on a specific target.
+# Assumes the calling workflow has already checked out the code and installed root dependencies.
 name: Reusable Software Component Analysis (Retire.js)
 
 on:
+  # Triggered when called by another workflow
   workflow_call:
+    # Define inputs required by this reusable workflow
     inputs:
-      # Define which part of the project to scan
       scan-target:
         description: 'The target to scan ("root", "backend", or "frontend")'
         required: true
         type: string
-      # Define the name for the artifact uploaded
       artifact-name:
-        description: "Name for the uploaded report artifact"
-        required: false
+        description: 'The desired name for the uploaded report artifact (e.g., "frontend-retirejs-report")'
+        required: true # Caller should provide the full specific name
         type: string
-        default: "retirejs-report" # Default name, caller can override
+
+    # Define outputs provided by this reusable workflow
     outputs:
-      # Output whether vulnerabilities were detected
       vulnerabilities-found:
-        description: "Boolean indicating if vulnerabilities were found"
+        description: 'Boolean indicating if vulnerabilities were found ("true" or "false")'
         value: ${{ jobs.scan.outputs.vulnerabilities-found }}
-      # Output the exact name of the artifact uploaded
       report-artifact-name:
-        description: "The name of the artifact containing the JSON report"
+        description: "The actual name of the artifact uploaded"
         value: ${{ jobs.scan.outputs.report-artifact-name }}
 
 jobs:
   scan:
-    name: Retire.js Scan (${{ inputs.scan-target }}) # Dynamic job name
+    # Job name includes the target for better UI identification
+    name: Retire.js Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
-    # Define outputs for the job, which are then referenced in workflow outputs
+    # Define job outputs, referencing step outputs below
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
-    # Permissions might not be needed here anymore if commenting is moved out
-    # permissions:
-    #   contents: read
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # Use latest version
-        with:
-          fetch-depth: 0
+      # No checkout step - assumes caller checked out the code
 
+      # Setup Node.js - Required to install and run retirejs via yarn
       - name: Set up Node.js
-        uses: actions/setup-node@v4 # Use latest version
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "yarn" # Enable caching
+          # Caching here might speed up Node setup itself slightly, but not critical
+          # cache: 'yarn'
 
-      # Install dependencies for the entire monorepo - necessary for retire to find packages
-      - name: Install root dependencies
-        run: yarn install --frozen-lockfile
+      # No root dependency install step - assumes caller installed dependencies
 
-      # Install Retire.js globally within the runner
+      # Install Retire.js globally within the runner environment
       - name: Install Retire.js
         run: yarn global add retire@latest
 
-      # Determine report file path based on input
-      - name: Set Report Path
+      # Determine the base filename for the report
+      - name: Set Report Filename
         id: set_paths
         run: |
-          echo "report_file=retire-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
+          echo "report_filename=retire-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
-      # --- Run Retire.js Scan (Conditionally based on input) ---
+      # Run Retire.js scan, adjusting working directory and output path based on target
       - name: Run Retire.js scan for ${{ inputs.scan-target }}
         id: retire_scan
         run: |
-          SCAN_DIR="." # Default to root
-          OUTPUT_PATH="${{ steps.set_paths.outputs.report_file }}"
+          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
+          RUN_DIR="." # Default directory to run the command in
+          OUTPUT_PATH="./$REPORT_FILENAME" # Default output path relative to RUN_DIR
 
           if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-            SCAN_DIR="backend"
-            # Install specific backend dependencies if needed (often retire works on lockfiles)
-            # echo "Installing dependencies in backend..."
-            # (cd backend && yarn install --frozen-lockfile)
-            OUTPUT_PATH="../${{ steps.set_paths.outputs.report_file }}" # Output relative to root
-            cd backend
+            RUN_DIR="./backend"
           elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-            SCAN_DIR="frontend"
-            # Install specific frontend dependencies if needed
-            # echo "Installing dependencies in frontend..."
-            # (cd frontend && yarn install --frozen-lockfile)
-            OUTPUT_PATH="../${{ steps.set_paths.outputs.report_file }}" # Output relative to root
-            cd frontend
+            RUN_DIR="./frontend"
           fi
 
-          echo "Running retire in $(pwd) saving to ${OUTPUT_PATH}"
-          # Run retire, allowing it to fail without stopping the workflow (using || true)
-          # We check the report content later to determine success/failure status
-          retire --nodepath "$SCAN_DIR" --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true
-
-          # Ensure we are back at the root directory if we changed it
-          if [[ "${{ inputs.scan-target }}" != "root" ]]; then
-            cd ..
+          # Ensure the target directory exists before trying to cd into it
+          if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
+             echo "Error: Target directory '$RUN_DIR' not found in workspace."
+             exit 1
           fi
 
-      # --- Check Report for Vulnerabilities ---
+          echo "Running retire scan in $RUN_DIR, outputting to $OUTPUT_PATH (relative to $RUN_DIR)"
+          # Execute retire within the RUN_DIR. Output file will be created inside RUN_DIR.
+          # Use --nodepath "." because we are already inside the target directory.
+          # Use || true to prevent workflow failure if retire finds issues (we check report later)
+          (cd $RUN_DIR && retire --nodepath "." --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true)
+
+          # Add check: Verify file creation right after running retire
+          if [[ -f "$RUN_DIR/$OUTPUT_PATH" ]]; then
+            echo "Successfully created report file at $RUN_DIR/$OUTPUT_PATH"
+          else
+            # This warning is crucial for debugging if the upload fails later
+            echo "Warning: Report file $RUN_DIR/$OUTPUT_PATH was NOT created by retire."
+          fi
+
+      # Determine the full path of the report relative to the workspace root
+      - name: Determine Full Report Path
+        id: report_full_path
+        run: |
+          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
+          REPORT_FULL_PATH="$REPORT_FILENAME" # Default for root target
+          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+             REPORT_FULL_PATH="backend/$REPORT_FILENAME"
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+             REPORT_FULL_PATH="frontend/$REPORT_FILENAME"
+          fi
+          echo "full_path=$REPORT_FULL_PATH" >> $GITHUB_OUTPUT
+          echo "Resolved full report path relative to root: $REPORT_FULL_PATH"
+
+      # Check the generated report file for vulnerabilities
       - name: Check Report Content
         id: check_report
         run: |
-          REPORT_FILE="${{ steps.set_paths.outputs.report_file }}"
-          VULNS_FOUND="false" # Default to false
+          REPORT_FILE="${{ steps.report_full_path.outputs.full_path }}"
+          VULNS_FOUND="false" # Default value
 
           if [[ ! -f "$REPORT_FILE" ]]; then
-            echo "Report file '$REPORT_FILE' not found. Assuming no vulnerabilities."
+             echo "Check Report: File '$REPORT_FILE' not found. Assuming no vulnerabilities."
           else
-            # Check if the 'results' array within any 'data' item is non-empty
-            # Adjust jq query if your vulnerability criteria differ
-            COUNT=$(jq 'if .data then [.data[].results[] | select(.vulnerabilities | length > 0)] | length else 0 end' "$REPORT_FILE")
-
-            echo "Found $COUNT vulnerabilities in $REPORT_FILE."
-            if [[ "$COUNT" -gt 0 ]]; then
-              VULNS_FOUND="true"
-            fi
+             echo "Check Report: Found file '$REPORT_FILE'. Checking content..."
+             # Check if any result has a non-empty 'vulnerabilities' array
+             COUNT=$(jq 'if .data then [.data[].results[] | select(.vulnerabilities | length > 0)] | length else 0 end' "$REPORT_FILE")
+             if [[ $? -ne 0 ]]; then
+               echo "Warning: jq command failed to parse $REPORT_FILE"
+               # Decide how to handle parse error - treat as no vulns? Or error?
+             elif [[ "$COUNT" -gt 0 ]]; then
+               echo "Check Report: Found $COUNT vulnerabilities."
+               VULNS_FOUND="true"
+             else
+               echo "Check Report: No vulnerabilities found in report content."
+             fi
           fi
-
+          # Set the step output
           echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
 
-      # Set the artifact name for output
-      - name: Set Artifact Name
+      # Set the artifact name step output using the input directly
+      - name: Set Artifact Name Output
         id: set_artifact_name
-        run: echo "artifact-name=${{ inputs.artifact-name }}-${{ inputs.scan-target }}" >> $GITHUB_OUTPUT
+        run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
 
-      # --- Upload Report Artifact ---
+      # Upload the generated report as a workflow artifact
       - name: Upload Retire.js Report (${{ inputs.scan-target }})
-        if: always() # Upload even if previous steps had issues (e.g., file not found)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_artifact_name.outputs.artifact-name }} # Use dynamic name
-          path: ${{ steps.set_paths.outputs.report_file }}
-          if-no-files-found: warn # Don't fail if the report wasn't generated
+          # Use the artifact name passed as input via the previous step's output
+          name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+          # Use the full path relative to the workspace root
+          path: ${{ steps.report_full_path.outputs.full_path }}
+          # How to handle if the file wasn't found (e.g., retire failed silently)
+          if-no-files-found: warn # Options: warn, error, ignore
+
+
+      # No summary, commenting, or failure steps here - handled by the caller
