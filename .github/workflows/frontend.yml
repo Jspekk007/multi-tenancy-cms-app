@@ -1,4 +1,4 @@
-name: Frontend CI/CD
+name: Frontend CI, SCA and SAST
 
 on:
   push:
@@ -6,41 +6,47 @@ on:
       - main
       - develop
     paths:
-      - 'frontend/**'  # Trigger if files in the frontend directory change
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+      - ".github/workflows/sca.yml"
+      - ".github/workflows.sast.yml"
   pull_request:
     branches:
       - main
       - develop
     paths:
-      - 'frontend/**'  # Trigger if files in the frontend directory change
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+      - ".github/workflows/sca.yml"
+      - ".github/workflows.sast.yml"
 
 jobs:
-  frontend:
+  build_and_lint:
+    name: Frontend Build & Lint
     runs-on: ubuntu-latest
     steps:
-      # Checkout the code
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      # Set up Node.js
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
+          cache: "yarn"
 
-      # Install dependencies for the entire monorepo
       - name: Install dependencies
-        run: |
-          yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
-      # Run eslint on the frontend workspace
       - name: Run ESLint on Frontend
-        run: |
-          cd frontend
-          yarn lint
+        run: yarn workspace frontend lint
 
-      # Build the frontend app
       - name: Build Frontend
-        run: |
-          cd frontend
-          yarn build
+        run: yarn workspace frontend build
+
+  frontend_sca:
+    name: Frontend SCA Scan
+    needs: build_and_lint
+    uses: ./.github/workflows/sca.yml
+    with:
+      target-dir: frontend
+    secrets: inherit

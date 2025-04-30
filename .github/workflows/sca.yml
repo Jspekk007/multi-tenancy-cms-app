@@ -1,14 +1,15 @@
 name: Software Component Analysis
 
 on:
-  pull_request:
-    branches:
-      - main
-      - develop
-  push:
-    branches:
-      - main
-      - develop
+  workflow_call:
+    inputs:
+      target-dir:
+        required: false
+        type: string
+        default: "."
+    secrets:
+      GH_TOKEN:
+        required: false
 
 jobs:
   retirejs:
