@@ -70,8 +70,8 @@ jobs:
       - name: Download Frontend SCA Report
         uses: actions/download-artifact@v4
         with:
-          name: ${{ needs.frontend_sca.outputs.report-artifact-name }} # Use output name
-          path: ./sca-reports/frontend # Download to a specific directory
+          name: frontend-retirejs-report-frontend
+          path: ./sca-reports/frontend
 
       # Add steps here to process the downloaded report(s)
       # This would involve adapting your original 'Summarize Findings' script
