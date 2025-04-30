@@ -70,7 +70,7 @@ jobs:
   frontend_sca:
     name: Frontend SCA Scan
     needs: build_and_lint
-    uses: ./.github/workflows/sca.yml@main
+    uses: ./.github/workflows/sca.yml
     with:
       scan-target: "frontend"
       artifact-name: "frontend-retirejs-report"
