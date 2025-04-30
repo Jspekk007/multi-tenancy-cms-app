@@ -78,7 +78,7 @@ jobs:
           fi
 
           echo "Running retire scan in $RUN_DIR, outputting to $OUTPUT_PATH (relative to $RUN_DIR)"
-          (cd $RUN_DIR && retire --nodepath "." --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true)
+          (cd $RUN_DIR && retire "." --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true)
 
           if [[ -f "$RUN_DIR/$OUTPUT_PATH" ]]; then
             echo "Successfully created report file at $RUN_DIR/$OUTPUT_PATH"
