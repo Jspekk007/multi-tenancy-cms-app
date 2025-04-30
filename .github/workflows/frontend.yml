@@ -69,13 +69,12 @@ jobs:
   # Job 2: Call the Reusable SCA Workflow
   frontend_sca:
     name: Frontend SCA Scan
-    runs-on: ubuntu-latest # Runner for this job definition itself
-    needs: build_and_lint # Ensure build/lint job completes successfully first
-    uses: ./.github/workflows/sca.yml # Path to the reusable SCA workflow file
+    needs: build_and_lint
+    uses: ./.github/workflows/sca.yml@main
     with:
-      scan-target: "frontend" # Input telling sca.yml which part to scan
-      artifact-name: "frontend-retirejs-report" # Input specifying the desired artifact name
-    secrets: inherit # Pass secrets (like GITHUB_TOKEN if needed by sca.yml)
+      scan-target: "frontend"
+      artifact-name: "frontend-retirejs-report"
+    secrets: inherit
 
   # Job 3: Call the Reusable SAST Workflow (Placeholder - uncomment and adapt if you have sast.yml)
   # frontend_sast:
