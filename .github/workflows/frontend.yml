@@ -9,7 +9,7 @@ on:
       - "frontend/**"
       - ".github/workflows/frontend.yml"
       - ".github/workflows/sca.yml"
-      - ".github/workflows.sast.yml"
+      - ".github/workflows/sast.yml" # Corrected typo: workflows.sast.yml -> workflows/sast.yml
   pull_request:
     branches:
       - main
@@ -18,11 +18,11 @@ on:
       - "frontend/**"
       - ".github/workflows/frontend.yml"
       - ".github/workflows/sca.yml"
-      - ".github/workflows.sast.yml"
+      - ".github/workflows/sast.yml" # Corrected typo: workflows.sast.yml -> workflows/sast.yml
 
 jobs:
   build_and_lint:
-    name: Frontend Build & Lint
+    name: Frontend Build, Lint & Cache
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,6 +37,18 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      # Optional but recommended: Cache node_modules explicitly for cross-job caching
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            frontend/node_modules
+            backend/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
       - name: Run ESLint on Frontend
         run: yarn workspace frontend lint
 
@@ -45,14 +57,17 @@ jobs:
 
   frontend_sca:
     name: Frontend SCA Scan
+    runs-on: ubuntu-latest # Runner for the job definition itself
     needs: build_and_lint
-    uses: ./.github/workflows/sca.yml
+    uses: ./.github/workflows/sca.yml # Call the self-contained reusable workflow
     with:
       scan-target: "frontend"
-      artifact-name: "frontend-retirejs-report"
+      artifact-name: "frontend-retirejs-report" # Pass the desired *full* artifact name
     secrets: inherit
 
-  # --- NEW: Job to summarize and comment (or fail) ---
+  # Add frontend_sast job here if needed, similar structure to frontend_sca
+
+  # --- Job to summarize SCA results and comment ---
   summarize_sca:
     name: Summarize SCA Results
     runs-on: ubuntu-latest
@@ -70,46 +85,177 @@ jobs:
       - name: Download Frontend SCA Report
         uses: actions/download-artifact@v4
         with:
-          name: frontend-retirejs-report
-          path: ./sca-reports/frontend
+          # Use the output from the needs context to get the exact artifact name
+          name: ${{ needs.frontend_sca.outputs.report-artifact-name }}
+          path: ./sca-reports/frontend # Download to a specific directory
 
-      # Add steps here to process the downloaded report(s)
-      # This would involve adapting your original 'Summarize Findings' script
-      # to read from the downloaded file(s) instead of locally generated ones.
+      # Process the downloaded report and comment
       - name: Process Reports and Comment
         id: summary
         run: |
+          # Exit script immediately if any command fails
           set -e
+          # Optional: Enable detailed command tracing for debugging
+          # set -x
+
+          # --- Initialization ---
           PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
           COMMENT=""
-          VULNS_FOUND=false
+          VULNS_FOUND=false # Reset flag specific to this summary job
 
+          # --- START: Full process_report function definition ---
+          # Processes a single Retire.js JSON report file and appends results to the global $COMMENT variable.
           process_report() {
-            local REPORT_FILE="$1"
-            local REPORT_NAME="$2"
+              # Function arguments
+              local REPORT_FILE="$1"    # Path to the retirejs JSON report
+              local REPORT_NAME="$2"    # Identifier ("root", "backend", "frontend")
+              echo "[DEBUG process_report] Received: $REPORT_NAME, File: $REPORT_FILE" # DEBUG
+
+              # Local variables
+              local SECTION_TITLE       # User-facing title (e.g., "Root Dependencies")
+              local SECTION_HEADER      # Formatted Markdown header (e.g., "📦 **Root Dependencies**")
+              local FILTERED_RESULTS    # JSON array of filtered vulnerability data
+              local SUMMARY             # Formatted Markdown list of vulnerabilities
+              local COUNT               # Number of vulnerabilities found in this report
+              local COMMENT_ADD_HEADER="" # Temporary variable for the section header (if needed)
+              local COMMENT_ADD_BODY=""   # Temporary variable for the section body (results or status)
+              local JQ_EXIT_CODE        # Exit code from the jq command
+
+              # --- 1. Determine Section Title and Header ---
+              case "$REPORT_NAME" in
+                "root")     SECTION_TITLE="Root Dependencies";;
+                "backend")  SECTION_TITLE="Backend Dependencies";;
+                "frontend") SECTION_TITLE="Frontend Dependencies";;
+                *)
+                  echo "[DEBUG process_report] Error: Unknown report name '$REPORT_NAME'" >&2
+                  printf -v COMMENT_ADD_BODY '⚠️ **Internal Error:** Unknown report section requested: %s\n\n' "$REPORT_NAME"
+                  COMMENT+="${COMMENT_ADD_BODY}"
+                  return 1 # Indicate error
+                  ;;
+              esac
+              SECTION_HEADER="📦 **${SECTION_TITLE}**"
+              echo "[DEBUG process_report] Header defined as: $SECTION_HEADER" # DEBUG
+
+              # --- 2. Check if Section Header needs to be added ---
+              # Add header only if it's not already present in the comment being built.
+              if ! printf '%s' "$COMMENT" | grep -qF -- "$SECTION_HEADER"; then
+                  echo "[DEBUG process_report] Adding header..." # DEBUG
+                  printf -v COMMENT_ADD_HEADER '%s\n\n' "$SECTION_HEADER"
+              else
+                  echo "[DEBUG process_report] Header check - already found or grep failed?" # DEBUG
+              fi
+              COMMENT+="${COMMENT_ADD_HEADER}" # Append header (if defined)
+              echo "[DEBUG process_report] Comment after header attempt: [$COMMENT]" # DEBUG
+
+              # --- 3. Check if Report File Exists ---
+              if [[ ! -f "$REPORT_FILE" ]]; then
+                  echo "[DEBUG process_report] Report file NOT found: $REPORT_FILE" # DEBUG
+                  printf -v COMMENT_ADD_BODY 'ℹ️ Could not find report file (or it was empty): %s\n\n' "$REPORT_FILE"
+                  COMMENT+="${COMMENT_ADD_BODY}" # Append info message
+                  return 0 # Continue processing other reports if applicable, but this one is done
+              fi
+              echo "[DEBUG process_report] Report file found. Processing..." # DEBUG
+
+              # --- 4. Filter and Extract Vulnerabilities using jq ---
+              # Exclude node_modules within the filter itself if retirejs includes them unexpectedly
+              FILTERED_RESULTS=$(jq --exit-status '
+                  .data
+                  | map(select(.file | test("/(node_modules|bower_components|vendor|dist|build|test|spec|public)/") | not))
+                  | map(.file as $f | . + {results: [.results[] | select(.vulnerabilities | length > 0)] } )
+                  | map(select(.results | length > 0))
+              ' "$REPORT_FILE")
+              JQ_EXIT_CODE=$?
+
+              # --- Handle jq Execution Results ---
+              if [[ $JQ_EXIT_CODE -ne 0 ]]; then
+                  if [[ $JQ_EXIT_CODE -eq 4 ]]; then
+                      echo "[DEBUG process_report] jq produced no matching results for $REPORT_FILE (exit code 4)."
+                      FILTERED_RESULTS="[]"
+                  else
+                      echo "[DEBUG process_report] Error: jq failed to process '$REPORT_FILE' (exit code: $JQ_EXIT_CODE)" >&2
+                      printf -v COMMENT_ADD_BODY '⚠️ Error processing Retire.js report for %s (jq exit code %d).\n\n' "$SECTION_TITLE" "$JQ_EXIT_CODE"
+                      COMMENT+="${COMMENT_ADD_BODY}"
+                      return 1 # Indicate processing error for this file
+                  fi
+              elif [[ -z "$FILTERED_RESULTS" ]]; then
+                  echo "[DEBUG process_report] jq produced empty output for $REPORT_FILE."
+                  FILTERED_RESULTS="[]"
+              fi
+
+              # --- 5. Count Total Vulnerabilities Found in this Section ---
+              COUNT=$(echo "$FILTERED_RESULTS" | jq 'map(.results[].vulnerabilities[]) | length')
+              echo "[DEBUG process_report] Vulnerability count for $REPORT_NAME: $COUNT" # DEBUG
+
+              # --- 6. Generate Summary or Success Message ---
+              if [[ "$COUNT" -gt 0 ]]; then
+                  VULNS_FOUND=true # Set the global flag for the summary job
+                  SUMMARY=$(echo "$FILTERED_RESULTS" | jq -r '
+                      map(
+                          .file as $filename | .results[] |
+                           "- `" + .component + " " + .version + "` ⚠️ " +
+                           (try (.vulnerabilities | map(.info | join("; ")) | join(", ")) catch "N/A") +
+                           " (in `" + ($filename // "Unknown file") + "`)"
+                      ) | join("\n")
+                  ')
+                  printf -v COMMENT_ADD_BODY '%s\n\n' "$SUMMARY"
+              else
+                  # No vulnerabilities found in this specific report
+                  printf -v COMMENT_ADD_BODY '✅ Retire.js scan passed for %s — no vulnerabilities found.\n\n' "$SECTION_TITLE"
+              fi
+
+              # --- 7. Append Section Body (Results or Success Message) to Global Comment ---
+              COMMENT+="${COMMENT_ADD_BODY}"
+              echo "[DEBUG process_report] Finished. Final Comment piece added: [$COMMENT_ADD_BODY]" # DEBUG
+
+              return 0 # Indicate successful processing of this report
           }
+          # --- END: Full process_report function definition ---
 
-          process_report "./sca-reports/frontend/retire-report-frontend.json" "frontend"
 
-          if $VULNS_FOUND; then
-            printf -v FINAL_SUMMARY '\n---\n%s' "*Please review the vulnerabilities listed above and update the dependencies.*"
-            COMMENT+="$FINAL_SUMMARY"
-            echo "Vulnerabilities found in frontend SCA. Setting output."
-            echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
+          # --- Process Downloaded Report ---
+          echo "[DEBUG Summary] Checking for downloaded report file..." # DEBUG
+          ls -lR ./sca-reports/ # DEBUG - Verify file exists and path is correct
+          # Define the path to the specific report file to process
+          REPORT_TO_PROCESS="./sca-reports/frontend/retire-report-frontend.json"
+          if [[ -f "$REPORT_TO_PROCESS" ]]; then
+             echo "[DEBUG Summary] Processing report: $REPORT_TO_PROCESS" # DEBUG
+             process_report "$REPORT_TO_PROCESS" "frontend"
           else
-            printf -v FINAL_SUMMARY '\n---\n%s' "*Retire.js scan completed for frontend. No vulnerabilities detected.*"
-            COMMENT+="$FINAL_SUMMARY"
-            echo "No vulnerabilities found in frontend SCA."
-            echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT"
+             echo "[DEBUG Summary] Cannot process report, file not found: $REPORT_TO_PROCESS" # DEBUG
+             # Optionally add an error message to the comment here
+             COMMENT+="⚠️ Could not find the downloaded SCA report for frontend.\n\n"
+          fi
+          echo "[DEBUG Summary] Comment after process_report call: [$COMMENT]" # DEBUG
+          echo "[DEBUG Summary] VULNS_FOUND after process_report call: $VULNS_FOUND" # DEBUG
+
+
+          # --- Final Commenting Logic (Only adds the overall summary line) ---
+          # This logic now only appends the FINAL_SUMMARY based on VULNS_FOUND status.
+          if $VULNS_FOUND; then
+             # Vulnerabilities were found by process_report, COMMENT already has header + list
+             printf -v FINAL_SUMMARY '\n---\n%s' "*Please review the vulnerabilities listed above and update the dependencies.*"
+             COMMENT+="$FINAL_SUMMARY"
+             echo "[DEBUG Summary] Vulnerabilities found overall. Setting output."
+             echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
+          else
+             # No vulnerabilities were found by process_report, COMMENT already has header + success message (or error if file missing)
+             printf -v FINAL_SUMMARY '\n---\n%s' "*Retire.js scan completed for frontend. No vulnerabilities detected.*"
+             COMMENT+="$FINAL_SUMMARY"
+             echo "[DEBUG Summary] No vulnerabilities found overall. Setting output."
+             echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT"
           fi
 
+          # --- Log and Post Comment ---
           echo "--- Generated Comment (Frontend SCA) ---"
-          printf '%s\n' "$COMMENT"
+          printf '%s\n' "$COMMENT" # Log the final comment using printf to show newlines
           echo "--- End Comment ---"
 
+          # Post the final comment to the PR
+          echo "Posting comment to PR $PR_NUMBER..."
           gh api --method POST -H "Accept: application/vnd.github+json" \
             "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
             -f body="$COMMENT"
+          echo "Comment posted successfully."
 
       # Optional: Fail the workflow based on the summary step's findings
       - name: Fail if vulnerabilities found
