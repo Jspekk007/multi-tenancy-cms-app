@@ -104,7 +104,8 @@ jobs:
              echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
           else
              # Handle no vulnerabilities found case for the comment
-             COMMENT+="✅ Frontend SCA scan passed — no vulnerabilities found.\n\n" # Example
+             printf -v success_message '✅ Frontend SCA scan passed — no vulnerabilities found.\n\n'
+             COMMENT+="$success_message" # Append the string that now contains actual newlines
              printf -v FINAL_SUMMARY '\n---\n%s' "*Retire.js scan completed for frontend. No vulnerabilities detected.*"
              COMMENT+="$FINAL_SUMMARY" # Or construct a combined comment if needed
              echo "No vulnerabilities found in frontend SCA."
