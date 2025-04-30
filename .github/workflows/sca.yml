@@ -52,13 +52,13 @@ jobs:
       - name: Install Retire.js
         run: yarn global add retire@latest
 
-      # STEP 5: Set Report Filename (no changes needed)
+      # STEP 5: Set Report Filename
       - name: Set Report Filename
         id: set_paths
         run: |
           echo "report_filename=retire-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
-      # STEP 6: Run Retire.js Scan (no changes needed to the script logic)
+      # STEP 6: Run Retire.js Scan
       - name: Run Retire.js scan for ${{ inputs.scan-target }}
         id: retire_scan
         run: |
@@ -72,14 +72,13 @@ jobs:
             RUN_DIR="./frontend"
           fi
 
-          # This check should now pass because code was checked out
           if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
              echo "Error: Target directory '$RUN_DIR' not found after checkout."
              exit 1
           fi
 
           echo "Running retire scan in $RUN_DIR, outputting to $OUTPUT_PATH (relative to $RUN_DIR)"
-          (cd $RUN_DIR && retire "." --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true)
+          (cd $RUN_DIR && retire --nodepath "." --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true)
 
           if [[ -f "$RUN_DIR/$OUTPUT_PATH" ]]; then
             echo "Successfully created report file at $RUN_DIR/$OUTPUT_PATH"
@@ -87,7 +86,7 @@ jobs:
             echo "Warning: Report file $RUN_DIR/$OUTPUT_PATH was NOT created by retire."
           fi
 
-      # STEP 7: Determine Full Report Path (no changes needed)
+      # STEP 7: Determine Full Report Path
       - name: Determine Full Report Path
         id: report_full_path
         run: |
@@ -101,21 +100,42 @@ jobs:
           echo "full_path=$REPORT_FULL_PATH" >> $GITHUB_OUTPUT
           echo "Resolved full report path relative to root: $REPORT_FULL_PATH"
 
-      # STEP 8: Check Report Content (no changes needed)
+      # STEP 8: Check Report Content - *** COMPLETED LOGIC ***
       - name: Check Report Content
         id: check_report
         run: |
           REPORT_FILE="${{ steps.report_full_path.outputs.full_path }}"
-          VULNS_FOUND="false"
-          # ... (rest of checking logic) ...
+          VULNS_FOUND="false" # Default value
+
+          if [[ ! -f "$REPORT_FILE" ]]; then
+             echo "Check Report: File '$REPORT_FILE' not found. Assuming no vulnerabilities."
+          else
+             echo "Check Report: Found file '$REPORT_FILE'. Checking content..."
+             # Use jq to count the number of results that have a non-empty 'vulnerabilities' array.
+             # Handle potential missing .data field gracefully.
+             COUNT=$(jq 'if .data then [.data[].results[] | select(.vulnerabilities | length > 0)] | length else 0 end' "$REPORT_FILE")
+             JQ_EXIT_CODE=$? # Check jq exit status
+
+             if [[ $JQ_EXIT_CODE -ne 0 ]]; then
+               echo "Warning: jq command failed to parse '$REPORT_FILE' (exit code: $JQ_EXIT_CODE). Assuming no vulnerabilities."
+               # Keep VULNS_FOUND="false"
+             elif [[ "$COUNT" -gt 0 ]]; then
+               echo "Check Report: Found $COUNT vulnerabilities."
+               VULNS_FOUND="true" # Set to true if count is greater than 0
+             else
+               echo "Check Report: No vulnerabilities found in report content (count is $COUNT)."
+               # Keep VULNS_FOUND="false"
+             fi
+          fi
+          # Set the step output as a string "true" or "false"
           echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
 
-      # STEP 9: Set Artifact Name Output (no changes needed)
+      # STEP 9: Set Artifact Name Output
       - name: Set Artifact Name Output
         id: set_artifact_name
         run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
 
-      # STEP 10: Upload Artifact (no changes needed)
+      # STEP 10: Upload Artifact
       - name: Upload Retire.js Report (${{ inputs.scan-target }})
         uses: actions/upload-artifact@v4
         with:
