@@ -109,9 +109,8 @@ jobs:
       - name: Download Frontend SCA Report
         uses: actions/download-artifact@v4
         with:
-          # Use the output from the 'needs' context to get the exact artifact name
-          name: ${{ needs.frontend_sca.outputs.report-artifact-name }}
-          path: ./sca-reports/frontend # Download to a specific directory
+          name: frontend-retirejs-report
+          path: ./sca-reports/frontend
 
       # Step 4.2: Download SAST report artifact (Uncomment if frontend_sast job is active)
       # - name: Download Frontend SAST Report
