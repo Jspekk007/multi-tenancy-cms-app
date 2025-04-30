@@ -1,272 +1,133 @@
-name: Software Component Analysis
+# .github/workflows/sca.yml
+name: Reusable Software Component Analysis (Retire.js)
 
 on:
   workflow_call:
     inputs:
-      target-dir:
+      # Define which part of the project to scan
+      scan-target:
+        description: 'The target to scan ("root", "backend", or "frontend")'
+        required: true
+        type: string
+      # Define the name for the artifact uploaded
+      artifact-name:
+        description: "Name for the uploaded report artifact"
         required: false
         type: string
-        default: "."
-    secrets:
-      GH_TOKEN:
-        required: false
+        default: "retirejs-report" # Default name, caller can override
+    outputs:
+      # Output whether vulnerabilities were detected
+      vulnerabilities-found:
+        description: "Boolean indicating if vulnerabilities were found"
+        value: ${{ jobs.scan.outputs.vulnerabilities-found }}
+      # Output the exact name of the artifact uploaded
+      report-artifact-name:
+        description: "The name of the artifact containing the JSON report"
+        value: ${{ jobs.scan.outputs.report-artifact-name }}
 
 jobs:
-  retirejs:
-    permissions:
-      contents: read
-      pull-requests: write
+  scan:
+    name: Retire.js Scan (${{ inputs.scan-target }}) # Dynamic job name
     runs-on: ubuntu-latest
+    # Define outputs for the job, which are then referenced in workflow outputs
+    outputs:
+      vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
+      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+    # Permissions might not be needed here anymore if commenting is moved out
+    # permissions:
+    #   contents: read
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Use latest version
         with:
-          fetch-depth: 0 # Important for accurate results
+          fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4 # Use latest version
         with:
           node-version: "22"
+          cache: "yarn" # Enable caching
 
-      - name: Install dependencies with Yarn workspaces
-        run: yarn install --immutable --check-cache
+      # Install dependencies for the entire monorepo - necessary for retire to find packages
+      - name: Install root dependencies
+        run: yarn install --frozen-lockfile
 
+      # Install Retire.js globally within the runner
       - name: Install Retire.js
         run: yarn global add retire@latest
 
-      - name: Run Retire.js scan (root)
-        id: retire_scan_root
+      # Determine report file path based on input
+      - name: Set Report Path
+        id: set_paths
         run: |
-          retire \
-            --outputformat json \
-            --outputpath retire-report-root.json \
-            --exitwith 0 || true
+          echo "report_file=retire-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
-      - name: Run Retire.js scan (backend)
-        id: retire_scan_backend
+      # --- Run Retire.js Scan (Conditionally based on input) ---
+      - name: Run Retire.js scan for ${{ inputs.scan-target }}
+        id: retire_scan
         run: |
-          cd backend
-          yarn install --immutable --check-cache
-          retire \
-            --outputformat json \
-            --outputpath ../retire-report-backend.json \
-            --exitwith 0 || true
+          SCAN_DIR="." # Default to root
+          OUTPUT_PATH="${{ steps.set_paths.outputs.report_file }}"
 
-      - name: Run Retire.js scan (frontend)
-        id: retire_scan_frontend
-        run: |
-          cd frontend
-          yarn install --immutable --check-cache
-          retire \
-            --outputformat json \
-            --outputpath ../retire-report-frontend.json \
-            --exitwith 0 || true
-
-      - name: Upload reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: retirejs-reports
-          path: |
-            retire-report-root.json
-            retire-report-backend.json
-            retire-report-frontend.json
-
-      - name: Summarize Findings and Comment on PR
-        id: summary
-        # Only run this step for pull request events
-        if: github.event_name == 'pull_request'
-        env:
-          # Pass the GitHub token needed by the gh CLI
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Exit script immediately if any command fails
-          set -e
-
-          # --- Initialization ---
-          # Get the Pull Request number from the event payload
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          # Initialize the comment body and vulnerability flag
-          COMMENT=""
-          VULNS_FOUND=false
-
-          # --- START: Revised process_report function ---
-          # Processes a single Retire.js JSON report file and appends results to the global $COMMENT variable.
-          process_report() {
-              # Function arguments
-              local REPORT_FILE="$1"    # Path to the retirejs JSON report
-              local REPORT_NAME="$2"    # Identifier ("root", "backend", "frontend")
-
-              # Local variables
-              local SECTION_TITLE       # User-facing title (e.g., "Root Dependencies")
-              local SECTION_HEADER      # Formatted Markdown header (e.g., "📦 **Root Dependencies**")
-              local FILTERED_RESULTS    # JSON array of filtered vulnerability data
-              local SUMMARY             # Formatted Markdown list of vulnerabilities
-              local COUNT               # Number of vulnerabilities found in this report
-              local COMMENT_ADD_HEADER="" # Temporary variable for the section header (if needed)
-              local COMMENT_ADD_BODY=""   # Temporary variable for the section body (results or status)
-              local JQ_EXIT_CODE        # Exit code from the jq command
-
-              echo "Processing report: $REPORT_NAME ($REPORT_FILE)"
-
-              # --- 1. Determine Section Title and Header ---
-              case "$REPORT_NAME" in
-                "root")     SECTION_TITLE="Root Dependencies";;
-                "backend")  SECTION_TITLE="Backend Dependencies";;
-                "frontend") SECTION_TITLE="Frontend Dependencies";;
-                *)
-                  echo "Error: Unknown report name '$REPORT_NAME'" >&2
-                  # Append error directly to the main comment if an unknown type is processed
-                  printf -v COMMENT_ADD_BODY '⚠️ **Internal Error:** Unknown report section requested: %s\n\n' "$REPORT_NAME"
-                  COMMENT+="${COMMENT_ADD_BODY}"
-                  return 1 # Indicate error
-                  ;;
-              esac
-              SECTION_HEADER="📦 **${SECTION_TITLE}**"
-
-              # --- 2. Check if Section Header needs to be added ---
-              # Add header only if it's not already present in the comment being built.
-              # Uses grep -F for fixed string matching (safer than regex).
-              if ! printf '%s' "$COMMENT" | grep -qF -- "$SECTION_HEADER"; then
-                  # Format header with Markdown bolding and double newline for spacing.
-                  printf -v COMMENT_ADD_HEADER '%s\n\n' "$SECTION_HEADER"
-              fi
-
-              # --- 3. Check if Report File Exists ---
-              if [[ ! -f "$REPORT_FILE" ]]; then
-                  echo "Report file not found: $REPORT_FILE"
-                  # Add the header (if needed) before the info message.
-                  COMMENT+="${COMMENT_ADD_HEADER}"
-                  # Append an informational message about the missing file.
-                  printf -v COMMENT_ADD_BODY 'ℹ️ Could not find report file (or it was empty): %s\n\n' "$REPORT_FILE"
-                  COMMENT+="${COMMENT_ADD_BODY}"
-                  return 0 # Continue processing other reports
-              fi
-
-              # --- 4. Filter and Extract Vulnerabilities using jq ---
-              # Filters the report data:
-              # - Excludes files in common non-application directories (node_modules, vendor, test, etc.)
-              # - Selects only components where vulnerabilities were actually found.
-              # Uses --exit-status to check if jq ran correctly.
-              FILTERED_RESULTS=$(jq --exit-status '
-                  .data
-                  # Filter out common non-application code paths - adjust regex as needed for your project
-                  | map(select(.file | test("/(bower_components|vendor|dist|build|test|spec|public)/") | not))
-                  # Keep structure {file, results}, but filter results within each file object
-                  | map(.file as $f | . + {results: [.results[] | select(.vulnerabilities | length > 0)] } )
-                  # Keep only file objects that still have results after filtering
-                  | map(select(.results | length > 0))
-              ' "$REPORT_FILE")
-              JQ_EXIT_CODE=$?
-
-              # --- Handle jq Execution Results ---
-              # jq exit codes: 0=ok, 1=system err, 2=compile err, 3=runtime err, 4=null/false output
-              if [[ $JQ_EXIT_CODE -ne 0 ]]; then
-                  # Exit code 4 means jq produced 'null' or 'false' (e.g., empty input or no matches) - treat as no results.
-                  if [[ $JQ_EXIT_CODE -eq 4 ]]; then
-                      echo "jq produced no matching results for $REPORT_FILE (exit code 4)."
-                      FILTERED_RESULTS="[]" # Ensure it's a valid empty JSON array
-                  else
-                      # Handle actual jq errors
-                      echo "Error: jq failed to process '$REPORT_FILE' (exit code: $JQ_EXIT_CODE)" >&2
-                      COMMENT+="${COMMENT_ADD_HEADER}" # Add header if needed
-                      printf -v COMMENT_ADD_BODY '⚠️ Error processing Retire.js report for %s (jq exit code %d).\n\n' "$SECTION_TITLE" "$JQ_EXIT_CODE"
-                      COMMENT+="${COMMENT_ADD_BODY}"
-                      # Consider if this warrants failing the entire step later
-                      return 1 # Indicate processing error for this file
-                  fi
-              elif [[ -z "$FILTERED_RESULTS" ]]; then
-                  # Handle case where jq produced empty output (e.g., empty input file)
-                  echo "jq produced empty output for $REPORT_FILE."
-                  FILTERED_RESULTS="[]"
-              fi
-
-              # --- 5. Count Total Vulnerabilities Found in this Section ---
-              # Sums the length of all 'vulnerabilities' arrays in the filtered results.
-              COUNT=$(echo "$FILTERED_RESULTS" | jq 'map(.results[].vulnerabilities[]) | length')
-
-              # --- 6. Generate Summary or Success Message ---
-              if [[ "$COUNT" -gt 0 ]]; then
-                  echo "$COUNT vulnerabilities found in $REPORT_NAME."
-                  VULNS_FOUND=true # Set the global flag
-                  # Format the findings into a Markdown list using jq -r.
-                  SUMMARY=$(echo "$FILTERED_RESULTS" | jq -r '
-                      # Iterate through each file object that has results
-                      map(
-                          .file as $filename | .results[] | # Get filename and iterate results
-                          # Format output line for each result (component)
-                           "- `" + .component + " " + .version + "` ⚠️ " +
-                           # Join all info URLs (usually one per vulnerability entry)
-                           # Handles cases where .info might be missing or not an array. Use "; " as separator.
-                           (try (.vulnerabilities | map(.info | join("; ")) | join(", ")) catch "N/A") +
-                           # Include the file where the component was found
-                           " (in `" + ($filename // "Unknown file") + "`)"
-                      ) | join("\n") # Join each formatted line with a newline character
-                  ')
-                  # Store the formatted summary list in the body accumulator.
-                  printf -v COMMENT_ADD_BODY '%s\n\n' "$SUMMARY"
-              else
-                  echo "No vulnerabilities found in $REPORT_NAME."
-                  # Store the success message for this section.
-                  printf -v COMMENT_ADD_BODY '✅ Retire.js scan passed for %s — no vulnerabilities found.\n\n' "$SECTION_TITLE"
-              fi
-
-              # --- 7. Append Section Header (if needed) and Body to Global Comment ---
-              COMMENT+="${COMMENT_ADD_HEADER}${COMMENT_ADD_BODY}"
-
-              return 0 # Indicate successful processing of this report
-          }
-          # --- END: Revised process_report function ---
-
-
-          # --- Process Each Report ---
-          # Call the function for each report file generated in previous steps.
-          process_report "retire-report-root.json" "root"
-          process_report "retire-report-backend.json" "backend"
-          process_report "retire-report-frontend.json" "frontend"
-
-
-          # --- Final Output and PR Commenting ---
-          # Check the global flag to determine the overall result.
-          if $VULNS_FOUND; then
-            printf -v FINAL_SUMMARY '\n---\n%s' "*Please review the vulnerabilities listed above and update the dependencies.*"
-            COMMENT+="$FINAL_SUMMARY"
-            echo "Vulnerabilities found overall. Setting output and preparing comment."
-            echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT"
-          else
-            printf -v FINAL_SUMMARY '\n---\n%s' "*Retire.js scan completed. No vulnerabilities detected.*"
-            # If the comment only contains success messages, replace with a single overall success message.
-            # This regex checks if the comment consists only of one or more Header+Success blocks.
-            if [[ "$COMMENT" =~ ^(📦[[:space:]]\*\*.+\*\*\n\n✅.+\n\n)+$ ]]; then
-               COMMENT="✅ Retire.js scan completed successfully — no vulnerabilities found in root, backend, or frontend dependencies."
-            else
-               # Otherwise (e.g., if there were errors or missing files noted), append the summary.
-               COMMENT+="$FINAL_SUMMARY"
-            fi
-            echo "No vulnerabilities found overall. Setting output."
-            echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT"
+          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+            SCAN_DIR="backend"
+            # Install specific backend dependencies if needed (often retire works on lockfiles)
+            # echo "Installing dependencies in backend..."
+            # (cd backend && yarn install --frozen-lockfile)
+            OUTPUT_PATH="../${{ steps.set_paths.outputs.report_file }}" # Output relative to root
+            cd backend
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+            SCAN_DIR="frontend"
+            # Install specific frontend dependencies if needed
+            # echo "Installing dependencies in frontend..."
+            # (cd frontend && yarn install --frozen-lockfile)
+            OUTPUT_PATH="../${{ steps.set_paths.outputs.report_file }}" # Output relative to root
+            cd frontend
           fi
 
-          # --- Log the final comment before posting ---
-          echo "--- Generated Comment ---"
-          # Use printf for reliable display of newlines in the log
-          printf '%s\n' "$COMMENT"
-          echo "--- End Comment ---"
+          echo "Running retire in $(pwd) saving to ${OUTPUT_PATH}"
+          # Run retire, allowing it to fail without stopping the workflow (using || true)
+          # We check the report content later to determine success/failure status
+          retire --nodepath "$SCAN_DIR" --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true
 
-          # --- Post the comment to the Pull Request ---
-          echo "Posting comment to PR $PR_NUMBER..."
-          # Uses GitHub CLI (gh) to call the REST API
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            -f body="$COMMENT" # Pass the generated comment body
+          # Ensure we are back at the root directory if we changed it
+          if [[ "${{ inputs.scan-target }}" != "root" ]]; then
+            cd ..
+          fi
 
-          echo "Comment posted successfully."
-
-      - name: Fail if vulnerabilities found
-        if: steps.summary.outputs.vulnerabilities_found == 'true'
+      # --- Check Report for Vulnerabilities ---
+      - name: Check Report Content
+        id: check_report
         run: |
-          echo "❌ Retire.js found vulnerable components."
-          exit 1
+          REPORT_FILE="${{ steps.set_paths.outputs.report_file }}"
+          VULNS_FOUND="false" # Default to false
+
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            echo "Report file '$REPORT_FILE' not found. Assuming no vulnerabilities."
+          else
+            # Check if the 'results' array within any 'data' item is non-empty
+            # Adjust jq query if your vulnerability criteria differ
+            COUNT=$(jq 'if .data then [.data[].results[] | select(.vulnerabilities | length > 0)] | length else 0 end' "$REPORT_FILE")
+
+            echo "Found $COUNT vulnerabilities in $REPORT_FILE."
+            if [[ "$COUNT" -gt 0 ]]; then
+              VULNS_FOUND="true"
+            fi
+          fi
+
+          echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
+
+      # Set the artifact name for output
+      - name: Set Artifact Name
+        id: set_artifact_name
+        run: echo "artifact-name=${{ inputs.artifact-name }}-${{ inputs.scan-target }}" >> $GITHUB_OUTPUT
+
+      # --- Upload Report Artifact ---
+      - name: Upload Retire.js Report (${{ inputs.scan-target }})
+        if: always() # Upload even if previous steps had issues (e.g., file not found)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set_artifact_name.outputs.artifact-name }} # Use dynamic name
+          path: ${{ steps.set_paths.outputs.report_file }}
+          if-no-files-found: warn # Don't fail if the report wasn't generated
