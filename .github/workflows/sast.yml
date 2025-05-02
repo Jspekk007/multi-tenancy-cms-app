@@ -81,17 +81,14 @@ jobs:
           echo "Docker run finished with exit code: $docker_exit_code"
           echo "exit_code=$docker_exit_code" >> "$GITHUB_OUTPUT"
 
-      - name: Determine Outcome
-        id: determine_outcome
+      - name: Check TruffleHog findings from JSON
+        id: check-findings
         run: |
-          json_exit_code="${{ steps.run-json.outputs.exit_code }}"
-          echo "TruffleHog JSON scan (Docker) exited with code: $json_exit_code"
-
-          if [[ "$json_exit_code" -ne 0 && "${{ inputs.fails-on-secret }}" == "true" ]]; then
-            echo "Vulnerabilities found and fail-on-secret is true."
+          if [[ -s trufflehog-report.json && $(jq length trufflehog-report.json) -gt 0 ]]; then
+            echo "TruffleHog found potential secrets."
             echo "vulnerabilities-found=true" >> "$GITHUB_OUTPUT"
           else
-            echo "No blocking vulnerabilities found (or fail-on-secret is false)."
+            echo "No secrets found."
             echo "vulnerabilities-found=false" >> "$GITHUB_OUTPUT"
           fi
 
