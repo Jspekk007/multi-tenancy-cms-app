@@ -86,8 +86,8 @@ jobs:
     name: SAST Scan
     uses: ./.github/workflows/sast.yml
     with:
-      fails-on-secret: true
-      scan-history: false
+      scan-target: "frontend"
+      artifact-name: "frontend-sast-report"
     secrets: inherit
 
   # Job 4: Summarize SCA Results (and optionally SAST) and Comment on PR
@@ -115,7 +115,7 @@ jobs:
           path: ./sca-reports/frontend
 
       # Step 4.2: Download SAST report artifact (Uncomment if frontend_sast job is active)
-      - name: Download SAST Report
+      - name: Download Frontend SAST Report
         uses: actions/download-artifact@v4
         with:
           name: trufflehog-report
