@@ -60,7 +60,7 @@ jobs:
           fi
 
           echo "Running TruffleHog scan in $RUN_DIR"
-          pip install truffleHog==2.9.1 > /dev/null
+          pip install truffleHog==3.88.26 > /dev/null
           trufflehog --json "$RUN_DIR" > "$OUTPUT_PATH"
 
           if [[ -f "$OUTPUT_PATH" ]]; then
