@@ -32,7 +32,7 @@ jobs:
     name: TruffleHog Scan (Docker)
     runs-on: ubuntu-latest
     outputs:
-      vulnerabilities-found: ${{ steps.determine_outcome.outputs.vulnerabilities-found }}
+      vulnerabilities-found: ${{ steps.check-findings.outputs.vulnerabilities-found }}
       report-artifact-name: "trufflehog-report"
 
     defaults:
