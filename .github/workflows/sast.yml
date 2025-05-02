@@ -47,25 +47,48 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Trufflehog scan arguments
-        id: trufflehog-args
+      - name: Set up TruffleHog scan arguments
+        id:
+          trufflehog-args
+          # Explicitly use bash, although default is likely already bash
         run: |
-          ARGS="--json --output trufflehog-report.json --sarif --output trufflehog-report.sarif"
-          SCAN_MODE_ARGS="--base ${{ github.event.repository.default_branch }} --head HEAD"
+          # Start with base arguments
+          base_args="--json --output trufflehog-report.json --sarif --output trufflehog-report.sarif"
+          scan_mode_args=""
+          fail_arg=""
 
-          if [[ "${{ inputs.scan-history }}" == true ]]; then
-          echo "Full history scan requested"
-
-          SCAN_MODE_ARGS=""
-
-          if [[ "${{ inputs.fails-on-secret }}" == "true" ]]; then
-            ARGS=$ARGS --fail
-            echo "Workflow will fail if verified secrets are found (--fail enabled)"
+          # Determine scanning mode (history or diff)
+          if [[ "${{ inputs.scan-history }}" == "true" ]]; then
+            echo "Configuring for full history scan."
+            # For full history, we don't use base/head typically
+            scan_mode_args=""
           else
-            echo "Workflow will NOT fail if verified secrets are found (--fail disabled)"
+            echo "Configuring for diff scan against default branch."
+            # Quote the branch name just in case it has spaces or special chars
+            default_branch="${{ github.event.repository.default_branch }}"
+            scan_mode_args="--base \"$default_branch\" --head HEAD"
           fi
 
-          echo "scan_args=${ARGS} ${SCAN_MODE_ARGS}" >> $GITHUB_OUTPUT
+          # Determine if the --fail flag should be added
+          if [[ "${{ inputs.fails-on-secret }}" == "true" ]]; then
+            echo "Adding --fail flag."
+            fail_arg="--fail"
+          else
+            echo "Not adding --fail flag."
+          fi
+
+          # Combine all arguments
+          # Note: We need to handle potential empty strings carefully when combining
+          final_args="$base_args"
+          if [[ -n "$fail_arg" ]]; then
+            final_args="$final_args $fail_arg"
+          fi
+          if [[ -n "$scan_mode_args" ]]; then
+            final_args="$final_args $scan_mode_args"
+          fi
+
+          echo "Final computed args: $final_args"
+          echo "scan_args=$final_args" >> "$GITHUB_OUTPUT"
 
       - name: Run TruffleHog
         id: trufflehog
