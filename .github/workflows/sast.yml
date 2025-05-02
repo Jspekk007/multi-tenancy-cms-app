@@ -76,7 +76,7 @@ jobs:
         continue-on-error: true # Capture exit code even if trufflehog fails
         run: |
           # Specify the exact TruffleHog version tag you want to use
-          TRUFFLEHOG_VERSION="v3.77.0"
+          TRUFFLEHOG_VERSION="3.77.0"
           FAIL_ARG="${{ steps.prepare-args.outputs.fail_arg }}"
           # The scan target is '.' which refers to the working dir '/work' inside the container
           SCAN_TARGET="${{ steps.prepare-args.outputs.scan_mode_args }}"
