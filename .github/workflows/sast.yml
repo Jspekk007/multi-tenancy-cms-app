@@ -79,32 +79,11 @@ jobs:
             -v "${GITHUB_WORKSPACE}:/work" \
             -w "/work" \
             "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --format json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json
+            --json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json
 
           docker_exit_code=$?
           echo "Docker run finished with exit code: $docker_exit_code"
           echo "exit_code=$docker_exit_code" >> "$GITHUB_OUTPUT"
-
-      - name: Run TruffleHog via Docker (SARIF Output)
-        run: |
-          TRUFFLEHOG_DOCKER_TAG="3.88.26"
-          FAIL_ARG="${{ steps.prepare_args.outputs.fail_arg }}"
-          SCAN_TARGET="${{ steps.prepare_args.outputs.scan_mode_args }}"
-
-          echo "Running TruffleHog tag ${TRUFFLEHOG_DOCKER_TAG} via Docker for SARIF output..."
-          echo "Args passed to container entrypoint: --sarif $FAIL_ARG filesystem $SCAN_TARGET"
-
-          docker run --rm \
-            -v "${GITHUB_WORKSPACE}:/work" \
-            -w "/work" \
-            "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --format sarif $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.sarif
-
-          docker_exit_code=$?
-          if [[ $docker_exit_code -ne 0 ]]; then
-            echo "SARIF generation failed (Exit Code: $docker_exit_code). Creating empty SARIF file."
-            echo '{"version": "2.1.0", "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json", "runs": []}' > trufflehog-report.sarif
-          fi
 
       - name: Determine Outcome
         id: determine_outcome
