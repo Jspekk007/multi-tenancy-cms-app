@@ -41,7 +41,13 @@ jobs:
         run: |
           echo "report_filename=trufflehog-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
-      - name: Run TruffleHog
+      - name: Install TruffleHog v3 (binary)
+        run: |
+          curl -sSL https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog-linux-amd64 -o trufflehog
+          chmod +x trufflehog
+          sudo mv trufflehog /usr/local/bin/trufflehog
+
+      - name: Run TruffleHog v3 filesystem scan
         id: trufflehog_scan
         run: |
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
@@ -59,11 +65,9 @@ jobs:
              exit 1
           fi
 
-          echo "Installing TruffleHog v3..."
-          pip install --quiet trufflehog
-
           echo "Running TruffleHog v3 filesystem scan in $RUN_DIR"
-          trufflehog filesystem --path "$RUN_DIR" --json > "$OUTPUT_PATH"
+          trufflehog filesystem "$RUN_DIR" --json > "$OUTPUT_PATH"
+
           if [[ -f "$OUTPUT_PATH" ]]; then
             echo "Successfully created report at $OUTPUT_PATH"
           else
