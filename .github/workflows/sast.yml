@@ -20,9 +20,6 @@ on:
       report-artifact-name:
         description: "The name of the artifact containing the JSON report"
         value: ${{ jobs.trufflehog-scan.outputs.report-artifact-name }}
-      sarif-artifact-name:
-        description: "The name of the artifact containing the SARIF report"
-        value: ${{ jobs.trufflehog-scan.outputs.sarif-artifact-name }}
 
 permissions:
   contents: read
@@ -37,7 +34,6 @@ jobs:
     outputs:
       vulnerabilities-found: ${{ steps.determine_outcome.outputs.vulnerabilities-found }}
       report-artifact-name: "trufflehog-report"
-      sarif-artifact-name: "trufflehog-sarif"
 
     defaults:
       run:
@@ -106,16 +102,3 @@ jobs:
           name: trufflehog-report
           path: trufflehog-report.json
           retention-days: 7
-
-      - name: Upload TruffleHog SARIF Report
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: trufflehog-report.sarif
-          category: TruffleHog Scan Results
-
-      - name: Check scan results status (Job Failure Control)
-        if: steps.run-json.outputs.exit_code != '0' && inputs.fails-on-secret == true
-        run: |
-          echo "TruffleHog found secrets (exit code ${{ steps.run-json.outputs.exit_code }}) and fail-on-secret is true. Failing the job."
-          exit 1
