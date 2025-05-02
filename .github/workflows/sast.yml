@@ -1,7 +1,7 @@
 # .github/workflows/sast.yml
-# Reusable workflow for running SAST scan (e.g., semgrep) on frontend/backend
+# Reusable SAST workflow using TruffleHog, dynamically targets frontend/backend/root
 
-name: Reusable Static Analysis (SAST)
+name: Reusable SAST (TruffleHog)
 
 on:
   workflow_call:
@@ -11,48 +11,41 @@ on:
         required: true
         type: string
       artifact-name:
-        description: "Name for the uploaded SAST report artifact"
+        description: 'The desired name for the uploaded report artifact (e.g., "frontend-trufflehog-report")'
         required: true
         type: string
     outputs:
-      issues-found:
-        description: 'Boolean indicating if issues were found ("true" or "false")'
-        value: ${{ jobs.scan.outputs.issues-found }}
+      secrets-found:
+        description: 'Boolean indicating if secrets were found ("true" or "false")'
+        value: ${{ jobs.sast.outputs.secrets-found }}
       report-artifact-name:
         description: "The actual name of the artifact uploaded"
-        value: ${{ jobs.scan.outputs.report-artifact-name }}
+        value: ${{ jobs.sast.outputs.report-artifact-name }}
 
 jobs:
-  scan:
-    name: SAST Scan (${{ inputs.scan-target }})
+  sast:
+    name: TruffleHog Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
     outputs:
-      issues-found: ${{ steps.check_report.outputs.issues-found }}
+      secrets-found: ${{ steps.check_report.outputs.secrets-found }}
       report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "yarn"
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+          fetch-depth: 0
 
       - name: Set Report Filename
         id: set_paths
         run: |
-          echo "report_filename=sast-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
+          echo "report_filename=trufflehog-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
-      - name: Run SAST Scan (semgrep)
-        id: run_sast
+      - name: Run TruffleHog
+        id: trufflehog_scan
         run: |
-          yarn global add semgrep
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
+          OUTPUT_PATH="./$REPORT_FILENAME"
           RUN_DIR="."
 
           if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
@@ -61,52 +54,53 @@ jobs:
             RUN_DIR="./frontend"
           fi
 
-          OUTPUT_PATH="$RUN_DIR/$REPORT_FILENAME"
-
-          if [[ ! -d "$RUN_DIR" ]]; then
-            echo "Error: $RUN_DIR not found."
-            exit 1
+          if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
+             echo "Error: Target directory '$RUN_DIR' not found after checkout."
+             exit 1
           fi
 
-          echo "Running semgrep in $RUN_DIR, outputting to $OUTPUT_PATH"
-          semgrep --config=auto --json --output "$OUTPUT_PATH" "$RUN_DIR" || true
+          echo "Running TruffleHog scan in $RUN_DIR"
+          pip install trufflehog > /dev/null
+          trufflehog filesystem "$RUN_DIR" --json > "$OUTPUT_PATH"
+
+          if [[ -f "$OUTPUT_PATH" ]]; then
+            echo "Successfully created report at $OUTPUT_PATH"
+          else
+            echo "Warning: TruffleHog report was not created."
+          fi
 
       - name: Determine Full Report Path
         id: report_full_path
         run: |
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          REPORT_FULL_PATH="$REPORT_FILENAME"
-          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-             REPORT_FULL_PATH="backend/$REPORT_FILENAME"
-          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-             REPORT_FULL_PATH="frontend/$REPORT_FILENAME"
-          fi
-          echo "full_path=$REPORT_FULL_PATH" >> $GITHUB_OUTPUT
+          FULL_PATH="$REPORT_FILENAME"
+          echo "full_path=$FULL_PATH" >> $GITHUB_OUTPUT
 
       - name: Check Report Content
         id: check_report
         run: |
-          REPORT_FILE="${{ steps.report_full_path.outputs.full_path }}"
-          ISSUES_FOUND="false"
+          FILE="${{ steps.report_full_path.outputs.full_path }}"
+          SECRETS_FOUND="false"
 
-          if [[ ! -f "$REPORT_FILE" ]]; then
-             echo "Report file not found. Assuming no issues."
+          if [[ -f "$FILE" ]]; then
+            COUNT=$(jq -s 'map(select(.SourceMetadata)) | length' "$FILE")
+            if [[ "$COUNT" -gt 0 ]]; then
+              echo "Secrets found: $COUNT"
+              SECRETS_FOUND="true"
+            else
+              echo "No secrets found."
+            fi
           else
-             COUNT=$(jq '.results | length' "$REPORT_FILE")
-             if [[ "$COUNT" -gt 0 ]]; then
-               echo "Found $COUNT issues in SAST report."
-               ISSUES_FOUND="true"
-             else
-               echo "No issues found in SAST report."
-             fi
+            echo "Report file not found."
           fi
-          echo "issues-found=$ISSUES_FOUND" >> $GITHUB_OUTPUT
+
+          echo "secrets-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
       - name: Set Artifact Name Output
         id: set_artifact_name
         run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
 
-      - name: Upload SAST Report
+      - name: Upload TruffleHog Report (${{ inputs.scan-target }})
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.set_artifact_name.outputs.artifact-name }}
