@@ -101,7 +101,7 @@ jobs:
       - name: Run TruffleHog via Docker (SARIF Output)
         # Always run this to generate the report
         run: |
-          TRUFFLEHOG_VERSION="v3.77.0" # Use the same version
+          TRUFFLEHOG_VERSION="3.77.0" # Use the same version
           FAIL_ARG="${{ steps.prepare-args.outputs.fail_arg }}"
           SCAN_TARGET="${{ steps.prepare-args.outputs.scan_mode_args }}"
 
