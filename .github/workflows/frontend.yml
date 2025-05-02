@@ -83,6 +83,7 @@ jobs:
     with:
       fails-on-secret: true
       scan-history: false
+    secrets: inherit
 
   # Job 4: Summarize SCA Results (and optionally SAST) and Comment on PR
   summarize_sca: # Rename to summarize_security_scans if including SAST
