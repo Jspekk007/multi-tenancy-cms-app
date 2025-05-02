@@ -1,19 +1,113 @@
-# name: Static Application Security Testing
+name: Static Application Security Testing
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
-#       - develop
-#   push:
-#     branches:
-#       - main
-#       - develop
+on:
+  workflow_call:
+    inputs:
+      fails-on-secret:
+        description: "Fail the workflow if verified secrets are found"
+        required: false
+        type: boolean
+        default: true
+      scan-history:
+        description: "Scan the full git history (slower, more thorough)"
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      vulnerabilities-found:
+        description: 'Boolean indicating if vulnerabilities were found ("true" of "false")'
+        value: ${{ jobs.trufflehog-scan.outputs.vulnerabilities-found }}
+      report-artifact-name:
+        description: "The name of the artifact containing the JSON report"
+        value: ${{ jobs.trufflehog-scan.outputs.report-artifact-name }}
+      sarif-artifact-name:
+        description: "The name of the artifact containing the SARIF report"
+        value: ${{ jobs.trufflehog-scan.outputs.sarif-artifact-name }}
 
-# jobs:
-#   trufflehog:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Run TruffleHog scan
-#         run: |
-#           docker run -v $(pwd):/src --rm hysnsec/trufflehog filesystem /src --fail --json | tee trufflehog-output.json
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  trufflehog-scan:
+    runs-on: ubuntu-latest
+    outputs:
+      vulnerabilities-found: ${{ steps.trufflehog.outputs.vulnerabilities-found }}
+      report-artifact-name: "trufflehog-report"
+      sarif-artifact-name: "trufflehog-sarif"
+
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Trufflehog scan arguments
+        id: trufflehog-args
+        run: |
+          ARGS="--json --output trufflehog-report.json --sarif --output trufflehog-report.sarif"
+          SCAN_MODE_ARGS="--base ${{ github.event.repository.default_branch }} --head HEAD"
+
+          if [[ "${{ inputs.scan-history }}" == true ]]; then
+          echo "Full history scan requested"
+
+          SCAN_MODE_ARGS=""
+
+          if [[ "${{ inputs.fails-on-secret }}" == "true" ]]; then
+            ARGS=$ARGS --fail
+            echo "Workflow will fail if verified secrets are found (--fail enabled)"
+          else
+            echo "Workflow will NOT fail if verified secrets are found (--fail disabled)"
+          fi
+
+          echo "scan_args=${ARGS} ${SCAN_MODE_ARGS}" >> $GITHUB_OUTPUT
+
+      - name: Run TruffleHog
+        id: trufflehog
+        uses: trufflesecurity/trufflehog@v3.77.0
+        continue-on-error: true
+        with:
+          path: ./
+          extra_args: ${{ steps.trufflehog-args.outputs.scan_args}}
+
+      - name: Determine if vulnerabilities were found
+        run: |
+          if [[ "${{ steps.trufflehog.outcome }}" == "failure" ]]; then
+            echo "Vulnerabilities found by Trufflehog"
+            echo "vulnerabilities-found=true" >> $GITHUB_OUTPUT
+          else
+            echo "No vulnerabilities found by TruffleHog, or --fail was disabled and findings occurred"
+            echo "vulnerabilities-found=false" >> $GITHUB_OUTPUT
+          fi
+        id: vulnerabilities-check
+
+      - name: Set job output
+        run: |
+          echo "Setting job output: vulnerabilities-found-${{ steps.vulnerabilities-check.outputs.vulnerabilities-found }}"
+
+      - name: Upload TruffleHog JSON Report as Artifact
+        uses: actions/upload-artifact@v4
+        if: always() # Always upload the report
+        with:
+          name: "trufflehog-report"
+          path: trufflehog-report.json
+          retention-days: 7
+
+      - name: Upload TruffleHog SARIF Report as Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trufflehog-sarif
+          path: trufflehog-report.sarif
+          retention-days: 7
+
+      - name: Check scan results status (Job Failure Control)
+        if: steps.trufflehog.outcome == 'failure' && inputs.fails-on-secret == true
+        run: |
+          echo "TruffleHog found secrets and fail-on-secret is true. Failing the workflow job"
+          exit 1
