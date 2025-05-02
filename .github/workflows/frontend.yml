@@ -76,17 +76,13 @@ jobs:
       artifact-name: "frontend-retirejs-report"
     secrets: inherit
 
-  # Job 3: Call the Reusable SAST Workflow (Placeholder - uncomment and adapt if you have sast.yml)
-  # frontend_sast:
-  #   name: Frontend SAST Scan
-  #   runs-on: ubuntu-latest
-  #   needs: build_and_lint
-  #   uses: ./.github/workflows/sast.yml # Path to your reusable SAST workflow
-  #   with:
-  #     scan-target: "frontend"
-  #     artifact-name: "frontend-sast-report" # Example artifact name
-  #     # Add other inputs required by sast.yml
-  #   secrets: inherit
+  frontend_sast:
+    name: SAST Scan
+    needs: build_and_lint
+    uses: ./.github/workflows/sast.yml
+    with:
+      fails-on-secret: true
+      scan-history: false
 
   # Job 4: Summarize SCA Results (and optionally SAST) and Comment on PR
   summarize_sca: # Rename to summarize_security_scans if including SAST
