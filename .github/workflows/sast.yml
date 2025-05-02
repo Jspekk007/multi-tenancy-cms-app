@@ -15,7 +15,7 @@ on:
         default: false
     outputs:
       vulnerabilities-found:
-        description: 'Boolean indicating if vulnerabilities were found ("true" of "false")'
+        description: 'Boolean indicating if vulnerabilities were found ("true" or "false")'
         value: ${{ jobs.trufflehog-scan.outputs.vulnerabilities-found }}
       report-artifact-name:
         description: "The name of the artifact containing the JSON report"
@@ -32,7 +32,7 @@ permissions:
 
 jobs:
   trufflehog-scan:
-    name: TruffleHog Scan (Docker) # Updated name for clarity
+    name: TruffleHog Scan (Docker)
     runs-on: ubuntu-latest
     outputs:
       vulnerabilities-found: ${{ steps.determine_outcome.outputs.vulnerabilities-found }}
@@ -49,13 +49,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      # This step remains largely the same, but scan_mode_args will be '.' for Docker context
       - name: Prepare Scan Arguments
         id: prepare_args
         run: |
           fail_arg=""
-
-          # Determine if the --fail flag should be added
           if [[ "${{ inputs.fails-on-secret }}" == "true" ]]; then
             echo "Adding --fail flag for TruffleHog."
             fail_arg="--fail"
@@ -63,11 +60,7 @@ jobs:
             echo "Not adding --fail flag."
           fi
 
-          # When running in Docker, we mount the workspace and scan '.' inside the container
           scan_mode_args="."
-          echo "Scan target inside container set to: $scan_mode_args"
-
-          # Output the arguments for subsequent steps
           echo "scan_mode_args=$scan_mode_args" >> "$GITHUB_OUTPUT"
           echo "fail_arg=$fail_arg" >> "$GITHUB_OUTPUT"
 
@@ -78,19 +71,17 @@ jobs:
           TRUFFLEHOG_DOCKER_TAG="3.77.0"
           FAIL_ARG="${{ steps.prepare_args.outputs.fail_arg }}"
           SCAN_TARGET="${{ steps.prepare_args.outputs.scan_mode_args }}"
-          docker_exit_code=1 # Default to failure
 
           echo "Running TruffleHog tag ${TRUFFLEHOG_DOCKER_TAG} via Docker for JSON output..."
-          # Note: Command args start with flags/subcommand, not 'trufflehog' itself
           echo "Args passed to container entrypoint: --json $FAIL_ARG filesystem $SCAN_TARGET"
 
           docker run --rm \
             -v "${GITHUB_WORKSPACE}:/work" \
             -w "/work" \
             "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json # No 'trufflehog' here
-          docker_exit_code=$?
+            --json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json
 
+          docker_exit_code=$?
           echo "Docker run finished with exit code: $docker_exit_code"
           echo "exit_code=$docker_exit_code" >> "$GITHUB_OUTPUT"
 
@@ -99,46 +90,36 @@ jobs:
           TRUFFLEHOG_DOCKER_TAG="3.77.0"
           FAIL_ARG="${{ steps.prepare_args.outputs.fail_arg }}"
           SCAN_TARGET="${{ steps.prepare_args.outputs.scan_mode_args }}"
-          docker_exit_code=1 # Default to failure
 
           echo "Running TruffleHog tag ${TRUFFLEHOG_DOCKER_TAG} via Docker for SARIF output..."
-          # Note: Command args start with flags/subcommand, not 'trufflehog' itself
           echo "Args passed to container entrypoint: --sarif $FAIL_ARG filesystem $SCAN_TARGET"
 
           docker run --rm \
             -v "${GITHUB_WORKSPACE}:/work" \
             -w "/work" \
             "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --sarif $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.sarif # No 'trufflehog' here
-          docker_exit_code=$?
-          echo "SARIF generation command finished with exit code $docker_exit_code."
+            --sarif $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.sarif
 
-          # Handle potential failure (same logic as before)
+          docker_exit_code=$?
           if [[ $docker_exit_code -ne 0 ]]; then
-            echo "SARIF generation failed (Exit Code: $docker_exit_code). Creating empty valid SARIF file."
+            echo "SARIF generation failed (Exit Code: $docker_exit_code). Creating empty SARIF file."
             echo '{"version": "2.1.0", "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json", "runs": []}' > trufflehog-report.sarif
-            exit 0
           fi
 
-      # This step remains the same - checks the exit code from the 'run-json' step
       - name: Determine Outcome
         id: determine_outcome
         run: |
-          json_exit_code=${{ steps.run-json.outputs.exit_code }}
+          json_exit_code="${{ steps.run-json.outputs.exit_code }}"
           echo "TruffleHog JSON scan (Docker) exited with code: $json_exit_code"
-          # Logic based on exit code and input remains the same...
+
           if [[ "$json_exit_code" -ne 0 && "${{ inputs.fails-on-secret }}" == "true" ]]; then
             echo "Vulnerabilities found and fail-on-secret is true."
             echo "vulnerabilities-found=true" >> "$GITHUB_OUTPUT"
-          elif [[ "$json_exit_code" -ne 0 && "${{ inputs.fails-on-secret }}" == "false" ]]; then
-             echo "Vulnerabilities found but fail-on-secret is false. Report generated."
-             echo "vulnerabilities-found=false" >> "$GITHUB_OUTPUT" # Report false as job shouldn't fail
           else
-            echo "No vulnerabilities found or --fail not used / triggered."
+            echo "No blocking vulnerabilities found (or fail-on-secret is false)."
             echo "vulnerabilities-found=false" >> "$GITHUB_OUTPUT"
           fi
 
-      # Upload steps remain the same
       - name: Upload TruffleHog JSON Report as Artifact
         uses: actions/upload-artifact@v4
         if: always()
@@ -154,9 +135,8 @@ jobs:
           sarif_file: trufflehog-report.sarif
           category: TruffleHog Scan Results
 
-      # Failure control step remains the same - checks the exit code from 'run-json'
       - name: Check scan results status (Job Failure Control)
         if: steps.run-json.outputs.exit_code != '0' && inputs.fails-on-secret == true
         run: |
-          echo "TruffleHog found secrets (exit code ${{ steps.run-json.outputs.exit_code }}) via Docker and fail-on-secret is true. Failing the workflow job."
+          echo "TruffleHog found secrets (exit code ${{ steps.run-json.outputs.exit_code }}) and fail-on-secret is true. Failing the job."
           exit 1
