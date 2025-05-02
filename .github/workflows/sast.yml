@@ -1,101 +1,114 @@
-name: Static Application Security Testing
+# .github/workflows/sast.yml
+# Reusable workflow for running SAST scan (e.g., semgrep) on frontend/backend
+
+name: Reusable Static Analysis (SAST)
 
 on:
   workflow_call:
     inputs:
-      fails-on-secret:
-        description: "Fail the workflow if verified secrets are found"
-        required: false
-        type: boolean
-        default: true
-      scan-history:
-        description: "Scan the full git history (slower, more thorough)"
-        required: false
-        type: boolean
-        default: false
+      scan-target:
+        description: 'The target to scan ("root", "backend", or "frontend")'
+        required: true
+        type: string
+      artifact-name:
+        description: "Name for the uploaded SAST report artifact"
+        required: true
+        type: string
     outputs:
-      vulnerabilities-found:
-        description: 'Boolean indicating if vulnerabilities were found ("true" or "false")'
-        value: ${{ jobs.trufflehog-scan.outputs.vulnerabilities-found }}
+      issues-found:
+        description: 'Boolean indicating if issues were found ("true" or "false")'
+        value: ${{ jobs.scan.outputs.issues-found }}
       report-artifact-name:
-        description: "The name of the artifact containing the JSON report"
-        value: ${{ jobs.trufflehog-scan.outputs.report-artifact-name }}
-
-permissions:
-  contents: read
-  id-token: write
-  issues: write
-  pull-requests: write
+        description: "The actual name of the artifact uploaded"
+        value: ${{ jobs.scan.outputs.report-artifact-name }}
 
 jobs:
-  trufflehog-scan:
-    name: TruffleHog Scan (Docker)
+  scan:
+    name: SAST Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
     outputs:
-      vulnerabilities-found: ${{ steps.check-findings.outputs.vulnerabilities-found }}
-      report-artifact-name: "trufflehog-report"
-
-    defaults:
-      run:
-        shell: bash
+      issues-found: ${{ steps.check_report.outputs.issues-found }}
+      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 0
+          node-version: "22"
+          cache: "yarn"
 
-      - name: Prepare Scan Arguments
-        id: prepare_args
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Set Report Filename
+        id: set_paths
         run: |
-          fail_arg=""
-          if [[ "${{ inputs.fails-on-secret }}" == "true" ]]; then
-            echo "Adding --fail flag for TruffleHog."
-            fail_arg="--fail"
-          else
-            echo "Not adding --fail flag."
+          echo "report_filename=sast-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
+
+      - name: Run SAST Scan (semgrep)
+        id: run_sast
+        run: |
+          yarn global add semgrep
+          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
+          RUN_DIR="."
+
+          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+            RUN_DIR="./backend"
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+            RUN_DIR="./frontend"
           fi
 
-          scan_mode_args="."
-          echo "scan_mode_args=$scan_mode_args" >> "$GITHUB_OUTPUT"
-          echo "fail_arg=$fail_arg" >> "$GITHUB_OUTPUT"
+          OUTPUT_PATH="$RUN_DIR/$REPORT_FILENAME"
 
-      - name: Run TruffleHog via Docker (JSON Output)
-        id: run-json
-        continue-on-error: true
-        run: |
-          TRUFFLEHOG_DOCKER_TAG="3.88.26"
-          FAIL_ARG="${{ steps.prepare_args.outputs.fail_arg }}"
-          SCAN_TARGET="${{ steps.prepare_args.outputs.scan_mode_args }}"
-
-          echo "Running TruffleHog tag ${TRUFFLEHOG_DOCKER_TAG} via Docker for JSON output..."
-          echo "Args passed to container entrypoint: --json $FAIL_ARG filesystem $SCAN_TARGET"
-
-          docker run --rm \
-            -v "${GITHUB_WORKSPACE}:/work" \
-            -w "/work" \
-            "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json
-
-          docker_exit_code=$?
-          echo "Docker run finished with exit code: $docker_exit_code"
-          echo "exit_code=$docker_exit_code" >> "$GITHUB_OUTPUT"
-
-      - name: Check TruffleHog findings from JSON
-        id: check-findings
-        run: |
-          if [[ -s trufflehog-report.json && $(jq length trufflehog-report.json) -gt 0 ]]; then
-            echo "TruffleHog found potential secrets."
-            echo "vulnerabilities-found=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "No secrets found."
-            echo "vulnerabilities-found=false" >> "$GITHUB_OUTPUT"
+          if [[ ! -d "$RUN_DIR" ]]; then
+            echo "Error: $RUN_DIR not found."
+            exit 1
           fi
 
-      - name: Upload TruffleHog JSON Report as Artifact
+          echo "Running semgrep in $RUN_DIR, outputting to $OUTPUT_PATH"
+          semgrep --config=auto --json --output "$OUTPUT_PATH" "$RUN_DIR" || true
+
+      - name: Determine Full Report Path
+        id: report_full_path
+        run: |
+          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
+          REPORT_FULL_PATH="$REPORT_FILENAME"
+          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+             REPORT_FULL_PATH="backend/$REPORT_FILENAME"
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+             REPORT_FULL_PATH="frontend/$REPORT_FILENAME"
+          fi
+          echo "full_path=$REPORT_FULL_PATH" >> $GITHUB_OUTPUT
+
+      - name: Check Report Content
+        id: check_report
+        run: |
+          REPORT_FILE="${{ steps.report_full_path.outputs.full_path }}"
+          ISSUES_FOUND="false"
+
+          if [[ ! -f "$REPORT_FILE" ]]; then
+             echo "Report file not found. Assuming no issues."
+          else
+             COUNT=$(jq '.results | length' "$REPORT_FILE")
+             if [[ "$COUNT" -gt 0 ]]; then
+               echo "Found $COUNT issues in SAST report."
+               ISSUES_FOUND="true"
+             else
+               echo "No issues found in SAST report."
+             fi
+          fi
+          echo "issues-found=$ISSUES_FOUND" >> $GITHUB_OUTPUT
+
+      - name: Set Artifact Name Output
+        id: set_artifact_name
+        run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
+
+      - name: Upload SAST Report
         uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: trufflehog-report
-          path: trufflehog-report.json
-          retention-days: 7
+          name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+          path: ${{ steps.report_full_path.outputs.full_path }}
+          if-no-files-found: warn

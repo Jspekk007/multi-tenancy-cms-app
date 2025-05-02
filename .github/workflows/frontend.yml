@@ -254,17 +254,17 @@ jobs:
           fi
 
           # --- Process Downloaded SAST Report (Uncomment if frontend_sast job is active) ---
-          # echo "[DEBUG Summary] Checking for downloaded SAST report file..."
-          # ls -lR ./sast-reports/ # Verify download directory content
-          # SAST_REPORT_TO_PROCESS="./sast-reports/frontend/sast-report-frontend.json" # Adjust filename
-          # if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
-          #    echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
-          #    # You might need a different process_report function or logic for SAST results
-          #    # process_sast_report "$SAST_REPORT_TO_PROCESS" "frontend"
-          # else
-          #    echo "[DEBUG Summary] Cannot process SAST report, file not found: $SAST_REPORT_TO_PROCESS"
-          #    COMMENT+="⚠️ Could not find the downloaded SAST report for frontend.\n\n"
-          # fi
+          echo "[DEBUG Summary] Checking for downloaded SAST report file..."
+          ls -lR ./sast-reports/ # Verify download directory content
+          SAST_REPORT_TO_PROCESS="./sast-reports/frontend/sast-report-frontend.json" # Adjust filename
+          if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
+             echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
+             # You might need a different process_report function or logic for SAST results
+             # process_sast_report "$SAST_REPORT_TO_PROCESS" "frontend"
+          else
+             echo "[DEBUG Summary] Cannot process SAST report, file not found: $SAST_REPORT_TO_PROCESS"
+             COMMENT+="⚠️ Could not find the downloaded SAST report for frontend.\n\n"
+          fi
 
           echo "[DEBUG Summary] Comment after processing all reports: [$COMMENT]"
           echo "[DEBUG Summary] OVERALL_VULNS_FOUND after processing all reports: $OVERALL_VULNS_FOUND"
