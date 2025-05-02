@@ -61,7 +61,7 @@ jobs:
 
           echo "Running TruffleHog scan in $RUN_DIR"
           pip install trufflehog > /dev/null
-          trufflehog filesystem "$RUN_DIR" --json > "$OUTPUT_PATH"
+          trufflehog filesystem --path="$RUN_DIR" --json > "$OUTPUT_PATH"
 
           if [[ -f "$OUTPUT_PATH" ]]; then
             echo "Successfully created report at $OUTPUT_PATH"
