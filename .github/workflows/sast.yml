@@ -79,7 +79,7 @@ jobs:
             -v "${GITHUB_WORKSPACE}:/work" \
             -w "/work" \
             "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json
+            --format json $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.json
 
           docker_exit_code=$?
           echo "Docker run finished with exit code: $docker_exit_code"
@@ -98,7 +98,7 @@ jobs:
             -v "${GITHUB_WORKSPACE}:/work" \
             -w "/work" \
             "trufflesecurity/trufflehog:${TRUFFLEHOG_DOCKER_TAG}" \
-            --sarif $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.sarif
+            --format sarif $FAIL_ARG filesystem $SCAN_TARGET > trufflehog-report.sarif
 
           docker_exit_code=$?
           if [[ $docker_exit_code -ne 0 ]]; then
