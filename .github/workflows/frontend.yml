@@ -23,6 +23,13 @@ on:
       - ".github/workflows/sca.yml"
       - ".github/workflows/sast.yml"
 
+# Add permissions at the workflow level
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+  pull-requests: write
+
 jobs:
   # Job 1: Setup, Install Dependencies, Build, Lint, and Cache
   build_and_lint:
