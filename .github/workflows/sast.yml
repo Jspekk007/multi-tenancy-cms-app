@@ -55,7 +55,9 @@ jobs:
         uses: trufflesecurity/trufflehog@main
         with:
           path: ${{ steps.set_paths.outputs.scan_dir }}
-          extra_args: --results=verified,unknown
+          base: ${{ github.event.repository.default_branch }}
+          head: ${{ github.sha }}
+          extra_args: --results=verified,unknown --history
         continue-on-error: true
 
       - name: Check Report Content
