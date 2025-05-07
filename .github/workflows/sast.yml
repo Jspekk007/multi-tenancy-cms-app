@@ -90,8 +90,6 @@ jobs:
             --json \
             --debug \
             --only-verified \
-            --no-history \
-            --no-verification \
             --fail-on-verified > "$OUTPUT_PATH"
 
           # Verify report creation on the host
