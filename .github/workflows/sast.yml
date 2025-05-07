@@ -56,7 +56,7 @@ jobs:
         with:
           path: ${{ steps.set_paths.outputs.scan_dir }}
           base: ${{ github.event.repository.default_branch }}
-          head: ${{ github.sha }}
+          head: HEAD
           extra_args: --debug --only-verified
         continue-on-error: true
 
