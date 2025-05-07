@@ -81,8 +81,8 @@ jobs:
           ls -la "$ABS_SCAN_DIR"
 
           # Debug: Show the contents of the test-secret file
-          echo "Contents of test-secret.txt:"
-          cat "$ABS_SCAN_DIR/test-secret.txt"
+          echo "Contents of test-secret.env:"
+          cat "$ABS_SCAN_DIR/test-secret.env"
 
           # Using a specific version of TruffleHog known for good GitHub token detection
           docker run --rm \
