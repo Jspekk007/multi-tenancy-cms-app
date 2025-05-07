@@ -90,7 +90,6 @@ jobs:
             --json \
             --debug \
             --only-verified \
-            --detectors all \
             --no-history \
             --no-verification \
             --fail-on-verified > "$OUTPUT_PATH"
