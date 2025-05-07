@@ -71,7 +71,7 @@ jobs:
           ABS_SCAN_DIR="$(realpath "$SCAN_DIR")"
           ABS_OUTPUT_DIR="$(realpath .)" # Resolves to GITHUB_WORKSPACE
 
-          echo "Running TruffleHog v3 filesystem scan using trufflesecurity/trufflehog:v3.30.0."
+          echo "Running TruffleHog v3 filesystem scan using trufflesecurity/trufflehog:v3.25.0."
           echo "Host scan directory (absolute): $ABS_SCAN_DIR (mounted to /src in container)"
           echo "Host output directory (absolute): $ABS_OUTPUT_DIR (mounted to /output in container)"
           echo "TruffleHog output will be redirected via sh -c to /output/$REPORT_FILENAME inside the container."
@@ -88,7 +88,7 @@ jobs:
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
-            trufflesecurity/trufflehog:v3.30.0 \
+            trufflesecurity/trufflehog:v3.25.0 \
             filesystem /src \
             --fail \
             --json \
