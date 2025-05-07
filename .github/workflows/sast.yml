@@ -71,7 +71,7 @@ jobs:
           ABS_SCAN_DIR="$(realpath "$SCAN_DIR")"
           ABS_OUTPUT_DIR="$(realpath .)" # Resolves to GITHUB_WORKSPACE
 
-          echo "Running TruffleHog v3 filesystem scan using ghcr.io/trufflesecurity/trufflehog:latest."
+          echo "Running TruffleHog v3 filesystem scan using trufflesecurity/trufflehog:v3.34.0."
           echo "Host scan directory (absolute): $ABS_SCAN_DIR (mounted to /src in container)"
           echo "Host output directory (absolute): $ABS_OUTPUT_DIR (mounted to /output in container)"
           echo "TruffleHog output will be redirected via sh -c to /output/$REPORT_FILENAME inside the container."
@@ -84,11 +84,11 @@ jobs:
           echo "Contents of test-secret.txt:"
           cat "$ABS_SCAN_DIR/test-secret.txt"
 
-          # Using ghcr.io/trufflesecurity/trufflehog:latest with core detection
+          # Using a specific version of TruffleHog known for good GitHub token detection
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
-            ghcr.io/trufflesecurity/trufflehog:latest \
+            trufflesecurity/trufflehog:v3.34.0 \
             filesystem /src \
             --fail \
             --json \
