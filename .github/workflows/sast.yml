@@ -47,6 +47,9 @@ jobs:
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
           OUTPUT_PATH="./$REPORT_FILENAME"
           SCAN_TARGET="${{ inputs.scan-target }}"
+          RUN_DIR=${RUN_DIR:-"."}
+
+          echo "$RUN_DIR"
 
           if [[ "$SCAN_TARGET" == "backend" ]]; then
             RUN_DIR="./backend"
@@ -54,6 +57,9 @@ jobs:
             RUN_DIR="./frontend"
           elif [[ "$SCAN_TARGET"== "root" ]]; then
             RUN_DIR="."
+          else
+            echo "Error: Invalid scan target '$SCAN_TARGET'"
+            exit 1
           fi
 
           if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
