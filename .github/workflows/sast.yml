@@ -53,13 +53,12 @@ jobs:
           fi
           echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
 
-      - name: Run TruffleHog Scan
+      - name: Secret Scanning
         id: trufflehog_scan
-        run: |
-          trufflehog filesystem ${{ steps.set_paths.outputs.scan_dir }} \
-            --debug \
-            --json \
-            --only-verified > ${{ steps.set_paths.outputs.report_filename }}
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ${{ steps.set_paths.outputs.scan_dir }}
+          extra_args: --results=verified,unknown --json > ${{ steps.set_paths.outputs.report_filename }}
 
       - name: Check Report Content
         id: check_report
