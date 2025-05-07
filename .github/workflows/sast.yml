@@ -83,7 +83,7 @@ jobs:
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
             ghcr.io/trufflesecurity/trufflehog:latest \
-            sh -c "trufflehog filesystem /src --fail --json > /output/$REPORT_FILENAME"
+            filesystem /src --fail --json > "$OUTPUT_PATH"
 
           # Verify report creation on the host
           if [[ -f "$OUTPUT_PATH" ]]; then
