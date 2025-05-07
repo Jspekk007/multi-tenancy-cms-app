@@ -41,23 +41,19 @@ jobs:
         run: |
           echo "report_filename=trufflehog-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
-      - name: Install TruffleHog v3 (binary)
-        run: |
-          curl -sSL https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog-linux-amd64 -o trufflehog
-          chmod +x trufflehog
-          sudo mv trufflehog /usr/local/bin/trufflehog
-
-      - name: Run TruffleHog v3 filesystem scan
+      - name: Run TruffleHog v3 filesystem scan using Docker
         id: trufflehog_scan
         run: |
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
           OUTPUT_PATH="./$REPORT_FILENAME"
-          RUN_DIR="."
+          SCAN_TARGET="${{ inputs.scan-target }}"
 
-          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+          if [[ "$SCAN_TARGET" == "backend" ]]; then
             RUN_DIR="./backend"
-          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+          elif [[ "$SCAN_TARGET" == "frontend" ]]; then
             RUN_DIR="./frontend"
+          elif [[ "$SCAN_TARGET"== "root" ]]; then
+            RUN_DIR="."
           fi
 
           if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
@@ -65,13 +61,20 @@ jobs:
              exit 1
           fi
 
+          ABS_RUN_DIR="$(realpath "$RUN_DIR")"
+          ABS_OUTPUT_PATH="$(realpath "$OUTPUT_PATH")"
+
           echo "Running TruffleHog v3 filesystem scan in $RUN_DIR"
-          trufflehog filesystem "$RUN_DIR" --json > "$OUTPUT_PATH"
+          docker run --rm \
+            -v "$ABS_RUN_DIR":/src \
+            -v "$(dirname "$ABS_OUTPUT_PATH")":/output \
+            hysnsec/trufflehog \
+            filesystem /src --fail --json > "$OUTPUT_PATH"
 
           if [[ -f "$OUTPUT_PATH" ]]; then
-            echo "Successfully created report at $OUTPUT_PATH"
+            echo "✅ TruffleHog report created at $OUTPUT_PATH"
           else
-            echo "Warning: TruffleHog report was not created."
+            echo "⚠️ Warning: TruffleHog report was not created."
           fi
 
       - name: Determine Full Report Path
