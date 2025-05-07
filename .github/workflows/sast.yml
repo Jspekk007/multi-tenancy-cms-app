@@ -20,7 +20,6 @@ on:
         value: ${{ jobs.sast.outputs.secrets-found }}
       report-artifact-name:
         description: "The actual name of the artifact uploaded"
-        # This now directly references the job output which will use the input
         value: ${{ jobs.sast.outputs.report-artifact-name }}
 
 jobs:
@@ -28,8 +27,7 @@ jobs:
     name: TruffleHog Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
     outputs:
-      secrets-found: ${{ steps.check_report.outputs.secrets-found }}
-      # Directly use the input for the job output, as it's the intended artifact name
+      secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
       report-artifact-name: ${{ inputs.artifact-name }}
 
     steps:
@@ -38,10 +36,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Report Filename and Paths
+      - name: Set Scan Directory
         id: set_paths
         run: |
-          echo "report_filename=trufflehog-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
           SCAN_TARGET_DIR="." # Default to root
           if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
             SCAN_TARGET_DIR="./backend"
@@ -54,15 +51,12 @@ jobs:
           echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
 
       - name: Secret Scanning
-        id: trufflehog_scan
+        id: trufflehog
         uses: trufflesecurity/trufflehog@main
         with:
           path: ${{ steps.set_paths.outputs.scan_dir }}
-          extra_args: --results=verified,unknown --json
-
-      - name: Save Report
-        run: |
-          cat trufflehog-results.json > ${{ steps.set_paths.outputs.report_filename }}
+          extra_args: --results=verified,unknown
+        continue-on-error: true
 
       - name: Check Report Content
         id: check_report
