@@ -86,7 +86,7 @@ jobs:
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
-            hysnsec/trufflehog \
+            ghcr.io/trufflesecurity/trufflehog:v3.88.28 \
             filesystem /src --fail --json --output "/output/$REPORT_FILENAME"
 
           # Verify report creation on the host
