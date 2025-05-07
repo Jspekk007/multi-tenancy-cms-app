@@ -76,14 +76,24 @@ jobs:
           echo "Host output directory (absolute): $ABS_OUTPUT_DIR (mounted to /output in container)"
           echo "TruffleHog output will be redirected via sh -c to /output/$REPORT_FILENAME inside the container."
 
-          # Using ghcr.io/trufflesecurity/trufflehog:latest with shell redirection inside the container
-          # This redirects the standard output of 'trufflehog filesystem ... --json'
-          # to a file within the container's /output directory.
+          # List files in scan directory for debugging
+          echo "Files in scan directory:"
+          ls -la "$ABS_SCAN_DIR"
+
+          # Using ghcr.io/trufflesecurity/trufflehog:latest with enhanced detection
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
             ghcr.io/trufflesecurity/trufflehog:latest \
-            filesystem /src --fail --json > "$OUTPUT_PATH"
+            filesystem /src \
+            --fail \
+            --json \
+            --debug \
+            --only-verified \
+            --detectors all \
+            --no-history \
+            --no-verification \
+            --fail-on-verified > "$OUTPUT_PATH"
 
           # Verify report creation on the host
           if [[ -f "$OUTPUT_PATH" ]]; then
