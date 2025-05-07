@@ -89,8 +89,7 @@ jobs:
             --fail \
             --json \
             --debug \
-            --only-verified \
-            --fail-on-verified > "$OUTPUT_PATH"
+            --only-verified > "$OUTPUT_PATH"
 
           # Verify report creation on the host
           if [[ -f "$OUTPUT_PATH" ]]; then
