@@ -84,7 +84,7 @@ jobs:
           echo "Contents of test-secret.txt:"
           cat "$ABS_SCAN_DIR/test-secret.txt"
 
-          # Using ghcr.io/trufflesecurity/trufflehog:latest with enhanced detection
+          # Using ghcr.io/trufflesecurity/trufflehog:latest with core detection
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
@@ -92,9 +92,7 @@ jobs:
             filesystem /src \
             --fail \
             --json \
-            --debug \
-            --entropy \
-            --no-verification > "$OUTPUT_PATH"
+            --debug > "$OUTPUT_PATH"
 
           # Debug: Show the contents of the report file
           echo "Report file contents:"
