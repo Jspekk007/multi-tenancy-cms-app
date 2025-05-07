@@ -53,73 +53,15 @@ jobs:
           fi
           echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
 
-      - name: Run TruffleHog v3 filesystem scan using Docker
+      - name: Run TruffleHog Scan
         id: trufflehog_scan
-        run: |
-          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          OUTPUT_PATH="./$REPORT_FILENAME" # Relative path on the host
-          SCAN_DIR="${{ steps.set_paths.outputs.scan_dir }}"
-
-          echo "Scan target directory: $SCAN_DIR"
-          echo "Report will be saved to host at: $OUTPUT_PATH (which is $GITHUB_WORKSPACE/$REPORT_FILENAME)"
-
-          if [[ "$SCAN_DIR" != "." ]] && [[ ! -d "$SCAN_DIR" ]]; then
-             echo "Error: Target directory '$SCAN_DIR' not found after checkout."
-             exit 1
-          fi
-
-          ABS_SCAN_DIR="$(realpath "$SCAN_DIR")"
-          ABS_OUTPUT_DIR="$(realpath .)" # Resolves to GITHUB_WORKSPACE
-
-          echo "Running TruffleHog v3 filesystem scan using ghcr.io/trufflesecurity/trufflehog:latest."
-          echo "Host scan directory (absolute): $ABS_SCAN_DIR (mounted to /src in container)"
-          echo "Host output directory (absolute): $ABS_OUTPUT_DIR (mounted to /output in container)"
-          echo "TruffleHog output will be redirected via sh -c to /output/$REPORT_FILENAME inside the container."
-
-          # List files in scan directory for debugging
-          echo "Files in scan directory:"
-          ls -la "$ABS_SCAN_DIR"
-
-          # Debug: Show the contents of the test secrets file
-          echo "Contents of test-secrets.env:"
-          cat "$ABS_SCAN_DIR/test-secrets.env"
-
-          # Using the latest stable version of TruffleHog
-          docker run --rm \
-            -v "$ABS_SCAN_DIR":/src \
-            -v "$ABS_OUTPUT_DIR":/output \
-            ghcr.io/trufflesecurity/trufflehog:latest \
-            filesystem /src \
-            --fail \
-            --json \
-            --debug \
-            --no-history \
-            --no-verification \
-            --fail-on-verified \
-            --detectors all \
-            --entropy-threshold 4.5 \
-            --max-depth 10 > "$OUTPUT_PATH"
-
-          # Debug: Show the contents of the report file
-          echo "Report file contents:"
-          cat "$OUTPUT_PATH"
-
-          # Verify report creation on the host
-          if [[ -f "$OUTPUT_PATH" ]]; then
-            echo "✅ TruffleHog report created at $OUTPUT_PATH"
-            # If TruffleHog finds no secrets, it should write "[]" via stdout.
-            # This check handles if the file was created but is unexpectedly empty (0 bytes).
-            if [[ ! -s "$OUTPUT_PATH" ]]; then
-              echo "ℹ️ TruffleHog report file exists but is empty (0 bytes). Initializing with []."
-              echo "[]" > "$OUTPUT_PATH"
-            fi
-          else
-            echo "⚠️ Error: TruffleHog report was not created at $OUTPUT_PATH."
-            echo "Creating an empty report '[]' to prevent downstream failures."
-            echo "[]" > "$OUTPUT_PATH"
-            # Consider failing the step if report creation is absolutely critical
-            # exit 1
-          fi
+        uses: trufflesecurity/trufflehog@add-actions-cli-switch
+        continue-on-error: true
+        with:
+          path: ${{ steps.set_paths.outputs.scan_dir }}
+          base: "${{ github.event.repository.default_branch }}"
+          head: HEAD
+          extra_args: --debug --json --only-verified
 
       - name: Check Report Content
         id: check_report
@@ -145,7 +87,6 @@ jobs:
             fi
           else
             echo "Report file $FILE not found. Assuming no secrets found."
-            # This case should ideally be handled by the trufflehog_scan step creating an empty report
           fi
           echo "secrets-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
