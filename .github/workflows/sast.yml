@@ -57,7 +57,7 @@ jobs:
           path: ${{ steps.set_paths.outputs.scan_dir }}
           base: ${{ github.event.repository.default_branch }}
           head: ${{ github.sha }}
-          extra_args: --results=verified,unknown --history
+          extra_args: --results=verified,unknown
         continue-on-error: true
 
       - name: Check Report Content
