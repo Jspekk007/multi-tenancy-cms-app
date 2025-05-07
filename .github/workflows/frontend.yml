@@ -256,7 +256,7 @@ jobs:
           # --- Process Downloaded SAST Report (Uncomment if frontend_sast job is active) ---
           echo "[DEBUG Summary] Checking for downloaded SAST report file..."
           ls -lR ./sast-reports/ # Verify download directory content
-          SAST_REPORT_TO_PROCESS="./sast-reports/frontend/sast-report-frontend.json" # Adjust filename
+          SAST_REPORT_TO_PROCESS="./sast-reports/frontend/trufflehog-report-frontend.json" # Updated to match actual filename
           if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
              echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
              # You might need a different process_report function or logic for SAST results
