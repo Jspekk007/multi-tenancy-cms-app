@@ -55,52 +55,55 @@ jobs:
           fi
           echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
 
-
       - name: Run TruffleHog v3 filesystem scan using Docker
         id: trufflehog_scan
         run: |
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          OUTPUT_PATH="./$REPORT_FILENAME" # Relative path for report creation
+          # OUTPUT_PATH is the relative path on the host where the report will be after the container writes it
+          OUTPUT_PATH="./$REPORT_FILENAME"
           SCAN_DIR="${{ steps.set_paths.outputs.scan_dir }}"
 
           echo "Scan target directory: $SCAN_DIR"
-          echo "Report will be saved to: $OUTPUT_PATH"
+          echo "Report will be saved to host at: $OUTPUT_PATH (which is $GITHUB_WORKSPACE/$REPORT_FILENAME)"
 
           if [[ "$SCAN_DIR" != "." ]] && [[ ! -d "$SCAN_DIR" ]]; then
-             echo "Error: Target directory '$SCAN_DIR' not found after checkout."
-             exit 1
+            echo "Error: Target directory '$SCAN_DIR' not found after checkout."
+            exit 1
           fi
 
-          # Get absolute paths for Docker volume mounting
-          # Docker needs absolute paths or paths relative to the build context,
-          # but for -v mounts, absolute paths are most reliable.
           ABS_SCAN_DIR="$(realpath "$SCAN_DIR")"
-          # The output directory for Docker will be the current working directory (GITHUB_WORKSPACE)
-          # And the report will be created directly within it.
-          ABS_OUTPUT_DIR="$(realpath .)"
+          # ABS_OUTPUT_DIR is the absolute path on the host (GITHUB_WORKSPACE) that will be mounted into /output in the container
+          ABS_OUTPUT_DIR="$(realpath .)" # This resolves to GITHUB_WORKSPACE
 
-          echo "Running TruffleHog v3 filesystem scan in $ABS_SCAN_DIR, outputting to $ABS_OUTPUT_DIR/$REPORT_FILENAME"
+          echo "Running TruffleHog v3 filesystem scan."
+          echo "Host scan directory (absolute): $ABS_SCAN_DIR (mounted to /src in container)"
+          echo "Host output directory (absolute): $ABS_OUTPUT_DIR (mounted to /output in container)"
+          echo "TruffleHog will write to /output/$REPORT_FILENAME inside the container."
+
+          # Corrected Docker command:
+          # Use TruffleHog's --output flag to specify the output file path *inside the container*.
+          # The redirection '>' is removed as TruffleHog now handles file writing.
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
             hysnsec/trufflehog \
-            filesystem /src --fail --json > "/output/$REPORT_FILENAME" # Ensure output is written to the mounted volume
+            filesystem /src --fail --json --output "/output/$REPORT_FILENAME"
 
-          # Verify report creation
+          # Verify report creation on the host
           if [[ -f "$OUTPUT_PATH" ]]; then
             echo "✅ TruffleHog report created at $OUTPUT_PATH"
-            # Check if the report is empty, which can happen if no secrets are found and --fail is not triggered
+            # If TruffleHog finds no secrets, it should write "[]" to the report.
+            # This check ensures the file isn't unexpectedly empty (0 bytes).
+            # A file with "[]" has a size > 0.
             if [[ ! -s "$OUTPUT_PATH" ]]; then
-              echo "ℹ️ TruffleHog report is empty. This might be okay if no secrets were expected."
-              # If TruffleHog outputs nothing on success (no secrets), jq might fail.
-              # Ensure an empty JSON array if the file is empty and no secrets are found.
+              echo "ℹ️ TruffleHog report file exists but is empty (0 bytes). Initializing with []."
               echo "[]" > "$OUTPUT_PATH"
             fi
           else
-            echo "⚠️ Warning: TruffleHog report was not created at $OUTPUT_PATH."
-            # Create an empty JSON array file so downstream steps don't fail on a missing file
+            echo "⚠️ Error: TruffleHog report was not created at $OUTPUT_PATH."
+            echo "Creating an empty report '[]' to prevent downstream failures."
             echo "[]" > "$OUTPUT_PATH"
-            # Consider exiting with an error if report creation is critical even with no findings
+            # Consider failing the step if report creation is absolutely critical
             # exit 1
           fi
 
