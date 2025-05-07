@@ -39,11 +39,9 @@ jobs:
           fetch-depth: 0
 
       - name: Set Report Filename and Paths
-        id: set_paths # Renamed for clarity as it sets more than just filename now
+        id: set_paths
         run: |
           echo "report_filename=trufflehog-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
-          # Determine SCAN_DIR here to ensure it's set before TruffleHog step if needed elsewhere
-          # Though in this specific case, the trufflehog_scan step handles it internally
           SCAN_TARGET_DIR="." # Default to root
           if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
             SCAN_TARGET_DIR="./backend"
@@ -59,42 +57,39 @@ jobs:
         id: trufflehog_scan
         run: |
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          # OUTPUT_PATH is the relative path on the host where the report will be after the container writes it
-          OUTPUT_PATH="./$REPORT_FILENAME"
+          OUTPUT_PATH="./$REPORT_FILENAME" # Relative path on the host
           SCAN_DIR="${{ steps.set_paths.outputs.scan_dir }}"
 
           echo "Scan target directory: $SCAN_DIR"
           echo "Report will be saved to host at: $OUTPUT_PATH (which is $GITHUB_WORKSPACE/$REPORT_FILENAME)"
 
           if [[ "$SCAN_DIR" != "." ]] && [[ ! -d "$SCAN_DIR" ]]; then
-            echo "Error: Target directory '$SCAN_DIR' not found after checkout."
-            exit 1
+             echo "Error: Target directory '$SCAN_DIR' not found after checkout."
+             exit 1
           fi
 
           ABS_SCAN_DIR="$(realpath "$SCAN_DIR")"
-          # ABS_OUTPUT_DIR is the absolute path on the host (GITHUB_WORKSPACE) that will be mounted into /output in the container
-          ABS_OUTPUT_DIR="$(realpath .)" # This resolves to GITHUB_WORKSPACE
+          ABS_OUTPUT_DIR="$(realpath .)" # Resolves to GITHUB_WORKSPACE
 
-          echo "Running TruffleHog v3 filesystem scan."
+          echo "Running TruffleHog v3 filesystem scan using ghcr.io/trufflesecurity/trufflehog:latest."
           echo "Host scan directory (absolute): $ABS_SCAN_DIR (mounted to /src in container)"
           echo "Host output directory (absolute): $ABS_OUTPUT_DIR (mounted to /output in container)"
-          echo "TruffleHog will write to /output/$REPORT_FILENAME inside the container."
+          echo "TruffleHog output will be redirected via sh -c to /output/$REPORT_FILENAME inside the container."
 
-          # Corrected Docker command:
-          # Use TruffleHog's --output flag to specify the output file path *inside the container*.
-          # The redirection '>' is removed as TruffleHog now handles file writing.
+          # Using ghcr.io/trufflesecurity/trufflehog:latest with shell redirection inside the container
+          # This redirects the standard output of 'trufflehog filesystem ... --json'
+          # to a file within the container's /output directory.
           docker run --rm \
             -v "$ABS_SCAN_DIR":/src \
             -v "$ABS_OUTPUT_DIR":/output \
             ghcr.io/trufflesecurity/trufflehog:latest \
-            filesystem /src --fail --json --output "/output/$REPORT_FILENAME"
+            sh -c "trufflehog filesystem /src --fail --json > /output/$REPORT_FILENAME"
 
           # Verify report creation on the host
           if [[ -f "$OUTPUT_PATH" ]]; then
             echo "✅ TruffleHog report created at $OUTPUT_PATH"
-            # If TruffleHog finds no secrets, it should write "[]" to the report.
-            # This check ensures the file isn't unexpectedly empty (0 bytes).
-            # A file with "[]" has a size > 0.
+            # If TruffleHog finds no secrets, it should write "[]" via stdout.
+            # This check handles if the file was created but is unexpectedly empty (0 bytes).
             if [[ ! -s "$OUTPUT_PATH" ]]; then
               echo "ℹ️ TruffleHog report file exists but is empty (0 bytes). Initializing with []."
               echo "[]" > "$OUTPUT_PATH"
