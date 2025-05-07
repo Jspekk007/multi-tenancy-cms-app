@@ -55,26 +55,21 @@ jobs:
 
       - name: Run TruffleHog Scan
         id: trufflehog_scan
-        uses: trufflesecurity/trufflehog@main
-        continue-on-error: true
-        with:
-          path: ${{ steps.set_paths.outputs.scan_dir }}
-          base: "${{ github.event.repository.default_branch }}"
-          head: HEAD
-          extra_args: --debug --json --only-verified
+        run: |
+          trufflehog filesystem ${{ steps.set_paths.outputs.scan_dir }} \
+            --debug \
+            --json \
+            --only-verified > ${{ steps.set_paths.outputs.report_filename }}
 
       - name: Check Report Content
         id: check_report
         run: |
-          # Use the filename set in the first step
           FILE="${{ steps.set_paths.outputs.report_filename }}"
           SECRETS_FOUND="false"
 
           echo "Checking report content in file: $FILE"
           if [[ -f "$FILE" ]]; then
-            # Ensure the file is not empty and contains valid JSON before querying
             if [[ -s "$FILE" ]] && jq -e . "$FILE" >/dev/null 2>&1; then
-              # Count items in the top-level array. Trufflehog v3 output is a list of findings.
               COUNT=$(jq '. | length' "$FILE")
               if [[ "$COUNT" -gt 0 ]]; then
                 echo "Secrets found: $COUNT"
@@ -87,6 +82,7 @@ jobs:
             fi
           else
             echo "Report file $FILE not found. Assuming no secrets found."
+            echo "[]" > "$FILE"
           fi
           echo "secrets-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
