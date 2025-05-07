@@ -20,6 +20,7 @@ on:
         value: ${{ jobs.sast.outputs.secrets-found }}
       report-artifact-name:
         description: "The actual name of the artifact uploaded"
+        # This now directly references the job output which will use the input
         value: ${{ jobs.sast.outputs.report-artifact-name }}
 
 jobs:
@@ -28,7 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       secrets-found: ${{ steps.check_report.outputs.secrets-found }}
-      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+      # Directly use the input for the job output, as it's the intended artifact name
+      report-artifact-name: ${{ inputs.artifact-name }}
 
     steps:
       - name: Checkout code
@@ -36,86 +38,105 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Report Filename
-        id: set_paths
+      - name: Set Report Filename and Paths
+        id: set_paths # Renamed for clarity as it sets more than just filename now
         run: |
           echo "report_filename=trufflehog-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
+          # Determine SCAN_DIR here to ensure it's set before TruffleHog step if needed elsewhere
+          # Though in this specific case, the trufflehog_scan step handles it internally
+          SCAN_TARGET_DIR="." # Default to root
+          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+            SCAN_TARGET_DIR="./backend"
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+            SCAN_TARGET_DIR="./frontend"
+          elif [[ "${{ inputs.scan-target }}" != "root" ]]; then
+            echo "Error: Invalid scan target '${{ inputs.scan-target }}'"
+            exit 1
+          fi
+          echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
+
 
       - name: Run TruffleHog v3 filesystem scan using Docker
         id: trufflehog_scan
         run: |
           REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          OUTPUT_PATH="./$REPORT_FILENAME"
-          SCAN_TARGET="${{ inputs.scan-target }}"
+          OUTPUT_PATH="./$REPORT_FILENAME" # Relative path for report creation
+          SCAN_DIR="${{ steps.set_paths.outputs.scan_dir }}"
 
-          echo "$RUN_DIR"
+          echo "Scan target directory: $SCAN_DIR"
+          echo "Report will be saved to: $OUTPUT_PATH"
 
-          if [[ "$SCAN_TARGET" == "backend" ]]; then
-            RUN_DIR="./backend"
-          elif [[ "$SCAN_TARGET" == "frontend" ]]; then
-            RUN_DIR="./frontend"
-          elif [[ "$SCAN_TARGET" == "root" ]]; then
-            RUN_DIR="."
-          else
-            echo "Error: Invalid scan target '$SCAN_TARGET'"
-            exit 1
-          fi
-
-          if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
-             echo "Error: Target directory '$RUN_DIR' not found after checkout."
+          if [[ "$SCAN_DIR" != "." ]] && [[ ! -d "$SCAN_DIR" ]]; then
+             echo "Error: Target directory '$SCAN_DIR' not found after checkout."
              exit 1
           fi
 
-          ABS_RUN_DIR="$(realpath "$RUN_DIR")"
-          ABS_OUTPUT_PATH="$(realpath "$OUTPUT_PATH")"
+          # Get absolute paths for Docker volume mounting
+          # Docker needs absolute paths or paths relative to the build context,
+          # but for -v mounts, absolute paths are most reliable.
+          ABS_SCAN_DIR="$(realpath "$SCAN_DIR")"
+          # The output directory for Docker will be the current working directory (GITHUB_WORKSPACE)
+          # And the report will be created directly within it.
+          ABS_OUTPUT_DIR="$(realpath .)"
 
-          echo "Running TruffleHog v3 filesystem scan in $RUN_DIR"
+          echo "Running TruffleHog v3 filesystem scan in $ABS_SCAN_DIR, outputting to $ABS_OUTPUT_DIR/$REPORT_FILENAME"
           docker run --rm \
-            -v "$ABS_RUN_DIR":/src \
-            -v "$(dirname "$ABS_OUTPUT_PATH")":/output \
+            -v "$ABS_SCAN_DIR":/src \
+            -v "$ABS_OUTPUT_DIR":/output \
             hysnsec/trufflehog \
-            filesystem /src --fail --json > "$OUTPUT_PATH"
+            filesystem /src --fail --json > "/output/$REPORT_FILENAME" # Ensure output is written to the mounted volume
 
+          # Verify report creation
           if [[ -f "$OUTPUT_PATH" ]]; then
             echo "✅ TruffleHog report created at $OUTPUT_PATH"
+            # Check if the report is empty, which can happen if no secrets are found and --fail is not triggered
+            if [[ ! -s "$OUTPUT_PATH" ]]; then
+              echo "ℹ️ TruffleHog report is empty. This might be okay if no secrets were expected."
+              # If TruffleHog outputs nothing on success (no secrets), jq might fail.
+              # Ensure an empty JSON array if the file is empty and no secrets are found.
+              echo "[]" > "$OUTPUT_PATH"
+            fi
           else
-            echo "⚠️ Warning: TruffleHog report was not created."
+            echo "⚠️ Warning: TruffleHog report was not created at $OUTPUT_PATH."
+            # Create an empty JSON array file so downstream steps don't fail on a missing file
+            echo "[]" > "$OUTPUT_PATH"
+            # Consider exiting with an error if report creation is critical even with no findings
+            # exit 1
           fi
-
-      - name: Determine Full Report Path
-        id: report_full_path
-        run: |
-          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          FULL_PATH="$REPORT_FILENAME"
-          echo "full_path=$FULL_PATH" >> $GITHUB_OUTPUT
 
       - name: Check Report Content
         id: check_report
         run: |
-          FILE="${{ steps.report_full_path.outputs.full_path }}"
+          # Use the filename set in the first step
+          FILE="${{ steps.set_paths.outputs.report_filename }}"
           SECRETS_FOUND="false"
 
+          echo "Checking report content in file: $FILE"
           if [[ -f "$FILE" ]]; then
-            COUNT=$(jq -s 'map(select(.SourceMetadata)) | length' "$FILE")
-            if [[ "$COUNT" -gt 0 ]]; then
-              echo "Secrets found: $COUNT"
-              SECRETS_FOUND="true"
+            # Ensure the file is not empty and contains valid JSON before querying
+            if [[ -s "$FILE" ]] && jq -e . "$FILE" >/dev/null 2>&1; then
+              # Count items in the top-level array. Trufflehog v3 output is a list of findings.
+              COUNT=$(jq '. | length' "$FILE")
+              if [[ "$COUNT" -gt 0 ]]; then
+                echo "Secrets found: $COUNT"
+                SECRETS_FOUND="true"
+              else
+                echo "No secrets found in the report."
+              fi
             else
-              echo "No secrets found."
+              echo "Report file is empty or not valid JSON. Assuming no secrets found."
             fi
           else
-            echo "Report file not found."
+            echo "Report file $FILE not found. Assuming no secrets found."
+            # This case should ideally be handled by the trufflehog_scan step creating an empty report
           fi
-
           echo "secrets-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
-      - name: Set Artifact Name Output
-        id: set_artifact_name
-        run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
-
-      - name: Upload TruffleHog Report (${{ inputs.scan-target }})
+      - name: Upload TruffleHog Report
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_artifact_name.outputs.artifact-name }}
-          path: ${{ steps.report_full_path.outputs.full_path }}
-          if-no-files-found: warn
+          # Use the input artifact name directly
+          name: ${{ inputs.artifact-name }}
+          # Use the report_filename from set_paths step
+          path: ${{ steps.set_paths.outputs.report_filename }}
+          if-no-files-found: error # Fail if the report file is somehow missing
