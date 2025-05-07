@@ -55,7 +55,7 @@ jobs:
 
       - name: Run TruffleHog Scan
         id: trufflehog_scan
-        uses: trufflesecurity/trufflehog@add-actions-cli-switch
+        uses: trufflesecurity/trufflehog@main
         continue-on-error: true
         with:
           path: ${{ steps.set_paths.outputs.scan_dir }}
