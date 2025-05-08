@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p trufflehog-output
           echo "Scanning folder: ${{ inputs.scan-target }}"
+          ls -ltr
           trufflehog -h
           trufflehog filesystem -i ./${{ inputs.scan-target }} \
             --only-verified --json --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
