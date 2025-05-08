@@ -39,22 +39,16 @@ jobs:
         with:
           fetch-depth: 0
 
-        # We need to locally install trufflehog to be able to scan our scan-target as we're not scanning in root
-      - name: Install TruffleHog
-        run: pip install trufflehog
-
-      - name: Run TruffleHog Scan
+      - name: Run TruffleHog Scan (Docker)
         id: trufflehog
         continue-on-error: true
         run: |
           mkdir -p trufflehog-output
 
-          wget https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog-linux-amd64
-          chmod +x trufflehog-linux-amd64
-          sudo mv trufflehog-linux-amd64 /usr/local/bin/trufflehog
-
-          echo "Running TruffleHog scan on the ful repo."
-          trufflehog filesystem \
+          docker run --rm \
+            -v "${PWD}:/repo" \
+            trufflesecurity/trufflehog:latest \
+            filesystem --directory /repo \
             --only-verified \
             --json \
             --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
