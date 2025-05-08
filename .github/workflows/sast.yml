@@ -17,15 +17,18 @@ on:
     outputs:
       secrets-found:
         description: 'Boolean indicating if secrets were found ("true" or "false")'
-        value: ${{ jobs.sast.outputs.secrets-found }}
+        value: ${{ jobs.scan.outputs.secrets-found }}
       report-artifact-name:
         description: "The actual name of the artifact uploaded"
-        value: ${{ jobs.sast.outputs.report-artifact-name }}
+        value: ${{ jobs.scan.outputs.report-artifact-name }}
 
 jobs:
-  sast:
+  scan:
     name: TruffleHog Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
+    outputs:
+      vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
+      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
     defaults:
       run:
         shell: bash
@@ -36,15 +39,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Trufflehog OSS scan
+        # We need to locally install trufflehog to be able to scan our scan-target as we're not scanning in root
+      - name: Install TruffleHog
+        run: pip install trufflehog
+
+      - name: Run TruffleHog Scan
         id: trufflehog
-        uses: trufflesecurity/trufflehog@main
         continue-on-error: true
-        with:
-          path: ./
-          base: "${{ github.event.repository.default_branch }}"
-          head: HEAD
-          extra_args: --debug --only-verified
+        run: |
+          mkdir -p trufflehog-output
+          echo "Scanning folder: ${{ inputs.scan-target }}"
+          trufflehog filesystem --directory ${{ inputs.scan-target }} \
+            --only-verified --json --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
     # outputs:
     #   secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
     #   report-artifact-name: ${{ inputs.artifact-name }}
