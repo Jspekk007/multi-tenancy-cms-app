@@ -26,70 +26,89 @@ jobs:
   sast:
     name: TruffleHog Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
-    outputs:
-      secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
-      report-artifact-name: ${{ inputs.artifact-name }}
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set Scan Directory
-        id: set_paths
-        run: |
-          SCAN_TARGET_DIR="." # Default to root
-          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-            SCAN_TARGET_DIR="./backend"
-          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-            SCAN_TARGET_DIR="./frontend"
-          elif [[ "${{ inputs.scan-target }}" != "root" ]]; then
-            echo "Error: Invalid scan target '${{ inputs.scan-target }}'"
-            exit 1
-          fi
-          echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
-
-      - name: Secret Scanning
+      - name: Trufflehog OSS scan
         id: trufflehog
         uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
         with:
-          path: ${{ steps.set_paths.outputs.scan_dir }}
-          base: ${{ github.event.repository.default_branch }}
+          path: ./
+          base: "${{ github.event.repository.default_branch }}"
           head: HEAD
           extra_args: --debug --only-verified
-        continue-on-error: true
+    # outputs:
+    #   secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
+    #   report-artifact-name: ${{ inputs.artifact-name }}
 
-      - name: Check Report Content
-        id: check_report
-        run: |
-          FILE="${{ steps.set_paths.outputs.report_filename }}"
-          SECRETS_FOUND="false"
+    # steps:
+    #   - name: Checkout code
+    #     uses: actions/checkout@v4
+    #     with:
+    #       fetch-depth: 0
 
-          echo "Checking report content in file: $FILE"
-          if [[ -f "$FILE" ]]; then
-            if [[ -s "$FILE" ]] && jq -e . "$FILE" >/dev/null 2>&1; then
-              COUNT=$(jq '. | length' "$FILE")
-              if [[ "$COUNT" -gt 0 ]]; then
-                echo "Secrets found: $COUNT"
-                SECRETS_FOUND="true"
-              else
-                echo "No secrets found in the report."
-              fi
-            else
-              echo "Report file is empty or not valid JSON. Assuming no secrets found."
-            fi
-          else
-            echo "Report file $FILE not found. Assuming no secrets found."
-            echo "[]" > "$FILE"
-          fi
-          echo "secrets-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
+    # - name: Set Scan Directory
+    #   id: set_paths
+    #   run: |
+    #     SCAN_TARGET_DIR="." # Default to root
+    #     if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+    #       SCAN_TARGET_DIR="./backend"
+    #     elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+    #       SCAN_TARGET_DIR="./frontend"
+    #     elif [[ "${{ inputs.scan-target }}" != "root" ]]; then
+    #       echo "Error: Invalid scan target '${{ inputs.scan-target }}'"
+    #       exit 1
+    #     fi
+    #     echo "scan_dir=$SCAN_TARGET_DIR" >> $GITHUB_OUTPUT
 
-      - name: Upload TruffleHog Report
-        uses: actions/upload-artifact@v4
-        with:
-          # Use the input artifact name directly
-          name: ${{ inputs.artifact-name }}
-          # Use the report_filename from set_paths step
-          path: ${{ steps.set_paths.outputs.report_filename }}
-          if-no-files-found: error # Fail if the report file is somehow missing
+    # - name: Secret Scanning
+    #   id: trufflehog
+    #   uses: trufflesecurity/trufflehog@main
+    #   with:
+    #     path: ${{ steps.set_paths.outputs.scan_dir }}
+    #     base: ${{ github.event.repository.default_branch }}
+    #     head: HEAD
+    #     extra_args: --debug --only-verified
+    #   continue-on-error: true
+
+    # - name: Check Report Content
+    #   id: check_report
+    #   run: |
+    #     FILE="${{ steps.set_paths.outputs.report_filename }}"
+    #     SECRETS_FOUND="false"
+
+    #     echo "Checking report content in file: $FILE"
+    #     if [[ -f "$FILE" ]]; then
+    #       if [[ -s "$FILE" ]] && jq -e . "$FILE" >/dev/null 2>&1; then
+    #         COUNT=$(jq '. | length' "$FILE")
+    #         if [[ "$COUNT" -gt 0 ]]; then
+    #           echo "Secrets found: $COUNT"
+    #           SECRETS_FOUND="true"
+    #         else
+    #           echo "No secrets found in the report."
+    #         fi
+    #       else
+    #         echo "Report file is empty or not valid JSON. Assuming no secrets found."
+    #       fi
+    #     else
+    #       echo "Report file $FILE not found. Assuming no secrets found."
+    #       echo "[]" > "$FILE"
+    #     fi
+    #     echo "secrets-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
+
+    # - name: Upload TruffleHog Report
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     # Use the input artifact name directly
+    #     name: ${{ inputs.artifact-name }}
+    #     # Use the report_filename from set_paths step
+    #     path: ${{ steps.set_paths.outputs.report_filename }}
+    #     if-no-files-found: error # Fail if the report file is somehow missing
