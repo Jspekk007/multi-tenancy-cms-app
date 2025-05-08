@@ -47,6 +47,7 @@ jobs:
         id: trufflehog
         continue-on-error: true
         run: |
+          trufflehog --version
           mkdir -p trufflehog-output
 
           # Map "root" to "."
