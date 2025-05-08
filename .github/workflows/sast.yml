@@ -48,10 +48,19 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p trufflehog-output
-          echo "Scanning folder: ${{ inputs.scan-target }}"
-          ls -ltr
-          trufflehog -h
-          trufflehog filesystem -i ${{ inputs.scan-target }}/ \
+
+          if [[ "${{ inputs.scan-target }}" == "root" ]]; then
+            SCAN_DIR="."
+          else
+            SCAN_DIR="${{ inputs.scan-target }}"
+          fi
+
+          echo "Scanning folder: $SCAN_DIR"
+          ls -ltr "$SCAN_DIR"
+
+          FILES=$(find "$SCAN_DIR" -type f)
+
+          trufflehog filesystem --include_paths $FILES \
             --only-verified --json --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
     # outputs:
     #   secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
