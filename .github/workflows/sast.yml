@@ -47,27 +47,17 @@ jobs:
         id: trufflehog
         continue-on-error: true
         run: |
-          trufflehog --version
           mkdir -p trufflehog-output
 
-          # Map "root" to "."
-          if [[ "${{ inputs.scan-target }}" == "root" ]]; then
-            SCAN_DIR="."
-          else
-            SCAN_DIR="${{ inputs.scan-target }}"
-          fi
+          wget https://github.com/trufflesecurity/trufflehog/releases/latest/download/trufflehog-linux-amd64
+          chmod +x trufflehog-linux-amd64
+          sudo mv trufflehog-linux-amd64 /usr/local/bin/trufflehog
 
-          echo "Scanning folder: $SCAN_DIR"
-          ls -ltr "$SCAN_DIR"
-
-          # Collect all file paths into a list of --include_paths flags
-          INCLUDE_PATHS=""
-          while IFS= read -r file; do
-            INCLUDE_PATHS="$INCLUDE_PATHS --include_paths $file"
-          done < <(find "$SCAN_DIR" -type f)
-
-          # Run TruffleHog with dynamically built include paths
-          eval "trufflehog filesystem $INCLUDE_PATHS --only-verified --json --debug" > trufflehog-output/${{ inputs.artifact-name }}.json || true
+          echo "Running TruffleHog scan on the ful repo."
+          trufflehog filesystem \
+            --only-verified \
+            --json \
+            --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
     # outputs:
     #   secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
     #   report-artifact-name: ${{ inputs.artifact-name }}
