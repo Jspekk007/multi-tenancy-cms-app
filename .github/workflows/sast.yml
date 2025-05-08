@@ -58,7 +58,7 @@ jobs:
           echo "Scanning folder: $SCAN_DIR"
           ls -ltr "$SCAN_DIR"
 
-          FILES=$(find "$SCAN_DIR" -type f)
+          FILES=$(find "$SCAN_DIR" -type f | paste -sd "," -)
 
           trufflehog filesystem --include_paths $FILES \
             --only-verified --json --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
