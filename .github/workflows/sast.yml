@@ -66,7 +66,7 @@ jobs:
           done < <(find "$SCAN_DIR" -type f)
 
           # Run TruffleHog with dynamically built include paths
-          eval "trufflehog filesystem --directory . $INCLUDE_PATHS --only-verified --json --debug" > trufflehog-output/${{ inputs.artifact-name }}.json || true
+          eval "trufflehog filesystem $INCLUDE_PATHS --only-verified --json --debug" > trufflehog-output/${{ inputs.artifact-name }}.json || true
     # outputs:
     #   secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
     #   report-artifact-name: ${{ inputs.artifact-name }}
