@@ -49,6 +49,7 @@ jobs:
         run: |
           mkdir -p trufflehog-output
 
+          # Map "root" to "."
           if [[ "${{ inputs.scan-target }}" == "root" ]]; then
             SCAN_DIR="."
           else
@@ -58,10 +59,14 @@ jobs:
           echo "Scanning folder: $SCAN_DIR"
           ls -ltr "$SCAN_DIR"
 
-          FILES=$(find "$SCAN_DIR" -type f | paste -sd "," -)
+          # Collect all file paths into a list of --include_paths flags
+          INCLUDE_PATHS=""
+          while IFS= read -r file; do
+            INCLUDE_PATHS="$INCLUDE_PATHS --include_paths $file"
+          done < <(find "$SCAN_DIR" -type f)
 
-          trufflehog filesystem --include_paths $FILES \
-            --only-verified --json --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
+          # Run TruffleHog with dynamically built include paths
+          eval "trufflehog filesystem --directory . $INCLUDE_PATHS --only-verified --json --debug" > trufflehog-output/${{ inputs.artifact-name }}.json || true
     # outputs:
     #   secrets-found: ${{ steps.trufflehog.outputs.secrets-found }}
     #   report-artifact-name: ${{ inputs.artifact-name }}
