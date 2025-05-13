@@ -62,11 +62,11 @@ jobs:
 
           TARGET_DIRS=""
           if [[ "${{ inputs.scan-target }}" == "root" ]]; then
-            TARGET_DIRS="/repo"
+            TARGET_DIRS="."
           elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-            TARGET_DIRS="/repo/frontend"
+            TARGET_DIRS="frontend"
           elif [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-            TARGET_DIRS="/repo/backend"
+            TARGET_DIRS="backend"
           else
             echo "Unknown scan target: ${{ inputs.scan-target }}"
             exit 1
