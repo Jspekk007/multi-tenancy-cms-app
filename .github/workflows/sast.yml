@@ -58,7 +58,7 @@ jobs:
           docker run --rm \
             -v "${PWD}:/repo" \
             trufflesecurity/trufflehog:latest \
-            /repo \
+            filesystem /repo \
             --json \
             --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
 
