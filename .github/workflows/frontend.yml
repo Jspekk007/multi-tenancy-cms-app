@@ -251,7 +251,7 @@ jobs:
             local COMMENT_ADD_BODY=""
             local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
 
-            COMMENT+=$(printf "%s\n\n" "$SECTION_HEADER" "%s\n\n")
+            COMMENT+="${SECTION_HEADER}"$'\n\n'
 
             if [[ ! -f "$REPORT_FILE" ]]; then
                 echo "[DEBUG process_trufflehog_report] Report file NOT found: $REPORT_FILE"
@@ -269,7 +269,7 @@ jobs:
             ' "$REPORT_FILE" 2>/dev/null || echo "")
 
             if [[ -n "${SECRET_SUMMARY}" ]]; then
-                COMMENT+=$(printf "%s\n" "$SECRET_SUMMARY")
+                COMMENT+="${SECRET_SUMMARY}"$'\n'
                 OVERALL_VULNS_FOUND=true # Set the global flag for the entire job
                 VULNS_IN_THIS_REPORT=true # Mark that this specific report had vulns
             else
