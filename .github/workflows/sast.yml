@@ -17,7 +17,7 @@ on:
     outputs:
       vulnerabilities-found:
         description: 'Boolean indicating if secrets were found ("true" or "false")'
-        value: ${{ jobs.scan.outputs.secrets-found }}
+        value: ${{ jobs.scan.outputs.vulnerabilities-found }}
       report-artifact-name:
         description: "The actual name of the artifact uploaded"
         value: ${{ jobs.scan.outputs.report-artifact-name }}
@@ -55,10 +55,24 @@ jobs:
         run: |
           mkdir -p trufflehog-output
 
+          TARGET_DIRS=""
+          if [[ "${{ inputs.scan-target }}" == "root" ]]; then
+            TARGET_DIRS="/repo"
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+            TARGET_DIRS="/repo/frontend"
+          elif [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+            TARGET_DIRS="/repo/backend"
+          else
+            echo "Unknown scan target: ${{ inputs.scan-target }}"
+            exit 1
+          fi
+
+          echo "Scanning the following directories: $TARGET_DIRS"
+
           docker run --rm \
             -v "${PWD}:/repo" \
             trufflesecurity/trufflehog:latest \
-            filesystem /repo \
+            filesystem $TARGET_DIRS \
             --json \
             --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
 
