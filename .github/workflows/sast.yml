@@ -68,6 +68,7 @@ jobs:
           fi
 
           echo "Scanning the following directories: $TARGET_DIRS"
+          find $TARGET_DIRS -type f -print
 
           docker run --rm \
             -v "${PWD}:/repo" \
