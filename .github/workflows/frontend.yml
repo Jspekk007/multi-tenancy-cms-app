@@ -258,9 +258,8 @@ jobs:
           ls -lR ./sast-reports/ # Verify download directory content
           SAST_REPORT_TO_PROCESS="./sast-reports/frontend/frontend-trufflehog-report.json"
           if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
-             echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
-             # You might need a different process_report function or logic for SAST results
-             # process_sast_report "$SAST_REPORT_TO_PROCESS" "frontend"
+            echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
+            process_sast_report "$SAST_REPORT_TO_PROCESS" "frontend"
           else
              echo "[DEBUG Summary] Cannot process SAST report, file not found: $SAST_REPORT_TO_PROCESS"
              COMMENT+="⚠️ Could not find the downloaded SAST report for frontend.\n\n"
