@@ -262,7 +262,7 @@ jobs:
 
             local SECRET_SUMMARY
             SECRET_SUMMARY=$(jq -r '
-              "- 🔑 **File:** \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)" + "\n" +
+              "  - **File:** \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)" + "\n" +
               "  - **Detector:**: \(.DetectorName)" + "\n" +
               "  - **Redacted Secret:** \(.Redacted)" + "\n" +
               "  - **Verified:** \(.Verified)" + "\n"
