@@ -80,9 +80,7 @@ jobs:
             trufflesecurity/trufflehog:latest \
             filesystem $TARGET_DIRS \
             --json \
-            --debug \
-            --no-verify \
-            --entropy=True > trufflehog-output/${{ inputs.artifact-name }}.json || true
+            --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
 
       - name: Check Report Content
         id: check_report
