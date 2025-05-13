@@ -242,6 +242,8 @@ jobs:
 
           # --- START: Process the downloaded SAST report ---
           process_sast_report() {
+            local REPORT_FILE="$1"
+            local REPORT_NAME="$2"
             # Check if the downloaded SAST report file exists
             echo "[DEBUG process_trufflehog_report] Received: $REPORT_NAME, File: $REPORT_FILE"
 
