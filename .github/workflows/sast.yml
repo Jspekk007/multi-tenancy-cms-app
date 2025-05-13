@@ -49,6 +49,11 @@ jobs:
         run: |
           echo "report_filename=trufflehog-output/${{ inputs.artifact-name }}.json" >> $GITHUB_OUTPUT
 
+      - name: Debug Working Directory
+        run: |
+          echo "Listing contents of the working directory:"
+          ls -l
+
       - name: Run TruffleHog Scan
         id: trufflehog
         continue-on-error: true
