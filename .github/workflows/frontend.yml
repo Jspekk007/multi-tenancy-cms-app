@@ -251,7 +251,7 @@ jobs:
             local COMMENT_ADD_BODY=""
             local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
 
-            COMMENT+="${SECTION_HEADER}\n\n" # Append header (if defined)
+            COMMENT+=$(printf "%s\n\n" "$SECTION_HEADER")
 
             if [[ ! -f "$REPORT_FILE" ]]; then
                 echo "[DEBUG process_trufflehog_report] Report file NOT found: $REPORT_FILE"
@@ -262,19 +262,18 @@ jobs:
 
             local SECRET_SUMMARY
             SECRET_SUMMARY=$(jq -r '
-              "- 🔑 File: \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)\n" +
-              "  - Detector: \(.DetectorName)\n" +
-              "  - Redacted Secret: \(.Redacted)\n" +
-              "  - Verified: \(.Verified)\n"
+              "- 🔑 File: \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)" + "\n" +
+              "  - Detector: \(.DetectorName)" + "\n" +
+              "  - Redacted Secret: \(.Redacted)" + "\n" +
+              "  - Verified: \(.Verified)" + "\n"
             ' "$REPORT_FILE" 2>/dev/null || echo "")
 
             if [[ -n "${SECRET_SUMMARY}" ]]; then
-                COMMENT+="${SECRET_SUMMARY}\n"
+                COMMENT+=$(printf "%s\n" "$SECRET_SUMMARY")
                 OVERALL_VULNS_FOUND=true # Set the global flag for the entire job
                 VULNS_IN_THIS_REPORT=true # Mark that this specific report had vulns
             else
-                # Format the success message with trailing newlines
-                printf -v COMMENT_ADD_BODY '✅ TruffleHog scan passed for %s — no secrets found.\n\n' "$SECTION_HEADER"
+                printf -v COMMENT_ADD_BODY '✅ TruffleHog scan passed for %s — no secrets found.\n\n' "$REPORT_NAME"
                 COMMENT+="${COMMENT_ADD_BODY}"
             fi
 
