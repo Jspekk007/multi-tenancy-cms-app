@@ -251,7 +251,7 @@ jobs:
             local COMMENT_ADD_BODY=""
             local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
 
-            COMMENT+=$(printf "%s\n\n" "$SECTION_HEADER")
+            COMMENT+=$(printf "%s\n\n" "$SECTION_HEADER" "%s\n\n")
 
             if [[ ! -f "$REPORT_FILE" ]]; then
                 echo "[DEBUG process_trufflehog_report] Report file NOT found: $REPORT_FILE"
