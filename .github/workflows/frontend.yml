@@ -299,6 +299,7 @@ jobs:
 
   build_and_lint:
     name: Frontend Lint & Cache
+    needs: [frontend_sca, frontend_sast, summarize_security_results]
     runs-on: ubuntu-latest
     steps:
       # Checkout the repository code
