@@ -83,7 +83,7 @@ jobs:
             --debug > trufflehog-output/${{ inputs.artifact-name }}.json || true
 
       - name: Display TruffleHog Misses
-        if: always() # Ensure it runs even if TruffleHog returns non-zero
+        if: always()
         run: |
           echo "Parsing TruffleHog output for misses..."
           
@@ -94,13 +94,13 @@ jobs:
             exit 1
           fi
           
-          MISSES=$(jq -r 'select(.Verified == false) | "\(.DetectorName) in \(.SourceMetadata.File):\(.SourceMetadata.Line) — \(.Reason)"' "$OUTPUT_FILE")
+          MISSES=$(jq -rc 'select(.Verified == false)' "$OUTPUT_FILE")
           
           if [ -z "$MISSES" ]; then
             echo "✅ No misses found."
           else
             echo "⚠️ Detected potential secrets (misses):"
-            echo "$MISSES"
+            echo "$MISSES" | jq -r '"\(.DetectorName) in \(.SourceMetadata.File):\(.SourceMetadata.Line) — \(.Reason)"'
           fi
 
       - name: Check Report Content
