@@ -241,43 +241,44 @@ jobs:
           # --- END: Full process_report function definition ---
 
           # --- START: Process the downloaded SAST report ---
-          # Check if the downloaded SAST report file exists
-          echo "[DEBUG process_trufflehog_report] Received: $REPORT_NAME, File: $REPORT_FILE"
+          process_sast_report() {
+            # Check if the downloaded SAST report file exists
+            echo "[DEBUG process_trufflehog_report] Received: $REPORT_NAME, File: $REPORT_FILE"
 
-          local SECTION_HEADER="🔐 **Secrets Scan: ${REPORT_NAME}**"
-          local COMMENT_ADD_BODY=""
-          local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
+            local SECTION_HEADER="🔐 **Secrets Scan: ${REPORT_NAME}**"
+            local COMMENT_ADD_BODY=""
+            local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
 
-          COMMENT+="${SECTION_HEADER}\n\n" # Append header (if defined)
+            COMMENT+="${SECTION_HEADER}\n\n" # Append header (if defined)
 
-          if [[ ! -f "$REPORT_FILE" ]]; then
-              echo "[DEBUG process_trufflehog_report] Report file NOT found: $REPORT_FILE"
-              printf -v COMMENT_ADD_BODY 'ℹ️ Could not find report file (or it was empty): %s\n\n' "$REPORT_FILE"
-              COMMENT+="${COMMENT_ADD_BODY}" # Append info message
-              return 0 # Exit function for this report
-          fi
+            if [[ ! -f "$REPORT_FILE" ]]; then
+                echo "[DEBUG process_trufflehog_report] Report file NOT found: $REPORT_FILE"
+                printf -v COMMENT_ADD_BODY 'ℹ️ Could not find report file (or it was empty): %s\n\n' "$REPORT_FILE"
+                COMMENT+="${COMMENT_ADD_BODY}" # Append info message
+                return 0 # Exit function for this report
+            fi
 
-          local SECRET_SUMMARY
-          SECRET_SUMMARY=$(jq -r '
-            "- 🔑 File: \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)\n" +
-            "  - Detector: \(.DetectorName)\n" +
-            "  - Redacted Secret: \(.Redacted)\n" +
-            "  - Verified: \(.Verified)\n"
-          ' "$REPORT_FILE" 2>/dev/null || echo "")
+            local SECRET_SUMMARY
+            SECRET_SUMMARY=$(jq -r '
+              "- 🔑 File: \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)\n" +
+              "  - Detector: \(.DetectorName)\n" +
+              "  - Redacted Secret: \(.Redacted)\n" +
+              "  - Verified: \(.Verified)\n"
+            ' "$REPORT_FILE" 2>/dev/null || echo "")
 
-          if [[ -n "${SECRET_SUMMARY}" ]]; then
-              COMMENT+="${SECRET_SUMMARY}\n"
-              OVERALL_VULNS_FOUND=true # Set the global flag for the entire job
-              VULNS_IN_THIS_REPORT=true # Mark that this specific report had vulns
-          else
-              # Format the success message with trailing newlines
-              printf -v COMMENT_ADD_BODY '✅ TruffleHog scan passed for %s — no secrets found.\n\n' "$SECTION_HEADER"
-              COMMENT+="${COMMENT_ADD_BODY}"
-          fi
+            if [[ -n "${SECRET_SUMMARY}" ]]; then
+                COMMENT+="${SECRET_SUMMARY}\n"
+                OVERALL_VULNS_FOUND=true # Set the global flag for the entire job
+                VULNS_IN_THIS_REPORT=true # Mark that this specific report had vulns
+            else
+                # Format the success message with trailing newlines
+                printf -v COMMENT_ADD_BODY '✅ TruffleHog scan passed for %s — no secrets found.\n\n' "$SECTION_HEADER"
+                COMMENT+="${COMMENT_ADD_BODY}"
+            fi
 
-          echo "[DEBUG process_trufflehog_report] Finished. Final Comment piece added: [$COMMENT_ADD_BODY]"
-          echo "[DEBUG process_trufflehog_report] VULNS_IN_THIS_REPORT: $VULNS_IN_THIS_REPORT"
-
+            echo "[DEBUG process_trufflehog_report] Finished. Final Comment piece added: [$COMMENT_ADD_BODY]"
+            echo "[DEBUG process_trufflehog_report] VULNS_IN_THIS_REPORT: $VULNS_IN_THIS_REPORT"
+          }
           # --- END: Process the downloaded SAST report ---
           
 
