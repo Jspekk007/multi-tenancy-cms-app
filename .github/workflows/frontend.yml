@@ -247,7 +247,7 @@ jobs:
             # Check if the downloaded SAST report file exists
             echo "[DEBUG process_trufflehog_report] Received: $REPORT_NAME, File: $REPORT_FILE"
 
-            local SECTION_HEADER="🔐 **Secrets Scan: ${REPORT_NAME}**"
+            local SECTION_HEADER="🔐 **TruffleHog Secrets Scan: ${REPORT_NAME}**"
             local COMMENT_ADD_BODY=""
             local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
 
