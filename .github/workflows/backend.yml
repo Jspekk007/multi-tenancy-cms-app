@@ -329,8 +329,8 @@ jobs:
 
       # Run ESLint specifically on the backend workspace
       - name: Run ESLint on backend
-        run: yarn workspace backend lint # Adjust if not using Yarn workspaces
+        run: yarn workspace backend lint:fix
 
       # Build the backend application
       - name: Build backend
-        run: yarn workspace backend build # Adjust if not using Yarn workspaces
+        run: yarn workspace backend build
