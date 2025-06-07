@@ -65,13 +65,4 @@ export class TenantController {
   async findByDomain(@Param('domain') domain: string) {
     return this.tenantService.findByDomain(domain)
   }
-
-  @Get('current')
-  getCurrentTenant() {
-    const tenant = this.tenantContext.getTenant()
-    return {
-      tenant,
-      message: `Current tenant: ${tenant?.name || 'No tenant found'}`,
-    }
-  }
 }
