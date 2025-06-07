@@ -1,6 +1,6 @@
 import { RefreshTokenStrategy } from './refresh-token.strategy'
 import { ConfigService } from '@nestjs/config'
-import { Repository, MoreThan } from 'typeorm'
+import { Repository } from 'typeorm'
 import { User } from '../../user/user.entity'
 import { RefreshToken } from '../entities/refresh-token.entity'
 import { UnauthorizedException } from '@nestjs/common'

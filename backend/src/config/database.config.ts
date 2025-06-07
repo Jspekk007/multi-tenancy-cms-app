@@ -9,7 +9,6 @@ import { Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
 const logger = new Logger('DatabaseConfig')
-const isDocker = process.env.DOCKER === 'true'
 const configService = new ConfigService()
 
 // Log environment variables

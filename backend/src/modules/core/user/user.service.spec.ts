@@ -50,8 +50,8 @@ describe('UserService', () => {
         roleIds: ['role1'],
       };
 
-      const hashMock = jest.spyOn(bcrypt, 'hash') as jest.MockedFunction<typeof bcrypt.hash>;
-      // hashMock.mockResolvedValue(Promise.resolve('mockedHashedPassword'));
+      const hashMock = jest.spyOn(bcrypt, 'hash');
+      (hashMock as jest.Mock).mockResolvedValue('mockedHashedPassword' as unknown as never);
 
       mockUserRepository.findOne.mockResolvedValue(null);
       mockRoleRepository.findByIds.mockResolvedValue([{ id: 'role1' }]);
