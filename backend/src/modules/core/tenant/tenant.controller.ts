@@ -8,6 +8,7 @@ import {
   ValidationPipe,
   UsePipes,
   Logger,
+  NotFoundException,
 } from '@nestjs/common'
 import { TenantService } from './tenant.service'
 import { CreateTenantDto } from './create-tenant.dto'
@@ -32,6 +33,21 @@ export class TenantController {
     return this.tenantService.createTenant(createTenantDto)
   }
 
+  @Get('current')
+  @Roles('User', 'Admin')
+  getCurrentTenant() {
+    const tenant = this.tenantContext.getTenant();
+
+    if(!tenant) {
+      throw new NotFoundException(`No tenant found in context.`)
+    }
+
+    return {
+      tenant,
+      message: `Current tenant: ${tenant?.name || 'No tenant found'}`,
+    }
+  }
+
   @Get()
   @Roles('Admin')
   async findAll() {
@@ -48,14 +64,5 @@ export class TenantController {
   @Roles('Admin')
   async findByDomain(@Param('domain') domain: string) {
     return this.tenantService.findByDomain(domain)
-  }
-
-  @Get('current')
-  getCurrentTenant() {
-    const tenant = this.tenantContext.getTenant()
-    return {
-      tenant,
-      message: `Current tenant: ${tenant?.name || 'No tenant found'}`,
-    }
   }
 }

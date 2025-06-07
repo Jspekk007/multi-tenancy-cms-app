@@ -3,7 +3,6 @@ import { Repository } from 'typeorm'
 import { Tenant } from './tenant.entity'
 import { CreateTenantDto } from './create-tenant.dto'
 import { NotFoundException, BadRequestException } from '@nestjs/common'
-import { getRepositoryToken } from '@nestjs/typeorm'
 
 describe('TenantService', () => {
   let tenantService: TenantService
