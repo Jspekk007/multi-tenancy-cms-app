@@ -1,0 +1,27 @@
+{
+  "customSyntax": "postcss-html",
+  "configBasedir": "./node_modules",
+  "extends": ["stylelint-config-recommended-vue", "stylelint-config-prettier"],
+  "plugins": ["stylelint-order"],
+  "rules": {
+    "at-rule-no-unknown": null,
+    "no-empty-source": null,
+    "order/order": [
+      "custom-properties",
+      "dollar-variables",
+      "at-rules",
+      "declarations",
+      {
+        "type": "rule",
+        "selector": "^&:\\w"
+      }
+    ],
+    "order/properties-order": [],
+
+    "declaration-empty-line-before": "never",
+    "no-descending-specificity": null,
+    "color-hex-length": "short",
+
+    "font-family-no-missing-generic-family-keyword": null
+  }
+}
