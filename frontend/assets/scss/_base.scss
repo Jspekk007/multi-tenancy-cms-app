@@ -1,4 +1,5 @@
-/* RESET + BASE STYLES */
+@use './variables' as *;
+
 *,
 *::before,
 *::after {
@@ -29,6 +30,9 @@ button {
   cursor: pointer;
 }
 
-input, textarea, select, button {
+input,
+textarea,
+select,
+button {
   font: inherit;
 }
