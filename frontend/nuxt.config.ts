@@ -1,18 +1,27 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
-export default defineNuxtConfig({
+import { resolve } from 'path'
+import { defineNuxtConfig } from 'nuxt/config'
 
-  modules: ['@nuxt/eslint'],
+export default defineNuxtConfig({
+  modules: [
+    '@nuxt/eslint',
+    '@nuxtjs/storybook',
+  ],
   devtools: { enabled: true },
-  css: ['@/assets/css/main.css'],
+  css: ['@/assets/scss/main.scss'],
   compatibilityDate: '2025-05-15',
 
   vite: {
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, '.'),
+      },
+    },
     css: {
       preprocessorOptions: {
         scss: {
           additionalData: `
-            @use "@/assets/scss/variables.scss" as *;
-            @use "@/assets/scss/mixins.scss" as *;
+            @use "@/assets/scss/variables" as *;
+            @use "@/assets/scss/mixins" as *;
           `,
         },
       },
