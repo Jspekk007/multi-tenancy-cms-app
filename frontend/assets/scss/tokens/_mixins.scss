@@ -3,29 +3,24 @@
 @use 'sass:map';
 
 // MEDIA QUERY HELPER
-@mixin respond-to($breakpoint) {
-  @if $breakpoint == sm {
-    @media (min-width: $breakpoint-sm) { @content; }
-  }
+@mixin respond-to($size) {
+  $breakpoints-map: (
+    sm: $breakpoint-sm,
+    md: $breakpoint-md,
+    lg: $breakpoint-lg,
+    xl: $breakpoint-xl,
+    2xl: $breakpoint-2xl
+  );
+  $breakpoint: map.get($breakpoints-map, $size);
 
-  @else if $breakpoint == md {
-    @media (min-width: $breakpoint-md) { @content; }
-  }
-
-  @else if $breakpoint == lg {
-    @media (min-width: $breakpoint-lg) { @content; }
-  }
-
-  @else if $breakpoint == xl {
-    @media (min-width: $breakpoint-xl) { @content; }
-  }
-
-  @else if $breakpoint == 2xl {
-    @media (min-width: $breakpoint-2xl) { @content; }
+  @if $breakpoint {
+    @media (min-width: $breakpoint) {
+      @content;
+    }
   }
 
   @else {
-    @warn 'Unknown breakpoint: #{$breakpoint}';
+    @warn 'Unknown breakpoint: #{$size}';
   }
 }
 

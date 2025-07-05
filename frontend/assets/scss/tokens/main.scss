@@ -4,6 +4,10 @@
 @use './breakpoints' as *;
 @use './misc' as *;
 @use './base' as *;
+@use './a11y' as *;
+@use './grid' as *;
+@use './flex' as *;
+@use './utilities' as *;
 
 *,
 *::before,
