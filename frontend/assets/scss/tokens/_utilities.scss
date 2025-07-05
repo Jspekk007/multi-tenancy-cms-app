@@ -1,0 +1,5 @@
+@use './spacing' as *;
+
+.mt-sm { margin-top: $spacing-3; }
+.mb-md { margin-bottom: $spacing-4; }
+.p-lg { padding: $spacing-6; }

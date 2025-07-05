@@ -9,7 +9,10 @@ export default {
   core: {
     disableTelemetry: true,
   },
-  stories: ['../components/**/*.stories.@(js|ts|jsx|tsx|mdx)'],
+  stories: [
+    '../components/**/*.stories.@(js|ts|jsx|tsx|mdx)',
+    './stories/**/*.stories.@(js|ts|jsx|tsx|mdx)',
+  ],
   addons: ['@storybook/addon-essentials'],
   viteFinal(config) {
     config.plugins = [
@@ -30,8 +33,12 @@ export default {
         ...(config.css?.preprocessorOptions || {}),
         scss: {
           additionalData: `
-            @use "@/assets/scss/variables" as *;
-            @use "@/assets/scss/mixins" as *;
+            @use "@/assets/scss/tokens/typography" as *;
+            @use "@/assets/scss/tokens/colors" as *;
+            @use "@/assets/scss/tokens/spacing" as *;
+            @use "@/assets/scss/tokens/breakpoints" as *;
+            @use "@/assets/scss/tokens/misc" as *;
+            @use "@/assets/scss/tokens/mixins" as *;
           `,
         },
       },
