@@ -20,8 +20,8 @@ const mockRoleRepository = {
 
 describe('UserService', () => {
   let userService: UserService;
-  let userRepository: Repository<User>;
-  let roleRepository: Repository<Role>;
+  let _userRepository: Repository<User>;
+  let _roleRepository: Repository<Role>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,8 +33,8 @@ describe('UserService', () => {
     }).compile();
 
     userService = module.get<UserService>(UserService);
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    roleRepository = module.get<Repository<Role>>(getRepositoryToken(Role));
+    _userRepository = module.get<Repository<User>>(getRepositoryToken(User));
+    _roleRepository = module.get<Repository<Role>>(getRepositoryToken(Role));
   });
 
   afterEach(() => {

@@ -37,7 +37,7 @@ const mockTenantContext = {
 describe('AuthService', () => {
   let authService: AuthService
   let userRepository: jest.Mocked<Repository<User>>
-  let roleRepository: jest.Mocked<Repository<Role>>
+  let _roleRepository: jest.Mocked<Repository<Role>>
   let refreshTokenRepository: jest.Mocked<Repository<RefreshToken>>
 
   beforeEach(async () => {
@@ -62,7 +62,7 @@ describe('AuthService', () => {
 
     authService = module.get<AuthService>(AuthService)
     userRepository = module.get(getRepositoryToken(User))
-    roleRepository = module.get(getRepositoryToken(Role))
+    _roleRepository = module.get(getRepositoryToken(Role))
     refreshTokenRepository = module.get(getRepositoryToken(RefreshToken))
   })
 

@@ -1,15 +1,6 @@
 name: Backend CI, SCA and SAST
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend.yml"
-      - ".github/workflows/sca.yml"
-      - ".github/workflows/sast.yml"
   pull_request:
     branches:
       - main

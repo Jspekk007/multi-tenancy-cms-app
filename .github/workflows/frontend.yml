@@ -1,15 +1,6 @@
 name: Frontend CI, SCA and SAST
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend.yml"
-      - ".github/workflows/sca.yml"
-      - ".github/workflows/sast.yml"
   pull_request:
     branches:
       - main
