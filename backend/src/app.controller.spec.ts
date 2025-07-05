@@ -8,9 +8,9 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 
 describe('AppController', () => {
   let appController: AppController
-  let appService: AppService
-  let tenantService: TenantService
-  let contentRepository: Repository<Content>
+  let _appService: AppService
+  let _tenantService: TenantService
+  let _contentRepository: Repository<Content>
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -36,9 +36,9 @@ describe('AppController', () => {
     }).compile()
 
     appController = module.get<AppController>(AppController)
-    appService = module.get<AppService>(AppService)
-    tenantService = module.get<TenantService>(TenantService)
-    contentRepository = module.get<Repository<Content>>(
+    _appService = module.get<AppService>(AppService)
+    _tenantService = module.get<TenantService>(TenantService)
+    _contentRepository = module.get<Repository<Content>>(
       getRepositoryToken(Content)
     )
   })
@@ -59,18 +59,18 @@ describe('AppController', () => {
     const content = { title: 'Test Title', body: 'Test Body' }
     const savedContent = { id: 1, ...content }
 
-    ;(contentRepository.create as jest.Mock).mockReturnValue(savedContent)
-    ;(contentRepository.save as jest.Mock).mockResolvedValue(savedContent)
+    ;(_contentRepository.create as jest.Mock).mockReturnValue(savedContent)
+    ;(_contentRepository.save as jest.Mock).mockResolvedValue(savedContent)
 
     const result = await appController.createTestContent(content)
     expect(result).toEqual(savedContent)
-    expect(contentRepository.create).toHaveBeenCalledWith(content)
-    expect(contentRepository.save).toHaveBeenCalledWith(savedContent)
+    expect(_contentRepository.create).toHaveBeenCalledWith(content)
+    expect(_contentRepository.save).toHaveBeenCalledWith(savedContent)
   })
 
   it('should return an empty list of test content', async () => {
     const result = await appController.getTestContent()
     expect(result).toEqual([])
-    expect(contentRepository.find).toHaveBeenCalled()
+    expect(_contentRepository.find).toHaveBeenCalled()
   })
 })

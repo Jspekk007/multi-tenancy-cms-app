@@ -10,7 +10,7 @@ import { UnauthorizedException } from '@nestjs/common'
 
 describe('AuthController', () => {
   let controller: AuthController
-  let authService: AuthService
+  let _authService: AuthService
 
   const mockAuthService = {
     validateUser: jest.fn(),
@@ -33,7 +33,7 @@ describe('AuthController', () => {
     }).compile()
 
     controller = module.get<AuthController>(AuthController)
-    authService = module.get<AuthService>(AuthService)
+    _authService = module.get<AuthService>(AuthService)
   })
 
   it('should be defined', () => {

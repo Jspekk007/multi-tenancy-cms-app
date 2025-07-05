@@ -8,8 +8,8 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 
 describe('JwtStrategy', () => {
   let jwtStrategy: JwtStrategy
-  let userRepository: Repository<User>
-  let configService: ConfigService
+  let _userRepository: Repository<User>
+  let _configService: ConfigService
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,8 +29,8 @@ describe('JwtStrategy', () => {
     }).compile()
 
     jwtStrategy = module.get<JwtStrategy>(JwtStrategy)
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User))
-    configService = module.get<ConfigService>(ConfigService)
+    _userRepository = module.get<Repository<User>>(getRepositoryToken(User))
+    _configService = module.get<ConfigService>(ConfigService)
   })
 
   it('should be defined', () => {
@@ -46,7 +46,7 @@ describe('JwtStrategy', () => {
       roles: ['admin'],
     }
 
-    ;(userRepository.findOne as jest.Mock).mockResolvedValue(user)
+    ;(_userRepository.findOne as jest.Mock).mockResolvedValue(user)
 
     const result = await jwtStrategy.validate(payload)
     expect(result).toEqual({
@@ -55,19 +55,19 @@ describe('JwtStrategy', () => {
       tenantId: 'tenant-1',
       roles: ['admin'],
     })
-    expect(userRepository.findOne).toHaveBeenCalledWith({
+    expect(_userRepository.findOne).toHaveBeenCalledWith({
       where: { id: '123' },
       relations: ['roles'],
     })
   })
 
   it('should throw UnauthorizedException if user is not found', async () => {
-    ;(userRepository.findOne as jest.Mock).mockResolvedValue(null)
+    ;(_userRepository.findOne as jest.Mock).mockResolvedValue(null)
 
     await expect(jwtStrategy.validate({ sub: '123' })).rejects.toThrow(
       UnauthorizedException
     )
-    expect(userRepository.findOne).toHaveBeenCalledWith({
+    expect(_userRepository.findOne).toHaveBeenCalledWith({
       where: { id: '123' },
       relations: ['roles'],
     })

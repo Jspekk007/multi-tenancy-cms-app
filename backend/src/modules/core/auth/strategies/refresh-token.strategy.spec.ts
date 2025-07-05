@@ -9,9 +9,9 @@ import { getRepositoryToken } from '@nestjs/typeorm'
 
 describe('RefreshTokenStrategy', () => {
   let refreshTokenStrategy: RefreshTokenStrategy
-  let userRepository: Repository<User>
-  let refreshTokenRepository: Repository<RefreshToken>
-  let configService: ConfigService
+  let _userRepository: Repository<User>
+  let _refreshTokenRepository: Repository<RefreshToken>
+  let _configService: ConfigService
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,11 +38,11 @@ describe('RefreshTokenStrategy', () => {
 
     refreshTokenStrategy =
       module.get<RefreshTokenStrategy>(RefreshTokenStrategy)
-    userRepository = module.get<Repository<User>>(getRepositoryToken(User))
-    refreshTokenRepository = module.get<Repository<RefreshToken>>(
+    _userRepository = module.get<Repository<User>>(getRepositoryToken(User))
+    _refreshTokenRepository = module.get<Repository<RefreshToken>>(
       getRepositoryToken(RefreshToken)
     )
-    configService = module.get<ConfigService>(ConfigService)
+    _configService = module.get<ConfigService>(ConfigService)
   })
 
   it('should be defined', () => {
@@ -70,10 +70,10 @@ describe('RefreshTokenStrategy', () => {
       roles: ['admin'],
     }
 
-    ;(refreshTokenRepository.findOne as jest.Mock).mockResolvedValue(
+    ;(_refreshTokenRepository.findOne as jest.Mock).mockResolvedValue(
       refreshToken
     )
-    ;(userRepository.findOne as jest.Mock).mockResolvedValue(user)
+    ;(_userRepository.findOne as jest.Mock).mockResolvedValue(user)
 
     const result = await refreshTokenStrategy.validate(payload)
     expect(result).toEqual({
@@ -83,7 +83,7 @@ describe('RefreshTokenStrategy', () => {
       roles: ['admin'],
       refreshTokenId: 'refresh-1',
     })
-    expect(refreshTokenRepository.findOne).toHaveBeenCalledWith({
+    expect(_refreshTokenRepository.findOne).toHaveBeenCalledWith({
       where: {
         token: 'refresh-token',
         userId: '123',
@@ -91,14 +91,14 @@ describe('RefreshTokenStrategy', () => {
         expiresAt: expect.any(Object),
       },
     })
-    expect(userRepository.findOne).toHaveBeenCalledWith({
+    expect(_userRepository.findOne).toHaveBeenCalledWith({
       where: { id: '123' },
       relations: ['roles'],
     })
   })
 
   it('should throw UnauthorizedException if refresh token is not found', async () => {
-    ;(refreshTokenRepository.findOne as jest.Mock).mockResolvedValue(null)
+    ;(_refreshTokenRepository.findOne as jest.Mock).mockResolvedValue(null)
 
     await expect(
       refreshTokenStrategy.validate({
@@ -118,10 +118,10 @@ describe('RefreshTokenStrategy', () => {
       tenantId: 'tenant-1',
       expiresAt: new Date(Date.now() + 10000),
     }
-    ;(refreshTokenRepository.findOne as jest.Mock).mockResolvedValue(
+    ;(_refreshTokenRepository.findOne as jest.Mock).mockResolvedValue(
       refreshToken
     )
-    ;(userRepository.findOne as jest.Mock).mockResolvedValue(null)
+    ;(_userRepository.findOne as jest.Mock).mockResolvedValue(null)
 
     await expect(
       refreshTokenStrategy.validate({
