@@ -114,7 +114,7 @@ const tag = computed(() => (props.href ? 'a' : 'button'))
   &.icon-only {
     justify-content: center;
 
-    .button-content > :not(svg, img) {
+    .button-content > :not(:first-child) {
       display: none;
     }
   }
