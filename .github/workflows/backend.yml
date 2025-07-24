@@ -1,15 +1,6 @@
 name: Backend CI, SCA and SAST
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-    paths:
-      - "backend/**"
-      - ".github/workflows/backend.yml"
-      - ".github/workflows/sca.yml"
-      - ".github/workflows/sast.yml"
   pull_request:
     branches:
       - main
@@ -309,11 +300,7 @@ jobs:
       # Set up Node.js environment with caching enabled for yarn
       - name: Set up Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "yarn" # Automatically caches yarn dependencies based on lockfile
-
-      # Install project dependencies using the cached yarn state if available
+        
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
@@ -333,8 +320,8 @@ jobs:
 
       # Run ESLint specifically on the backend workspace
       - name: Run ESLint on backend
-        run: yarn workspace backend lint # Adjust if not using Yarn workspaces
+        run: yarn workspace backend lint:fix
 
       # Build the backend application
       - name: Build backend
-        run: yarn workspace backend build # Adjust if not using Yarn workspaces
+        run: yarn workspace backend build

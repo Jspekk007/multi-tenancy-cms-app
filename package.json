@@ -1,10 +1,24 @@
 {
   "name": "multi-tenant-cms",
+  "version": "1.0.0",
   "private": true,
   "workspaces": [
     "frontend",
     "backend"
   ],
+  "scripts": {
+    "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
+    "dev:frontend": "cd frontend && yarn dev",
+    "dev:backend": "cd backend && yarn start:dev",
+    "build": "yarn build:frontend && yarn build:backend",
+    "build:frontend": "cd frontend && yarn build",
+    "build:backend": "cd backend && yarn build",
+    "start": "concurrently \"yarn start:frontend\" \"yarn start:backend\"",
+    "start:frontend": "cd frontend && yarn start",
+    "start:backend": "cd backend && yarn start",
+    "install:all": "yarn install && cd frontend && yarn install && cd ../backend && yarn install",
+    "prepare": "husky"
+  },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "husky": "^9.1.7",
@@ -13,10 +27,8 @@
     "eslint-config-next": "^15.2.2",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
-    "prettier": "^3.5.3"
-  },
-  "scripts": {
-    "prepare": "husky"
+    "prettier": "^3.5.3",
+    "concurrently": "^8.2.2"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx,ts,tsx}": [
@@ -27,5 +39,6 @@
       "cd backend && yarn lint:fix",
       "yarn prettier --write"
     ]
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

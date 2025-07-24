@@ -1,32 +1,65 @@
-# Step 1: Use an official Node.js runtime as a parent image
-FROM node:20
+# syntax=docker/dockerfile:1.4
 
-# Step 2: Set the working directory inside the container
+# Build stage
+FROM node:20-slim AS builder
+
+# Set working directory
 WORKDIR /app/backend
 
-# Step 3: Copy the root-level package.json and yarn.lock (important for Yarn workspaces)
+# Copy package files
 COPY package.json yarn.lock ../
-
-# Step 4: Copy the backend-specific package.json
 COPY backend/package.json ./
 
-# Step 5: Install dependencies for the backend (uses Yarn workspaces resolution)
-RUN apt-get update && \
+# Install dependencies with BuildKit cache mount
+RUN --mount=type=cache,target=/root/.yarn \
+    --mount=type=cache,target=/root/.cache \
+    apt-get update && \
     apt-get install -y --no-install-recommends make gcc g++ python3 && \
     yarn install --frozen-lockfile && \
-    yarn cache clean &&  \
     yarn add nodemon ts-node -D && \
     npm rebuild bcrypt --build-from-source && \
     apt-get remove -y make gcc g++ python3 && \
     apt-get autoremove -y && \
     apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    yarn cache clean
+
+# Development stage
+FROM node:20-slim AS development
+
+WORKDIR /app/backend
+
+# Install development dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends make gcc g++ python3 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Step 6: Copy the rest of the backend application code
-COPY backend ./
+# Copy package files
+COPY package.json yarn.lock ../
+COPY backend/package.json ./
 
-# Step 7: Expose the port that the backend app will run on
+# Install dependencies
+RUN yarn install --frozen-lockfile && \
+    yarn add nodemon ts-node -D && \
+    npm rebuild bcrypt --build-from-source
+
+# Copy source code
+COPY backend/src ./src
+COPY backend/tsconfig.json ./
+
+# Expose ports
 EXPOSE 3000
+EXPOSE 9229
 
-# Step 8: Start the backend app with nodemon for development
-CMD ["yarn", "start:debug"]
+# Start the app with proper ESM support
+CMD ["yarn", "start:dev"]
+
+# Production stage (optional, uncomment if needed)
+# FROM node:20-slim AS production
+# WORKDIR /app/backend
+# COPY --from=builder /app/backend/node_modules ./node_modules
+# COPY --from=builder /app/backend/package.json ./
+# COPY backend/dist ./dist
+# EXPOSE 3000
+# CMD ["yarn", "start:prod"]
