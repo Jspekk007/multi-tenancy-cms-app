@@ -1,9 +1,12 @@
-import { resolve } from 'path'
+import { createRequire } from 'node:module'
+import { resolve, dirname, join } from 'path'
 import vue from '@vitejs/plugin-vue'
+
+const require = createRequire(import.meta.url)
 
 export default {
   framework: {
-    name: '@storybook/vue3-vite',
+    name: getAbsolutePath('@storybook/vue3-vite'),
     options: {},
   },
   core: {
@@ -13,7 +16,7 @@ export default {
     '../components/**/*.stories.@(js|ts|jsx|tsx|mdx)',
     './stories/**/*.stories.@(js|ts|jsx|tsx|mdx)',
   ],
-  addons: ['@storybook/addon-essentials'],
+  addons: [getAbsolutePath('@storybook/addon-docs')],
   viteFinal(config) {
     config.plugins = [
       ...(config.plugins || []),
@@ -45,4 +48,8 @@ export default {
     }
     return config
   },
+}
+
+function getAbsolutePath(value: string): unknown {
+  return dirname(require.resolve(join(value, 'package.json')))
 }
