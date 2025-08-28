@@ -21,14 +21,17 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "husky": "^9.1.7",
-    "lint-staged": "^15.4.3",
-    "eslint": "^9.22.0",
-    "eslint-config-next": "^15.2.2",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.4",
+    "concurrently": "^8.2.2",
+    "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.1",
     "eslint-plugin-prettier": "^5.2.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
     "prettier": "^3.5.3",
-    "concurrently": "^8.2.2"
+    "semantic-release": "^24.2.7"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx,ts,tsx}": [

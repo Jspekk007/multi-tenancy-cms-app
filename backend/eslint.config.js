@@ -5,6 +5,9 @@ import nestjsPlugin from 'eslint-plugin-nestjs';
 import prettierPlugin from 'eslint-plugin-prettier';
 
 export default [
+  {
+    ignores: ['dist', 'node_modules', '.eslintrc.js']
+  },
   eslint.configs.recommended,
   {
     files: ['src/**/*.ts'],
