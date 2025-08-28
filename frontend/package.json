@@ -55,7 +55,7 @@
     "stylelint": "15.10.3",
     "stylelint-config-recommended-vue": "1",
     "stylelint-config-standard": "34",
-    "stylelint-config-standard-scss": "10",
+    "stylelint-config-standard-scss": "15",
     "stylelint-order": "^7.0.0",
     "typescript": "^5.9.2",
     "vite": "^6.3.5",
