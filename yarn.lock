@@ -507,7 +507,15 @@
     "@babel/types" "^7.28.2"
     debug "^4.3.1"
 
-"@babel/types@7.27.6", "@babel/types@^7.0.0", "@babel/types@^7.20.7", "@babel/types@^7.25.4", "@babel/types@^7.26.9", "@babel/types@^7.27.1", "@babel/types@^7.27.3", "@babel/types@^7.27.6", "@babel/types@^7.3.3":
+"@babel/types@7.28.0":
+  version "7.28.0"
+  resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.28.0.tgz#2fd0159a6dc7353933920c43136335a9b264d950"
+  integrity sha512-jYnje+JyZG5YThjHiF28oT4SIZLnYOcSBb6+SDaFIyzDVSkXQmQQYclJ2R+YxcdmK0AX6x1E5OQNtuh3jHDrUg==
+  dependencies:
+    "@babel/helper-string-parser" "^7.27.1"
+    "@babel/helper-validator-identifier" "^7.27.1"
+
+"@babel/types@^7.0.0", "@babel/types@^7.20.7", "@babel/types@^7.25.4", "@babel/types@^7.26.9", "@babel/types@^7.27.1", "@babel/types@^7.27.3", "@babel/types@^7.27.6", "@babel/types@^7.3.3":
   version "7.27.6"
   resolved "https://registry.npmjs.org/@babel/types/-/types-7.27.6.tgz"
   integrity sha512-ETyHEk2VHHvl9b9jZP5IHPavHYk57EhanlRRuae9XCpb/j5bDCbPPMOBfCWhnl/7EDJz0jEMCi/RhccCE8r1+Q==
@@ -1905,20 +1913,20 @@
   resolved "https://registry.yarnpkg.com/@netlify/serverless-functions-api/-/serverless-functions-api-1.41.2.tgz#268016647b33be93d30bbe86757b6a1495f30510"
   integrity sha512-pfCkH50JV06SGMNsNPjn8t17hOcId4fA881HeYQgMBOrewjsw4csaYgHEnCxCEu24Y5x75E2ULbFpqm9CvRCqw==
 
-"@netlify/serverless-functions-api@^2.1.1":
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/@netlify/serverless-functions-api/-/serverless-functions-api-2.1.2.tgz#b9526d49783b9d2ebe94cd79f3768a7c215f9508"
-  integrity sha512-uEFA0LAcBGd3+fgDSLkTTsrgyooKqu8mN/qA+F/COS2A7NFWRcLFnjVKH/xZhxq+oQkrSa+XPS9qj2wgQosiQw==
+"@netlify/serverless-functions-api@^2.1.3":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@netlify/serverless-functions-api/-/serverless-functions-api-2.3.0.tgz#36595deb187155116af1d6c0dc08868a65efd9c9"
+  integrity sha512-eSC+glm4bX+9t+ajNzAs4Bca0Q/xGLgcYYh6M2Z9Dcya/MjVod1UrjPB88b0ANSBAy/aGFpDhVbwLwBokfnppQ==
 
 "@netlify/zip-it-and-ship-it@^12.1.0":
-  version "12.1.4"
-  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-12.1.4.tgz#f21c0031ca8a4925ca517c17b13470bb23b6200d"
-  integrity sha512-/wM1c0iyym/7SlowbgqTuu/+tJS8CDDs4vLhSizKntFl3VOeDVX0kr9qriH9wA2hYstwGSuHsEgEAnKdMcDBOg==
+  version "12.2.1"
+  resolved "https://registry.yarnpkg.com/@netlify/zip-it-and-ship-it/-/zip-it-and-ship-it-12.2.1.tgz#83e911e4f54dd00031028e772fdf851e8cb807a5"
+  integrity sha512-zAr+8Tg80y/sUbhdUkZsq4Uy1IMzkSB6H/sKRMrDQ2NJx4uPgf5X5jMdg9g2FljNcxzpfJwc1Gg4OXQrjD0Z4A==
   dependencies:
     "@babel/parser" "^7.22.5"
-    "@babel/types" "7.27.6"
+    "@babel/types" "7.28.0"
     "@netlify/binary-info" "^1.0.0"
-    "@netlify/serverless-functions-api" "^2.1.1"
+    "@netlify/serverless-functions-api" "^2.1.3"
     "@vercel/nft" "0.29.4"
     archiver "^7.0.0"
     common-path-prefix "^3.0.0"
