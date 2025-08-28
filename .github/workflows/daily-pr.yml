@@ -28,7 +28,7 @@ jobs:
 
       - name: Create or update PR develop -> main
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
           # Check if a PR already exists
           if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
