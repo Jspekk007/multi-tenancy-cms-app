@@ -28,6 +28,8 @@ export default withNuxt([
       ],
       'vue/attribute-hyphenation': ['error', 'always'],
       'vue/no-v-html': 'warn',
+      // Ensure valid option shape for vue/object-property-newline on ESLint 9 + plugin-vue 10
+      'vue/object-property-newline': ['error', { allowAllPropertiesOnSameLine: false }],
 
       // Array/object formatting
       'array-bracket-newline': ['error', { multiline: true, minItems: 2 }],
