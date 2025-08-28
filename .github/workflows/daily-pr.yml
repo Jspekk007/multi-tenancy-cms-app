@@ -1,0 +1,31 @@
+# .github/workflows/daily-pr.yml
+name: Daily PR from develop to master
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # 8 AM Amsterdam (summer, CEST)
+    - cron: "0 7 * * *" # 8 AM Amsterdam (winter, CET)
+  workflow_dispatch: # allow manual trigger
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: main      # target branch
+          branch: develop   # source branch
+          title: "Daily Sync: develop → main"
+          body: |
+            This is an automated daily PR from `develop` to `main`.
+
+            ✅ Please review changes before merging.
+          labels: |
+            automated
+            daily-sync
+          draft: false
