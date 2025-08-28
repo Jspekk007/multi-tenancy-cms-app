@@ -8802,12 +8802,7 @@ express@4.21.2:
     utils-merge "1.0.1"
     vary "~1.1.2"
 
-exsolve@^1.0.1, exsolve@^1.0.4, exsolve@^1.0.5:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/exsolve/-/exsolve-1.0.6.tgz#91bf02c61511d72d780528a04aef98550b9845c6"
-  integrity sha512-Q05uIdxhPBVBwK29gcPsl2K220xSBy52TZQPdeYWE0zOs8jM+yJ6y5h7jm6cpAo1p+OOMZRIj/Ftku4EQQBLnQ==
-
-exsolve@^1.0.7:
+exsolve@^1.0.1, exsolve@^1.0.4, exsolve@^1.0.5, exsolve@^1.0.7:
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/exsolve/-/exsolve-1.0.7.tgz#3b74e4c7ca5c5f9a19c3626ca857309fa99f9e9e"
   integrity sha512-VO5fQUzZtI6C+vx4w/4BWJpg3s/5l+6pRQEHzFRM8WFi4XffSP1Z+4qi7GbjWbvRQEbdIco5mIMq+zX4rPuLrw==
