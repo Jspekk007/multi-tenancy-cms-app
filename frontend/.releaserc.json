@@ -1,0 +1,17 @@
+{
+  "branches": ["main"],
+  "tagFormat": "storybook-v${version}",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/changelog",
+      { "changelogFile": "frontend/CHANGELOG.storybook.md" }
+    ],
+    [
+      "@semantic-release/git",
+      { "assets": ["frontend/CHANGELOG.storybook.md"] }
+    ],
+    "@semantic-release/github"
+  ]
+}

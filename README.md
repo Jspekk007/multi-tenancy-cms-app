@@ -85,6 +85,30 @@ The backend is built with NestJS and includes:
 - JWT Authentication
 - Swagger API Documentation
 
+## Releases
+
+Semantic-release is configured to manage versions and GitHub releases per workspace.
+
+- Storybook (GitHub Pages):
+  - Config: `frontend/.releaserc.json`
+  - Workflow: `.github/workflows/release-storybook.yml`
+  - On push to `main` affecting `frontend/**`, builds Storybook, creates a release with tag `storybook-v<version>`, and deploys `frontend/storybook-static` to GitHub Pages.
+
+- Frontend app:
+  - Config: `frontend/.releaserc.app.json` with tag `frontend-v<version>`
+  - Workflow: `.github/workflows/release-frontend.yml`
+  - On push to `main` affecting `frontend/**`, builds the app and publishes a GitHub Release.
+
+- Backend service:
+  - Config: `backend/.releaserc.json` with tag `backend-v<version>`
+  - Workflow: `.github/workflows/release-backend.yml`
+  - On push to `main` affecting `backend/**`, builds, runs tests, and publishes a GitHub Release.
+
+Requirements:
+- Conventional commits are required for release notes and versioning (`feat:`, `fix:`, `chore:`, etc.).
+- GitHub Pages must be enabled with source set to GitHub Actions for Storybook.
+- The default release branch is `main`.
+
 ## Contributing
 
 1. Create a new branch for your feature
@@ -93,4 +117,4 @@ The backend is built with NestJS and includes:
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
