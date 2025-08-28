@@ -32,7 +32,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.4.20",
     "@nestjs/swagger": "^7.4.2",
-    "@nestjs/typeorm": "^10.0.2",
+    "@nestjs/typeorm": "^11.0.0",
     "@prisma/client": "^6.15.0",
     "@types/passport-jwt": "^4.0.1",
     "backend": "^0.0.0",
