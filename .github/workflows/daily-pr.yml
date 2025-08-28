@@ -1,0 +1,20 @@
+name: Daily PR Develop to Main
+
+on:
+    schedule:
+        - cron: '0 8 * * *'
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: master
+          branch: develop
+          title: "Daily Sync: develop → master"
+          body: "Automated daily pull request"
