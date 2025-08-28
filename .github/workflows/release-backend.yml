@@ -1,0 +1,47 @@
+name: Release Backend
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "package.json"
+      - "yarn.lock"
+      - ".github/workflows/release-backend.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install deps
+        run: yarn install --immutable
+
+      - name: Build Backend
+        working-directory: backend
+        run: yarn build
+
+      - name: Run Tests
+        working-directory: backend
+        run: yarn test --runInBand
+
+      - name: Semantic Release (Backend)
+        working-directory: backend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release 
