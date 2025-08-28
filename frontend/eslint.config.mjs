@@ -64,6 +64,7 @@ export default withNuxt([
       // TypeScript
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
 
       // General JS/TS
       'no-console': ['warn', { allow: ['warn', 'error'] }],

@@ -1,4 +1,5 @@
-@use './variables' as *;
+@use './typography' as *;
+@use './colors' as *;
 
 *,
 *::before,
@@ -11,8 +12,8 @@ body {
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-base;
-  color: $color-text;
-  background-color: $color-background;
+  color: $gray-900;
+  background-color: $gray-50;
   -webkit-font-smoothing: antialiased;
 }
 

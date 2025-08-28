@@ -1,0 +1,22 @@
+@use './typography' as *;
+@use './colors' as *;
+@use './spacing' as *;
+@use './breakpoints' as *;
+@use './misc' as *;
+@use './base' as *;
+@use './a11y' as *;
+@use './grid' as *;
+@use './flex' as *;
+@use './utilities' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-family-base;
+  color: $gray-900;
+  background-color: $gray-50;
+}

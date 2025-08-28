@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     '@nuxtjs/storybook',
   ],
   devtools: { enabled: true },
-  css: ['@/assets/scss/main.scss'],
+  css: ['@/assets/scss/tokens/main.scss'],
   compatibilityDate: '2025-05-15',
 
   vite: {
@@ -20,8 +20,12 @@ export default defineNuxtConfig({
       preprocessorOptions: {
         scss: {
           additionalData: `
-            @use "@/assets/scss/variables" as *;
-            @use "@/assets/scss/mixins" as *;
+            @use "@/assets/scss/tokens/typography" as *;
+            @use "@/assets/scss/tokens/colors" as *;
+            @use "@/assets/scss/tokens/spacing" as *;
+            @use "@/assets/scss/tokens/breakpoints" as *;
+            @use "@/assets/scss/tokens/misc" as *;
+            @use "@/assets/scss/tokens/mixins" as *;
           `,
         },
       },
