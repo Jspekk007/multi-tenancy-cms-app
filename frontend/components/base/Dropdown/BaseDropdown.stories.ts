@@ -125,3 +125,159 @@ export const Default: Story = {
     selected: null,
   },
 }
+
+// Preselected item story
+export const WithPreselected: Story = {
+  render: Default.render,
+  args: {
+    options: fruitOptions,
+    selected: fruitOptions[1],
+  },
+}
+
+// Many options (scroll/long list) story
+const manyOptions: FruitOption[] = [
+  ...fruitOptions,
+  {
+    label: '🥭 Mango',
+    value: 'mango',
+  },
+  {
+    label: '🍍 Pineapple',
+    value: 'pineapple',
+  },
+  {
+    label: '🍓 Strawberry',
+    value: 'strawberry',
+  },
+  {
+    label: '🍑 Peach',
+    value: 'peach',
+  },
+  {
+    label: '🍐 Pear',
+    value: 'pear',
+  },
+  {
+    label: '🍊 Orange',
+    value: 'orange',
+  },
+  {
+    label: '🍇 Grape',
+    value: 'grape',
+  },
+  {
+    label: '🥝 Kiwi',
+    value: 'kiwi',
+  },
+  {
+    label: '🍈 Melon',
+    value: 'melon',
+  },
+]
+
+export const WithManyOptions: Story = {
+  render: Default.render,
+  args: {
+    options: manyOptions,
+    selected: null,
+  },
+}
+
+// Long labels to test truncation in trigger
+const longLabelOptions: FruitOption[] = [
+  {
+    label: '🍎 Apple – A very long description that should be truncated in the trigger to avoid layout shifts',
+    value: 'apple-long',
+  },
+  {
+    label: '🍌 Banana – Another extremely verbose label to ensure ellipsis styling works as intended',
+    value: 'banana-long',
+  },
+  {
+    label: '🍒 Cherry – Lengthy label example to test overflow handling in UI',
+    value: 'cherry-long',
+  },
+]
+
+export const WithLongLabels: Story = {
+  render: Default.render,
+  args: {
+    options: longLabelOptions,
+    selected: null,
+  },
+}
+
+// Empty options list
+export const EmptyOptions: Story = {
+  render: Default.render,
+  args: {
+    options: [],
+    selected: null,
+  },
+}
+
+// Custom trigger content (e.g., with a leading icon)
+export const CustomTrigger: Story = {
+  render: (args: Args) => ({
+    components: {
+      BaseDropdown,
+      BaseDropdownTrigger,
+      BaseDropdownMenu,
+      BaseDropdownItem,
+    },
+    setup() {
+      const selectedItem = ref(args.selected)
+      watch(
+        () => args.selected,
+        (newVal) => {
+          selectedItem.value = newVal
+        },
+      )
+      const handleSelect = (option: FruitOption) => {
+        selectedItem.value = option
+        args.onSelect(option)
+      }
+      return {
+        args,
+        selectedItem,
+        handleSelect,
+      }
+    },
+    template: `
+      <BaseDropdown>
+        <template #trigger="dropdown">
+          <BaseDropdownTrigger
+            :trigger-ref="dropdown.triggerRef"
+            :is-open="dropdown.isOpen"
+            :toggle="dropdown.toggle"
+            :menu-id="dropdown.menuId"
+          >
+            <span style="margin-right: 0.5rem">🍽️</span>
+            {{ selectedItem?.label || 'Choose a fruit' }}
+          </BaseDropdownTrigger>
+        </template>
+
+        <template #menu="dropdown">
+          <BaseDropdownMenu
+            :menu-ref="dropdown.menuRef"
+            :trigger-ref="dropdown.triggerRef"
+          >
+            <BaseDropdownItem
+              v-for="option in args.options"
+              :key="option.value"
+              :close="dropdown.close"
+              :on-select="() => handleSelect(option)"
+            >
+              {{ option.label }}
+            </BaseDropdownItem>
+          </BaseDropdownMenu>
+        </template>
+      </BaseDropdown>
+    `,
+  }),
+  args: {
+    options: fruitOptions,
+    selected: null,
+  },
+}
