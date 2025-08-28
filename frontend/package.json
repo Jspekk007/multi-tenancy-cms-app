@@ -58,7 +58,7 @@
     "stylelint-config-standard-scss": "15",
     "stylelint-order": "^7.0.0",
     "typescript": "^5.9.2",
-    "vite": "^6.3.5",
+    "vite": "^7.1.3",
     "vitest": "^3.2.4",
     "vue-eslint-parser": "^10.2.0"
   },
