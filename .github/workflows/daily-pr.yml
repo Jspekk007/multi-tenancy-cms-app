@@ -1,5 +1,5 @@
 # .github/workflows/daily-pr.yml
-name: Daily PR from develop to master
+name: Daily PR from develop to main
 
 on:
   schedule:
@@ -7,25 +7,38 @@ on:
     - cron: "0 7 * * *" # 8 AM Amsterdam (winter, CET)
   workflow_dispatch: # allow manual trigger
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   create-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: main      # target branch
-          branch: develop   # source branch
-          title: "Daily Sync: develop → main"
-          body: |
-            This is an automated daily PR from `develop` to `main`.
+          fetch-depth: 0
 
-            ✅ Please review changes before merging.
-          labels: |
-            automated
-            daily-sync
-          draft: false
+      - name: Ensure both branches exist locally
+        run: |
+          git fetch origin main:main || true
+          git fetch origin develop:develop || true
+
+      - name: Create or update PR develop -> main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Check if a PR already exists
+          if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
+            gh pr create \
+              --base main \
+              --head develop \
+              --title "Daily Sync: develop → main" \
+              --body $'This is an automated daily PR from `develop` to `main`.\n\n✅ Please review changes before merging.' \
+              --label automated \
+              --label daily-sync
+          else
+            echo "An open PR from develop to main already exists. Skipping creation."
+          fi
