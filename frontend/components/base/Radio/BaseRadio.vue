@@ -6,7 +6,8 @@
 <template>
   <div
     class="base-radio-wrapper"
-    :class="[{ disabled, error: !!error }]"
+    :class="[{ disabled,
+               error: !!error }]"
   >
     <label class="radio-label">
       <input

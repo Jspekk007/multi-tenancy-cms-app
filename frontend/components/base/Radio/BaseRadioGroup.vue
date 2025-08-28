@@ -6,7 +6,8 @@
 <template>
   <div
     class="base-radio-group-wrapper"
-    :class="[{ disabled, error: !!error }]"
+    :class="[{ disabled,
+               error: !!error }]"
     role="radiogroup"
     :aria-labelledby="labelId"
     :aria-invalid="!!error || undefined"

@@ -6,7 +6,8 @@
 <template>
   <div
     class="base-input-wrapper"
-    :class="[size, { disabled, error: !!error }]"
+    :class="[size, { disabled,
+                     error: !!error }]"
   >
     <label
       v-if="label"

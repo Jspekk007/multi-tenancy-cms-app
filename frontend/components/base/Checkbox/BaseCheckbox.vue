@@ -6,7 +6,8 @@
 <template>
   <div
     class="base-checkbox-wrapper"
-    :class="[{ disabled, error: !!error }]"
+    :class="[{ disabled,
+               error: !!error }]"
   >
     <label class="checkbox-label">
       <input

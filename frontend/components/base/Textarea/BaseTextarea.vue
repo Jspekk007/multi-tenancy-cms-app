@@ -1,11 +1,8 @@
-<!--
-  BaseTextarea.vue
-  - For multi-line text input fields.
--->
 <template>
   <div
     class="base-textarea-wrapper"
-    :class="[size, { disabled, error: !!error }]"
+    :class="[size, { disabled,
+                     error: !!error }]"
   >
     <label
       v-if="label"

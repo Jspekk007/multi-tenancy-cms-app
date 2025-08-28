@@ -6,7 +6,8 @@
 <template>
   <div
     class="base-checkbox-group-wrapper"
-    :class="[{ disabled, error: !!error }]"
+    :class="[{ disabled,
+               error: !!error }]"
     role="group"
     :aria-labelledby="labelId"
     :aria-invalid="!!error || undefined"
