@@ -26,6 +26,8 @@ jobs:
   scan:
     name: Retire.js Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
+    env:
+      YARN_IGNORE_SCRIPTS: '1'
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
