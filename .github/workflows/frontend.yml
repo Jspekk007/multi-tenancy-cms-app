@@ -321,6 +321,8 @@ jobs:
     name: Frontend Lint & Cache
     needs: [quick_checks, frontend_sca, frontend_sast, summarize_security_results]
     runs-on: ubuntu-latest
+    env:
+      YARN_IGNORE_SCRIPTS: '1'
     steps:
       # Checkout the repository code
       - name: Checkout code
@@ -334,7 +336,11 @@ jobs:
           cache: "yarn" # Automatically caches yarn dependencies based on lockfile
 
       # Install project dependencies using the cached yarn state if available
-      - name: Install dependencies
+      - name: Install dependencies (skip scripts)
+        run: yarn install --frozen-lockfile --ignore-scripts
+
+      - name: Install frontend deps (generate .nuxt)
+        working-directory: frontend
         run: yarn install --frozen-lockfile
 
       # Explicitly cache node_modules for potential use in other jobs (optional but can help)
@@ -353,9 +359,11 @@ jobs:
 
       # Run ESLint specifically on the frontend workspace
       - name: Run ESLint on Frontend
-        run: yarn workspace frontend lint # Adjust if not using Yarn workspaces
+        working-directory: frontend
+        run: yarn lint
 
       # Build the frontend application
       - name: Build Frontend
-        run: yarn workspace frontend build # Adjust if not using Yarn workspaces
+        working-directory: frontend
+        run: yarn build
 
