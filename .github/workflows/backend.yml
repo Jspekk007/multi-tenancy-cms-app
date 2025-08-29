@@ -41,6 +41,11 @@ jobs:
         working-directory: backend
         run: yarn install --frozen-lockfile
 
+      - name: Rebuild bcrypt native binding (hoisted at root)
+        env:
+          YARN_IGNORE_SCRIPTS: ''
+        run: npm rebuild bcrypt --build-from-source
+
       - name: Run ESLint (backend)
         run: yarn workspace backend lint:fix
 
