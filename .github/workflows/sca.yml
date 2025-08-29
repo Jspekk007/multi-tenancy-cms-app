@@ -61,8 +61,8 @@ jobs:
         run: corepack enable
 
       # STEP 3: Install dependencies - Necessary here, but cache makes it fast
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+      - name: Install dependencies (skip scripts)
+        run: yarn install --frozen-lockfile --ignore-scripts
 
       # STEP 4: Run Retire.js Scan using npx (no global install)
       - name: Run Retire.js scan for ${{ inputs.scan-target }}
