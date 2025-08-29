@@ -33,7 +33,7 @@ jobs:
           cache: "yarn"
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --ignore-scripts
 
       - name: Run ESLint (backend)
         run: yarn workspace backend lint:fix
@@ -337,7 +337,7 @@ jobs:
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          yarn install --frozen-lockfile
+          yarn install --frozen-lockfile --ignore-scripts
 
   # Job to lint the code
   lint:
