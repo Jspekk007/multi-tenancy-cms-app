@@ -26,8 +26,6 @@ jobs:
   scan:
     name: Retire.js Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
-    env:
-      YARN_IGNORE_SCRIPTS: '1'
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
@@ -47,8 +45,8 @@ jobs:
           cache: "yarn" # Enable caching based on yarn.lock
 
       # STEP 3: Install dependencies - Necessary here, but cache makes it fast
-      - name: Install dependencies (skip scripts)
-        run: yarn install --frozen-lockfile --ignore-scripts
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       # STEP 4: Install Retire.js globally
       - name: Install Retire.js
