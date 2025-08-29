@@ -1,0 +1,41 @@
+name: Release Frontend (develop)
+
+on:
+  # Disabled by default until frontend releases start. Trigger manually.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install deps
+        run: yarn install --immutable
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: yarn build
+
+      - name: Semantic Release (Frontend on develop)
+        working-directory: frontend
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release -e ./frontend/.releaserc.app.json
+
