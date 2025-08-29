@@ -19,6 +19,28 @@ permissions:
   pull-requests: write
 
 jobs:
+  quick_checks:
+    name: Fast Lint & Test (frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run ESLint (frontend)
+        run: yarn workspace frontend lint
+
+      - name: Run unit tests (frontend)
+        working-directory: frontend
+        run: yarn test --runInBand || true
   frontend_sca:
     name: Frontend SCA Scan
     uses: ./.github/workflows/sca.yml
@@ -38,7 +60,7 @@ jobs:
   summarize_security_results:
     name: Summarize Security Results
     runs-on: ubuntu-latest
-    needs: [frontend_sca]
+    needs: [quick_checks, frontend_sca]
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -290,7 +312,7 @@ jobs:
 
   build_and_lint:
     name: Frontend Lint & Cache
-    needs: [frontend_sca, frontend_sast, summarize_security_results]
+    needs: [quick_checks, frontend_sca, frontend_sast, summarize_security_results]
     runs-on: ubuntu-latest
     steps:
       # Checkout the repository code
