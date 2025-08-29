@@ -13,6 +13,7 @@ permissions:
   contents: write
   pages: write
   id-token: write
+  pull-requests: write
 
 concurrency:
   group: pages
@@ -32,6 +33,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'yarn'
+          cache-dependency-path: |
+            yarn.lock
+            frontend/yarn.lock
 
       - name: Enable Corepack
         run: corepack enable
