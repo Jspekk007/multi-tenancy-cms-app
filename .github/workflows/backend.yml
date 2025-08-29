@@ -22,6 +22,8 @@ jobs:
   quick_checks:
     name: Fast Lint & Test (backend)
     runs-on: ubuntu-latest
+    env:
+      YARN_IGNORE_SCRIPTS: '1'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -318,6 +320,8 @@ jobs:
     name: backend Lint & Cache
     needs: [quick_checks, backend_sca, backend_sast, summarize_security_results]
     runs-on: ubuntu-latest
+    env:
+      YARN_IGNORE_SCRIPTS: '1'
     outputs:
       cache-hit: ${{ steps.cache.outputs.cache-hit }}
     steps:
