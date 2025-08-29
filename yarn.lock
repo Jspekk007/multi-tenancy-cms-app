@@ -13213,7 +13213,11 @@ postcss-sorting@^9.1.0:
   resolved "https://registry.yarnpkg.com/postcss-sorting/-/postcss-sorting-9.1.0.tgz#d2e7d43896dd399c23b5b86fc0b807a86146b590"
   integrity sha512-Mn8KJ45HNNG6JBpBizXcyf6LqY/qyqetGcou/nprDnFwBFBLGj0j/sNKV2lj2KMOVOwdXu14aEzqJv8CIV6e8g==
 
+<<<<<<< HEAD
 postcss-svgo@^7.1.0:
+=======
+postcss-svgo@^7.0.2, postcss-svgo@^7.1.0:
+>>>>>>> 18e5a6e (Build(deps): bump postcss-svgo from 7.0.2 to 7.1.0 (#83))
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/postcss-svgo/-/postcss-svgo-7.1.0.tgz#7eb6764a643ac2699bf56eef6d2676d428ed4542"
   integrity sha512-KnAlfmhtoLz6IuU3Sij2ycusNs4jPW+QoFE5kuuUOK8awR6tMxZQrs5Ey3BUz7nFCzT3eqyFgqkyrHiaU2xx3w==
