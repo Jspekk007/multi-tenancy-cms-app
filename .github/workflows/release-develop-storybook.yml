@@ -1,27 +1,20 @@
-name: Release Storybook
+name: Release Storybook (develop)
 
 on:
   push:
-    branches: ["main"]
+    branches: ["develop"]
     paths:
       - "frontend/**"
       - "package.json"
       - "yarn.lock"
-      - ".github/workflows/release-storybook.yml"
-  workflow_dispatch:
+      - ".github/workflows/release-develop-storybook.yml"
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   release:
-    name: Semantic Release (Storybook)
+    name: Semantic Release (Storybook on develop)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,20 +37,9 @@ jobs:
         working-directory: frontend
         run: yarn build-storybook
 
-      - name: Semantic Release (Storybook, tag-only)
+      - name: Semantic Release (commit changelog on develop)
         working-directory: frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release -e ./frontend/.releaserc.main.json
+        run: npx semantic-release -e ./frontend/.releaserc.app.json
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: frontend/storybook-static
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4

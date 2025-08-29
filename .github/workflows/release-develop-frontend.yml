@@ -1,4 +1,4 @@
-name: Release Frontend
+name: Release Frontend (develop)
 
 on:
   # Disabled by default until frontend releases start. Trigger manually.
@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -32,8 +33,9 @@ jobs:
         working-directory: frontend
         run: yarn build
 
-      - name: Semantic Release (Frontend)
+      - name: Semantic Release (Frontend on develop)
         working-directory: frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release -e ./frontend/.releaserc.app.json
+
