@@ -1,15 +1,20 @@
-name: Release Frontend
+name: Release Storybook (develop)
 
 on:
-  # Disabled by default until frontend releases start. Trigger manually.
-  workflow_dispatch:
+  push:
+    branches: ["develop"]
+    paths:
+      - "frontend/**"
+      - "package.json"
+      - "yarn.lock"
+      - ".github/workflows/release-develop-storybook.yml"
 
 permissions:
   contents: write
 
 jobs:
   release:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    name: Semantic Release (Storybook on develop)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,12 +33,13 @@ jobs:
       - name: Install deps
         run: yarn install --immutable
 
-      - name: Build Frontend
+      - name: Build Storybook
         working-directory: frontend
-        run: yarn build
+        run: yarn build-storybook
 
-      - name: Semantic Release (Frontend)
+      - name: Semantic Release (commit changelog on develop)
         working-directory: frontend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release -e ./frontend/.releaserc.app.json
+

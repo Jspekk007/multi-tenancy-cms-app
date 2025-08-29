@@ -329,4 +329,3 @@ jobs:
       # Build the frontend application
       - name: Build Frontend
         run: yarn workspace frontend build # Adjust if not using Yarn workspaces
-

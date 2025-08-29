@@ -1,11 +1,12 @@
-name: Release Frontend
+name: Release Backend (develop)
 
 on:
-  # Disabled by default until frontend releases start. Trigger manually.
+  # Disabled by default until backend releases start. Trigger manually.
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -28,12 +29,17 @@ jobs:
       - name: Install deps
         run: yarn install --immutable
 
-      - name: Build Frontend
-        working-directory: frontend
+      - name: Build Backend
+        working-directory: backend
         run: yarn build
 
-      - name: Semantic Release (Frontend)
-        working-directory: frontend
+      - name: Run Tests
+        working-directory: backend
+        run: yarn test --runInBand
+
+      - name: Semantic Release (Backend on develop)
+        working-directory: backend
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release -e ./frontend/.releaserc.app.json
+        run: npx semantic-release
+
