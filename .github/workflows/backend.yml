@@ -35,6 +35,10 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile --ignore-scripts
 
+      - name: Install backend deps (allow native builds like bcrypt)
+        working-directory: backend
+        run: yarn install --frozen-lockfile
+
       - name: Run ESLint (backend)
         run: yarn workspace backend lint:fix
 
