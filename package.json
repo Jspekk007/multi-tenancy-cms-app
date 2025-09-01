@@ -23,7 +23,7 @@
     "@eslint/eslintrc": "^3",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^11.0.4",
+    "@semantic-release/github": "^11.0.5",
     "concurrently": "^8.2.2",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.1",
