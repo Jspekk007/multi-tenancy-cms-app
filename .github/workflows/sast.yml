@@ -1,94 +1,66 @@
-# .github/workflows/sast.yml
 name: Reusable SAST (TruffleHog)
 
 on:
   workflow_call:
     inputs:
       scan-target:
-        description: 'The target to scan ("root", "backend", "frontend")'
         required: true
         type: string
       artifact-name:
-        description: 'Desired artifact name (e.g., "frontend-trufflehog-report")'
         required: true
         type: string
     outputs:
       vulnerabilities-found:
-        description: 'Boolean if secrets were found ("true"/"false")'
         value: ${{ jobs.scan.outputs.vulnerabilities-found }}
       report-artifact-name:
-        description: 'Actual artifact name'
         value: ${{ jobs.scan.outputs.report-artifact-name }}
 
 jobs:
   scan:
-    name: TruffleHog Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
-      report-artifact-name: ${{ steps.setup.outputs.report-artifact-name }}
+      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
 
     steps:
-      # Step 1: Use generic scan setup
       - name: Setup Scan Environment
-        uses: ./.github/workflows/scan-setup.yml
+        uses: ./.github/actions/scan-setup
         id: setup
         with:
           scan-target: ${{ inputs.scan-target }}
           artifact-name: ${{ inputs.artifact-name }}
 
-      # Step 2: Debug working directory
-      - name: Debug Working Directory
-        run: ls -l
-
-      # Step 3: Run TruffleHog
       - name: Run TruffleHog Scan
         id: trufflehog
         continue-on-error: true
         run: |
-          mkdir -p "$(dirname ${{ steps.setup.outputs.report-path }})"
-
-          TARGET_DIR="."
-          if [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-            TARGET_DIR="frontend"
-          elif [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-            TARGET_DIR="backend"
-          fi
-
-          echo "Scanning: $TARGET_DIR"
+          mkdir -p trufflehog-output
+          TARGET_DIRS="${{ inputs.scan-target }}"
+          if [[ "$TARGET_DIRS" == "root" ]]; then TARGET_DIRS="."; fi
           docker run --rm \
             -v "${PWD}:/repo" \
             trufflesecurity/trufflehog:latest \
-            filesystem /repo/$TARGET_DIR \
-            --json \
-            --debug > "${{ steps.setup.outputs.report-path }}" || true
+            filesystem /repo/$TARGET_DIRS \
+            --json > "${{ steps.setup.outputs.report-filename }}" || true
 
-      # Step 4: Check report content
       - name: Check Report Content
         id: check_report
         run: |
-          FILE="${{ steps.setup.outputs.report-path }}"
-          FOUND="false"
-
+          FILE="${{ steps.setup.outputs.report-filename }}"
+          SECRETS_FOUND="false"
           if [[ -f "$FILE" ]] && [[ -s "$FILE" ]] && jq -e . "$FILE" >/dev/null 2>&1; then
             COUNT=$(jq '. | length' "$FILE")
-            if [[ "$COUNT" -gt 0 ]]; then
-              FOUND="true"
-              echo "Secrets found: $COUNT"
-            else
-              echo "No secrets found."
-            fi
-          else
-            echo "Report missing or empty. Creating empty JSON."
-            echo "[]" > "$FILE"
+            if [[ "$COUNT" -gt 0 ]]; then SECRETS_FOUND="true"; fi
           fi
+          echo "vulnerabilities-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
-          echo "vulnerabilities-found=$FOUND" >> $GITHUB_OUTPUT
+      - name: Set Artifact Name Output
+        id: set_artifact_name
+        run: echo "artifact-name=${{ steps.setup.outputs.artifact-name }}" >> $GITHUB_OUTPUT
 
-      # Step 5: Upload artifact
       - name: Upload TruffleHog Report
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.setup.outputs.report-artifact-name }}
-          path: ${{ steps.setup.outputs.report-path }}
+          name: ${{ steps.setup.outputs.artifact-name }}
+          path: ${{ steps.setup.outputs.report-filename }}
           if-no-files-found: error
