@@ -1,0 +1,54 @@
+# .github/workflows-scan-setup.yml
+name: Generic Scan Setup
+
+on:
+  workflow_call:
+    inputs:
+      scan-target:
+        description: 'The target to scan ("root", "frontend", "backend", etc.)'
+        required: true
+        type: string
+      artifact-name:
+        description: 'Desired name for the uploaded artifact'
+        required: true
+        type: string
+    outputs:
+      report-artifact-name:
+        description: 'The name of the uploaded artifact'
+        value: ${{ steps.set-artifact-name.outputs.artifact-name }}
+      report-path:
+        description: 'The path to the report file'
+        value: ${{ steps.set-report-path.outputs.full_path }}
+  
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      report-artifact-name: ${{ steps.set-artifact-name.outputs.artifact-name }}
+      report-path: ${{ steps.set-report-path.outputs.full_path }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set Artifact Name
+        id: set-artifact-name
+        run: |
+          echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
+
+      - name: Determine Report Path
+        id: set-report-path
+        run: |
+          TARGET="${{ inputs.scan-target}}"
+          REPORT_FILE="${{ inputs.artifact-name }}.json"
+
+          if [[ "$TARGET === "frontend" ]]; then
+            FULL_PATH="frontend/reports/$REPORT_FILE"
+          elif [[ "$TARGET" == "backend" ]]; then
+            FULL_PATH="backend/reports/$REPORT_FILE"
+          else
+            FULL_PATH="$REPORT_FILE"
+          fi
+
+          echo "full_path=$FULL_PATH" >> $GITHUB_OUTPUT
