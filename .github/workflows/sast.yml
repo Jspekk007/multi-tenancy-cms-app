@@ -95,6 +95,7 @@ jobs:
             chmod +x trufflehog_asset
             sudo mv trufflehog_asset /usr/local/bin/trufflehog
           fi
+          echo "vulnerabilities-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
           trufflehog --version
 
@@ -127,7 +128,6 @@ jobs:
       - name: Debug report files
         run: ls -l ./sast-reports/${{ inputs.scan-target }}
 
-      # Step 5: Upload artifact
       - name: Upload TruffleHog Report
         if: always() && (github.event_name == 'pull_request' || failure())
         uses: actions/upload-artifact@v4
