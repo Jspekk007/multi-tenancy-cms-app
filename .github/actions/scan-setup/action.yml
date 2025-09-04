@@ -1,38 +1,35 @@
-name: "Scan Setup"
-description: "Checkout code, setup environment and artifact paths for SAST/SCA scans"
-author: "Johan"
-runs:
-  using: "composite"
-  steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set Artifact Name
-      run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
-
-    - name: Set Report Filename
-      run: |
-        if [[ "${{ inputs.scan-target }}" == "root" ]]; then
-          REPORT_PATH="${{ inputs.scan-target }}-scan.json"
-        else
-          REPORT_PATH="${{ inputs.scan-target }}-scan.json"
-        fi
-        echo "report_filename=$REPORT_PATH" >> $GITHUB_OUTPUT
+# .github/actions/scan-setup/action.yml
+name: Scan Setup
+description: "Generic scan setup for SAST or SCA scans"
 
 inputs:
   scan-target:
-    description: 'Target to scan (frontend, backend, root)'
+    description: "The target to scan (e.g., root, frontend, backend)"
     required: true
-    type: string
   artifact-name:
-    description: 'Artifact name for the uploaded report'
+    description: "The desired artifact name for the scan report"
     required: true
-    type: string
 
 outputs:
-  artifact-name:
-    description: 'Name of the artifact'
-  report-filename:
-    description: 'Path to the report file'
+  report-path:
+    description: "Full path to the scan report file"
+
+runs:
+  using: "composite"
+  steps:
+    # Step 1: Ensure the repository is checked out
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # Step 2: Create a reports directory for the target
+    - name: Create reports directory
+      shell: bash
+      run: |
+        mkdir -p reports/${{ inputs.scan-target }}
+
+    # Step 3: Set full report path output
+    - name: Set report path output
+      shell: bash
+      run: |
+        REPORT_PATH="reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}"
+        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT

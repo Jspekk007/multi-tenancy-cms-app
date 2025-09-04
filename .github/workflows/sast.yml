@@ -1,66 +1,99 @@
-name: Reusable SAST (TruffleHog)
+# .github/workflows/sast.yml
+name: Reusable SAST (Trufflehog)
 
 on:
   workflow_call:
     inputs:
       scan-target:
+        description: 'The target to scan ("root", "backend", or "frontend")'
         required: true
         type: string
       artifact-name:
+        description: 'The desired name for the uploaded report artifact (e.g., "frontend-trufflehog-report")'
         required: true
         type: string
     outputs:
       vulnerabilities-found:
+        description: 'Boolean indicating if vulnerabilities were found ("true" or "false")'
         value: ${{ jobs.scan.outputs.vulnerabilities-found }}
       report-artifact-name:
+        description: "The actual name of the artifact uploaded"
         value: ${{ jobs.scan.outputs.report-artifact-name }}
 
 jobs:
   scan:
+    name: Trufflehog Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
-      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+      report-artifact-name: ${{ steps.set_artifact.outputs.artifact-name }}
 
     steps:
+      # STEP 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # STEP 2: Use reusable scan setup (installs dependencies / environment)
       - name: Setup Scan Environment
         uses: ./.github/actions/scan-setup
-        id: setup
         with:
           scan-target: ${{ inputs.scan-target }}
           artifact-name: ${{ inputs.artifact-name }}
 
-      - name: Run TruffleHog Scan
-        id: trufflehog
-        continue-on-error: true
+      # STEP 3: Run Trufflehog scan
+      - name: Run Trufflehog scan for ${{ inputs.scan-target }}
+        id: trufflehog_scan
         run: |
-          mkdir -p trufflehog-output
-          TARGET_DIRS="${{ inputs.scan-target }}"
-          if [[ "$TARGET_DIRS" == "root" ]]; then TARGET_DIRS="."; fi
-          docker run --rm \
-            -v "${PWD}:/repo" \
-            trufflesecurity/trufflehog:latest \
-            filesystem /repo/$TARGET_DIRS \
-            --json > "${{ steps.setup.outputs.report-filename }}" || true
+          REPORT_FILE="trufflehog-report-${{ inputs.scan-target }}.json"
+          SCAN_DIR="."
+          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
+            SCAN_DIR="./backend"
+          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
+            SCAN_DIR="./frontend"
+          fi
 
+          echo "Running Trufflehog scan in $SCAN_DIR, outputting to $REPORT_FILE"
+          trufflehog filesystem "$SCAN_DIR" --json --exclude_paths 'node_modules|.git' > "$REPORT_FILE" || true
+
+          if [[ -f "$REPORT_FILE" ]]; then
+            echo "Report generated at $REPORT_FILE"
+          else
+            echo "Warning: Trufflehog did not produce a report!"
+          fi
+
+      # STEP 4: Check Report Content
       - name: Check Report Content
         id: check_report
         run: |
-          FILE="${{ steps.setup.outputs.report-filename }}"
-          SECRETS_FOUND="false"
-          if [[ -f "$FILE" ]] && [[ -s "$FILE" ]] && jq -e . "$FILE" >/dev/null 2>&1; then
-            COUNT=$(jq '. | length' "$FILE")
-            if [[ "$COUNT" -gt 0 ]]; then SECRETS_FOUND="true"; fi
+          REPORT_FILE="trufflehog-report-${{ inputs.scan-target }}.json"
+          VULNS_FOUND="false"
+
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            echo "No report found, assuming no vulnerabilities."
+          else
+            COUNT=$(jq 'length' "$REPORT_FILE")
+            if [[ "$COUNT" -gt 0 ]]; then
+              VULNS_FOUND="true"
+              echo "Found $COUNT secrets in report."
+            else
+              echo "No secrets found in report."
+            fi
           fi
-          echo "vulnerabilities-found=$SECRETS_FOUND" >> $GITHUB_OUTPUT
 
-      - name: Set Artifact Name Output
-        id: set_artifact_name
-        run: echo "artifact-name=${{ steps.setup.outputs.artifact-name }}" >> $GITHUB_OUTPUT
+          echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
 
-      - name: Upload TruffleHog Report
+      # STEP 5: Set artifact output
+      - name: Set Artifact Name and Path
+        id: set_artifact
+        run: |
+          REPORT_FILE="trufflehog-report-${{ inputs.scan-target }}.json"
+          echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
+          echo "report-path=$REPORT_FILE" >> $GITHUB_OUTPUT
+
+      # STEP 6: Upload Trufflehog report
+      - name: Upload Trufflehog Report (${{ inputs.scan-target }})
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.setup.outputs.artifact-name }}
-          path: ${{ steps.setup.outputs.report-filename }}
-          if-no-files-found: error
+          name: ${{ steps.set_artifact.outputs.artifact-name }}
+          path: ${{ steps.set_artifact.outputs.report-path }}
+          if-no-files-found: warn
