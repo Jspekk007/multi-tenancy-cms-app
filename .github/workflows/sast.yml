@@ -86,7 +86,7 @@ jobs:
       - name: Set Artifact Name and Path
         id: set_artifact
         run: |
-          REPORT_FILE="trufflehog-report-${{ inputs.scan-target }}.json"
+          REPORT_FILE="${{ inputs.scan-target }}-trufflehog-report.json"
           echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
           echo "report-path=$REPORT_FILE" >> $GITHUB_OUTPUT
 
