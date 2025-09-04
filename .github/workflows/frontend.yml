@@ -301,7 +301,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: "yarn" # Automatically caches yarn dependencies based on lockfile
 
       # Install project dependencies using the cached yarn state if available
