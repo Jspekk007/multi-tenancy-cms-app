@@ -82,18 +82,19 @@ jobs:
 
           echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
 
-      # STEP 5: Set artifact output
-      - name: Set Artifact Name and Path
-        id: set_artifact
-        run: |
-          REPORT_FILE="${{ inputs.scan-target }}-trufflehog-report.json"
-          echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
-          echo "report-path=$REPORT_FILE" >> $GITHUB_OUTPUT
+      - name: Set Artifact Name Output
+        id: set_artifact_name
+        run: echo "artifact-name=${{ inputs.scan-target }}-trufflehog-report" >> $GITHUB_OUTPUT
 
-      # STEP 6: Upload Trufflehog report
-      - name: Upload Trufflehog Report (${{ inputs.scan-target }})
+      - name: Run TruffleHog Scan
+        run: |
+          mkdir -p ./sast-reports/${{ inputs.scan-target }}
+          trufflehog filesystem ./ --json > ./sast-reports/${{ inputs.scan-target }}/${{ inputs.scan-target }}-trufflehog-report.json
+        shell: bash
+
+      - name: Upload TruffleHog Report
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_artifact.outputs.artifact-name }}
-          path: ${{ steps.set_artifact.outputs.report-path }}
+          name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+          path: ./sast-reports/${{ inputs.scan-target }}/${{ inputs.scan-target }}-trufflehog-report.json
           if-no-files-found: warn
