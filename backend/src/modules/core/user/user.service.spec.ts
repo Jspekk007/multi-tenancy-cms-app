@@ -64,7 +64,7 @@ describe('UserService', () => {
       expect(mockRoleRepository.findByIds).toHaveBeenCalledWith(['role1']);
       expect(mockUserRepository.create).toHaveBeenCalledWith({
         email: 'test@example.com',
-        password: 'hashedPassword',
+        password: 'mockedHashedPassword',
         tenantId: 'tenant1',
         roles: [{ id: 'role1' }],
       });

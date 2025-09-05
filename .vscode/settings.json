@@ -14,5 +14,8 @@
     "source.fixAll": "explicit",
     "source.fixAll.eslint": "explicit"
   },
-  "makefile.configureOnOpen": false
+  "makefile.configureOnOpen": false,
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }
