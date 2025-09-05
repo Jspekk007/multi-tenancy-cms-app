@@ -23,14 +23,18 @@ jobs:
       - name: Prepare SAST report directory
         run: mkdir -p ./sast-reports/${{ inputs.scan-target }}
 
-      # Step 3: Run TruffleHog
+      # Step 3: Install TruffleHog
+      - name: Install TruffleHog
+        run: pip install trufflehog
+
+      # Step 4: Run TruffleHog
       - name: Run TruffleHog Scan
         run: |
           trufflehog filesystem ./ \
             --json \
             > ./sast-reports/${{ inputs.scan-target }}/${{ inputs.scan-target }}-trufflehog-report.json
 
-      # Step 4: Debug (list files to confirm report is created)
+      # Step 5: Debug (list files)
       - name: Debug report files
         run: ls -l ./sast-reports/${{ inputs.scan-target }}
 
