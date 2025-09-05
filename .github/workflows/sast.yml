@@ -30,9 +30,9 @@ jobs:
       # Step 4: Run TruffleHog
       - name: Run TruffleHog Scan
         run: |
-          trufflehog filesystem ./ \
-            --json \
+          trufflehog --json ./ \
             > ./sast-reports/${{ inputs.scan-target }}/${{ inputs.scan-target }}-trufflehog-report.json
+
 
       # Step 5: Debug (list files)
       - name: Debug report files
