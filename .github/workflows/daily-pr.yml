@@ -32,11 +32,36 @@ jobs:
         run: |
           # Check if a PR already exists
           if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
+            echo "Generating commit summary for PR body..."
+            # Generate commit list between main..develop (non-merge commits)
+            COMMIT_LIST=$(git log --no-merges --pretty='- %h %s (%an)' main..develop || true)
+
+            # Build compare URL
+            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
+
+            # Create a temporary body file
+            BODY_FILE=$(mktemp)
+            {
+              echo "This is an automated daily PR from \`develop\` to \`main\`."
+              echo
+              echo "✅ Please review changes before merging."
+              echo
+              echo "### Compare"
+              echo "${COMPARE_URL}"
+              echo
+              echo "### Changes included"
+              if [ -n "$COMMIT_LIST" ]; then
+                echo "$COMMIT_LIST"
+              else
+                echo "- No new commits (branches are in sync)."
+              fi
+            } > "$BODY_FILE"
+
             gh pr create \
               --base main \
               --head develop \
               --title "Daily Sync: develop → main" \
-              --body $'This is an automated daily PR from `develop` to `main`.\n\n✅ Please review changes before merging.' \
+              --body-file "$BODY_FILE" \
               --label automated \
               --label daily-sync
           else
