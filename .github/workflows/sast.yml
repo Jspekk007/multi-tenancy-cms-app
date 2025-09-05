@@ -19,9 +19,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup report directory
-      - name: Prepare SAST report directory
-        run: mkdir -p ./sast-reports/${{ inputs.scan-target }}
+      # Step 2: Setup scan environment
+      - name: Setup Scan Environment
+        uses: ./.github/actions/scan-setup
+        id: setup
+        with:
+          scan-target: ${{ inputs.scan-target }}
+          artifact-name: ${{ inputs.artifact-name }}
 
       # Step 3: Install TruffleHog
       - name: Install TruffleHog
