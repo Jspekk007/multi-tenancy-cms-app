@@ -33,9 +33,10 @@
     "prettier": "^3.5.3",
     "semantic-release": "^24.2.7"
   },
-    "resolutions": {
-      "readdirp": "^4.1.2",
-      "chokidar": "^4.0.3"
+  "resolutions": {
+    "readdirp": "^4.1.2",
+    "chokidar": "^4.0.3",
+    "swagger-ui-dist": "^5.28.1"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx,ts,tsx}": [
