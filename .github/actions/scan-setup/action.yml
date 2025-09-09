@@ -25,11 +25,13 @@ runs:
     - name: Create reports directory
       shell: bash
       run: |
-        if [[ "${{ inputs.artifact-name }}" == *"trufflehog"* ]]; then
+        if [[ "ARTIFACT_NAME" == *"trufflehog"* ]]; then
           mkdir -p sast-reports/${{ inputs.scan-target }}
-          REPORT_PATH="sast-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
+          REPORT_PATH="sast-reports/$SCAN_TARGET/$ARTIFACT_NAME.json"
         else
           mkdir -p sca-reports/${{ inputs.scan-target }}
-          REPORT_PATH="sca-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
+          REPORT_PATH="sca-reports/$SCAN_TARGET/$ARTIFACT_NAME.json"
         fi
+        
+        echo "Report path is $REPORT_PATH"
         echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
