@@ -177,7 +177,7 @@ jobs:
               return 0 # Indicate successful processing of this report
           }
           # --- END: Full process_report function definition ---
-
+          
           # --- START: Process the downloaded SAST report ---
           process_sast_report() {
             local REPORT_FILE="$1"
@@ -219,13 +219,11 @@ jobs:
             echo "[DEBUG process_trufflehog_report] VULNS_IN_THIS_REPORT: $VULNS_IN_THIS_REPORT"
           }
           # --- END: Process the downloaded SAST report ---
-          
-
 
           # --- Process Downloaded SCA Report ---
           echo "[DEBUG Summary] Checking for downloaded SCA report file..."
           ls -lR ./sca-reports/ # Verify download directory content
-          SCA_REPORT_TO_PROCESS="./sca-reports/frontend/retire-report-frontend.json"
+          SCA_REPORT_TO_PROCESS="./sca-reports/frontend/frontend-retirejs-report.json"
           if [[ -f "$SCA_REPORT_TO_PROCESS" ]]; then
              echo "[DEBUG Summary] Processing SCA report: $SCA_REPORT_TO_PROCESS"
              process_report "$SCA_REPORT_TO_PROCESS" "frontend"
@@ -237,11 +235,11 @@ jobs:
           # --- Process Downloaded SAST Report (Uncomment if frontend_sast job is active) ---
           echo "[DEBUG Summary] Checking for downloaded SAST report file..."
           ls -lR ./sast-reports/frontend # Verify download directory content
-          
+
           echo "------ BEGIN SAST REPORT CONTENT ------"
           cat ./sast-reports/frontend/frontend-trufflehog-report.json
           echo "------ END SAST REPORT CONTENT ------"
-          
+
           SAST_REPORT_TO_PROCESS="./sast-reports/frontend/frontend-trufflehog-report.json"
           if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
              echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
