@@ -15,11 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repo
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Step 2: Setup scan environment
+      # Step 1: Setup scan environment
       - name: Setup Scan Environment
         uses: ./.github/actions/scan-setup
         id: setup
@@ -33,9 +29,16 @@ jobs:
         env:
           REPORT_PATH: ${{ steps.setup.outputs.report-path }}
 
+      # Step 2: Set up Python with pip cache
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
       # Step 3: Install TruffleHog
       - name: Install TruffleHog
-        run: pip install trufflehog
+        run: pip install --upgrade pip && pip install "trufflehog>=3.66.0,<4.0.0"
 
       # Step 4: Run TruffleHog Scan
       - name: Run TruffleHog Scan
@@ -49,7 +52,7 @@ jobs:
       - name: Debug report files
         run: ls -l ./sast-reports/${{ inputs.scan-target }}
 
-      # Step 5: Upload artifact
+      # Step 6: Upload artifact
       - name: Upload TruffleHog Report
         uses: actions/upload-artifact@v4
         with:
