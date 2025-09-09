@@ -30,6 +30,7 @@ runs:
         ARTIFACT_NAME: ${{ inputs.artifact-name }}
         SCAN_TARGET: ${{ inputs.scan-target }}
       run: |
+<<<<<<< HEAD
         if [[ "$ARTIFACT_NAME" == *"trufflehog"* ]]; then
           mkdir -p "sast-reports/$SCAN_TARGET"
           REPORT_PATH="sast-reports/$SCAN_TARGET/$ARTIFACT_NAME.json"
@@ -39,3 +40,20 @@ runs:
         fi
         echo "Report path is $REPORT_PATH"
         echo "report-path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
+=======
+        if [[ "${{ inputs.artifact-name }}" == *"trufflehog"* ]]; then
+          mkdir -p sast-reports/${{ inputs.scan-target }}
+          REPORT_PATH="sast-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
+        else
+          mkdir -p sca-reports/${{ inputs.scan-target }}
+          REPORT_PATH="sca-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
+        fi
+        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
+
+    # Step 3: Set full report path output
+    - name: Set report path output
+      shell: bash
+      run: |
+        REPORT_PATH="reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}"
+        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
+>>>>>>> ddff206 (fix: fix dir error in workflow)
