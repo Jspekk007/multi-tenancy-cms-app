@@ -31,12 +31,12 @@ jobs:
       - name: Install TruffleHog
         run: pip install trufflehog
 
-      - name: Debug report path
-        run: echo "Report path is ${{ steps.setup.outputs.report-path }}"
-
-      # Step 4: Run TruffleHog
+      # Step 4: Run TruffleHog Scan
       - name: Run TruffleHog Scan
-        run: trufflehog --json ./ > "${{ steps.setup.outputs.report-path }}"
+        run: trufflehog --json ./ > $REPORT_PATH
+        shell: bash
+        env:
+          REPORT_PATH: ${{ steps.setup.outputs.report-path }}
 
 
       # Step 5: Debug (list files)
@@ -48,5 +48,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
-          path: ./sast-reports/${{ inputs.scan-target }}/${{ inputs.scan-target }}-trufflehog-report.json
+          path: ${{ steps.setup.outputs.report-path }}
           if-no-files-found: error
