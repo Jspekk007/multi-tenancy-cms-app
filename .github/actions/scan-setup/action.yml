@@ -13,6 +13,7 @@ inputs:
 outputs:
   report-path:
     description: "Full path to the scan report file"
+    value: ${{ steps.compute-report-path.outputs.report-path }}
 
 runs:
   using: "composite"
@@ -23,15 +24,18 @@ runs:
 
     # Step 2: Create a reports directory for the target
     - name: Create reports directory
+      id: compute-report-path
       shell: bash
+      env:
+        ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        SCAN_TARGET: ${{ inputs.scan-target }}
       run: |
-        if [[ "ARTIFACT_NAME" == *"trufflehog"* ]]; then
-          mkdir -p sast-reports/${{ inputs.scan-target }}
+        if [[ "$ARTIFACT_NAME" == *"trufflehog"* ]]; then
+          mkdir -p "sast-reports/$SCAN_TARGET"
           REPORT_PATH="sast-reports/$SCAN_TARGET/$ARTIFACT_NAME.json"
         else
-          mkdir -p sca-reports/${{ inputs.scan-target }}
+          mkdir -p "sca-reports/$SCAN_TARGET"
           REPORT_PATH="sca-reports/$SCAN_TARGET/$ARTIFACT_NAME.json"
         fi
-        
         echo "Report path is $REPORT_PATH"
-        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
+        echo "report-path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
