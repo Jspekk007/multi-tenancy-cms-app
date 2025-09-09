@@ -128,7 +128,7 @@ jobs:
       - name: Debug report files
         run: ls -l ./sast-reports/${{ inputs.scan-target }}
 
-      # Step 6: Upload artifact
+      # Step 5: Upload artifact
       - name: Upload TruffleHog Report
         if: always() && (github.event_name == 'pull_request' || failure())
         uses: actions/upload-artifact@v4
