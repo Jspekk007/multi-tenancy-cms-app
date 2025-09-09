@@ -31,6 +31,10 @@ jobs:
       report-artifact-name: ${{ inputs.artifact-name }}
 
     steps:
+      # STEP 0: Checkout repository (required before using local actions)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       # STEP 1: Set up scan environment (prepare report path)
       - name: Setup Scan Environment
         id: setup
