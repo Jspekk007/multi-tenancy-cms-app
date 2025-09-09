@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
-      report-artifact-name: ${{ steps.set_artifact_name.outputs.artifact-name }}
+      report-artifact-name: ${{ inputs.artifact-name }}
 
     steps:
       # STEP 1: Checkout code - NECESSARY within the reusable workflow's job
@@ -37,108 +37,90 @@ jobs:
         with:
           fetch-depth: 0 # Keep if retire needs full history, else can remove
 
-      # STEP 2: Setup Node.js - Also necessary here
+      # STEP 2: Set up scan environment (prepare report path)
+      - name: Setup Scan Environment
+        id: setup
+        uses: ./.github/actions/scan-setup
+        with:
+          scan-target: ${{ inputs.scan-target }}
+          artifact-name: ${{ inputs.artifact-name }}
+
+      # STEP 3: Setup Node.js - Also necessary here
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "yarn" # Enable caching based on yarn.lock
 
-      # STEP 3: Install dependencies - Necessary here, but cache makes it fast
+      # STEP 4: Install dependencies - Necessary here, but cache makes it fast
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      # STEP 4: Install Retire.js globally
+      # STEP 5: Install Retire.js globally
       - name: Install Retire.js
         run: yarn global add retire@latest
-
-      # STEP 5: Set Report Filename
-      - name: Set Report Filename
-        id: set_paths
-        run: |
-          echo "report_filename=retire-report-${{ inputs.scan-target }}.json" >> $GITHUB_OUTPUT
 
       # STEP 6: Run Retire.js Scan
       - name: Run Retire.js scan for ${{ inputs.scan-target }}
         id: retire_scan
+        shell: bash
+        env:
+          REPORT_PATH: ${{ steps.setup.outputs.report-path }}
         run: |
-          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          RUN_DIR="."
-          OUTPUT_PATH="./$REPORT_FILENAME"
+          set -e
+          TARGET_DIR="."
+          case "${{ inputs.scan-target }}" in
+            backend) TARGET_DIR="./backend" ;;
+            frontend) TARGET_DIR="./frontend" ;;
+            root|.) TARGET_DIR="." ;;
+          esac
 
-          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-            RUN_DIR="./backend"
-          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-            RUN_DIR="./frontend"
-          fi
-
-          if [[ "$RUN_DIR" != "." ]] && [[ ! -d "$RUN_DIR" ]]; then
-             echo "Error: Target directory '$RUN_DIR' not found after checkout."
+          if [[ "$TARGET_DIR" != "." ]] && [[ ! -d "$TARGET_DIR" ]]; then
+             echo "Error: Target directory '$TARGET_DIR' not found after checkout."
              exit 1
           fi
 
-          echo "Running retire scan in $RUN_DIR, outputting to $OUTPUT_PATH (relative to $RUN_DIR)"
-          (cd $RUN_DIR && retire "." --outputformat json --outputpath "$OUTPUT_PATH" --exitwith 0 || true)
+          echo "Running retire scan on $TARGET_DIR, outputting to $REPORT_PATH"
+          retire "$TARGET_DIR" --outputformat json --outputpath "$REPORT_PATH" --exitwith 0 || true
 
-          if [[ -f "$RUN_DIR/$OUTPUT_PATH" ]]; then
-            echo "Successfully created report file at $RUN_DIR/$OUTPUT_PATH"
+          if [[ -f "$REPORT_PATH" ]]; then
+            echo "Successfully created report file at $REPORT_PATH"
           else
-            echo "Warning: Report file $RUN_DIR/$OUTPUT_PATH was NOT created by retire."
+            echo "Warning: Report file $REPORT_PATH was NOT created by retire."
           fi
 
-      # STEP 7: Determine Full Report Path
-      - name: Determine Full Report Path
-        id: report_full_path
-        run: |
-          REPORT_FILENAME="${{ steps.set_paths.outputs.report_filename }}"
-          REPORT_FULL_PATH="$REPORT_FILENAME"
-          if [[ "${{ inputs.scan-target }}" == "backend" ]]; then
-             REPORT_FULL_PATH="backend/$REPORT_FILENAME"
-          elif [[ "${{ inputs.scan-target }}" == "frontend" ]]; then
-             REPORT_FULL_PATH="frontend/$REPORT_FILENAME"
-          fi
-          echo "full_path=$REPORT_FULL_PATH" >> $GITHUB_OUTPUT
-          echo "Resolved full report path relative to root: $REPORT_FULL_PATH"
-
-      # STEP 8: Check Report Content - *** COMPLETED LOGIC ***
+      # STEP 7: Check Report Content
       - name: Check Report Content
         id: check_report
+        shell: bash
+        env:
+          REPORT_PATH: ${{ steps.setup.outputs.report-path }}
         run: |
-          REPORT_FILE="${{ steps.report_full_path.outputs.full_path }}"
+          REPORT_FILE="$REPORT_PATH"
           VULNS_FOUND="false" # Default value
 
           if [[ ! -f "$REPORT_FILE" ]]; then
              echo "Check Report: File '$REPORT_FILE' not found. Assuming no vulnerabilities."
           else
              echo "Check Report: Found file '$REPORT_FILE'. Checking content..."
-             # Use jq to count the number of results that have a non-empty 'vulnerabilities' array.
-             # Handle potential missing .data field gracefully.
              COUNT=$(jq 'if .data then [.data[].results[] | select(.vulnerabilities | length > 0)] | length else 0 end' "$REPORT_FILE")
-             JQ_EXIT_CODE=$? # Check jq exit status
+             JQ_EXIT_CODE=$?
 
              if [[ $JQ_EXIT_CODE -ne 0 ]]; then
                echo "Warning: jq command failed to parse '$REPORT_FILE' (exit code: $JQ_EXIT_CODE). Assuming no vulnerabilities."
-               # Keep VULNS_FOUND="false"
              elif [[ "$COUNT" -gt 0 ]]; then
                echo "Check Report: Found $COUNT vulnerabilities."
-               VULNS_FOUND="true" # Set to true if count is greater than 0
+               VULNS_FOUND="true"
              else
                echo "Check Report: No vulnerabilities found in report content (count is $COUNT)."
-               # Keep VULNS_FOUND="false"
              fi
           fi
-          # Set the step output as a string "true" or "false"
           echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
 
-      # STEP 9: Set Artifact Name Output
-      - name: Set Artifact Name Output
-        id: set_artifact_name
-        run: echo "artifact-name=${{ inputs.artifact-name }}" >> $GITHUB_OUTPUT
-
-      # STEP 10: Upload Artifact
+      # STEP 8: Upload Artifact
       - name: Upload Retire.js Report (${{ inputs.scan-target }})
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_artifact_name.outputs.artifact-name }}
-          path: ${{ steps.report_full_path.outputs.full_path }}
+          name: ${{ inputs.artifact-name }}
+          path: ${{ steps.setup.outputs.report-path }}
           if-no-files-found: warn
