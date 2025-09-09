@@ -10,9 +10,17 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   trufflehog-scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
       # Step 0: Checkout repository (required before using local actions)
@@ -111,9 +119,9 @@ jobs:
           fi
 
           EXCLUDE_FILE=$(mktemp)
-          printf '%s\n' '^\.git/' '(^|/)yarn\.lock$' > "$EXCLUDE_FILE"
+          printf '%s\n' '^\.git/' '(^|/)node_modules/' '(^|/)dist/' '(^|/)coverage/' '(^|/)yarn\.lock$' '(^|/)package-lock\.json$' '(^|/)pnpm-lock\.yaml$' > "$EXCLUDE_FILE"
 
-          echo "Running trufflehog on $TARGET_DIR (excluding .git and yarn.lock)"
+          echo "Running trufflehog on $TARGET_DIR (excluding common noisy paths)"
           trufflehog filesystem --json --exclude-paths "$EXCLUDE_FILE" "$TARGET_DIR" > "$REPORT_PATH" || true
 
       # Step 4: Debug (list files)
@@ -122,8 +130,10 @@ jobs:
 
       # Step 5: Upload artifact
       - name: Upload TruffleHog Report
+        if: always() && (github.event_name == 'pull_request' || failure())
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: ${{ steps.setup.outputs.report-path }}
           if-no-files-found: error
+          retention-days: 7

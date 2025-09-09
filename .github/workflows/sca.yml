@@ -22,10 +22,18 @@ on:
         description: "The actual name of the artifact uploaded"
         value: ${{ jobs.scan.outputs.report-artifact-name }}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   scan:
     name: Retire.js Scan (${{ inputs.scan-target }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ inputs.artifact-name }}
@@ -49,6 +57,9 @@ jobs:
         with:
           node-version: "22"
           cache: "yarn" # Enable caching based on yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
 
       # STEP 3: Install dependencies - Necessary here, but cache makes it fast
       - name: Install dependencies
@@ -113,8 +124,10 @@ jobs:
 
       # STEP 6: Upload Artifact
       - name: Upload Retire.js Report (${{ inputs.scan-target }})
+        if: always() && (github.event_name == 'pull_request' || failure())
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
           path: ${{ steps.setup.outputs.report-path }}
           if-no-files-found: warn
+          retention-days: 7
