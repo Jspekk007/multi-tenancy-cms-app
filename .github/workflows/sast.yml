@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 0: Checkout repository (required before using local actions)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       # Step 1: Setup scan environment
       - name: Setup Scan Environment
         uses: ./.github/actions/scan-setup
