@@ -33,6 +33,10 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
+<<<<<<< HEAD
+=======
+      security-events: write
+>>>>>>> e6bdd77 (fix dependencies)
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ inputs.artifact-name }}
@@ -137,4 +141,8 @@ jobs:
           name: ${{ inputs.artifact-name }}
           path: ${{ steps.setup.outputs.report-path }}
           if-no-files-found: warn
+<<<<<<< HEAD
           retention-days: 7
+=======
+          retention-days: 7
+>>>>>>> e6bdd77 (fix dependencies)
