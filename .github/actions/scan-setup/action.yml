@@ -25,7 +25,14 @@ runs:
     - name: Create reports directory
       shell: bash
       run: |
-        mkdir -p reports/${{ inputs.scan-target }}
+        if [[ "${{ inputs.artifact-name }}" == *"trufflehog"* ]]; then
+          mkdir -p sast-reports/${{ inputs.scan-target }}
+          REPORT_PATH="sast-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
+        else
+          mkdir -p sca-reports/${{ inputs.scan-target }}
+          REPORT_PATH="sca-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
+        fi
+        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
 
     # Step 3: Set full report path output
     - name: Set report path output
