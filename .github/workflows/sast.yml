@@ -33,7 +33,7 @@ jobs:
 
       # Step 4: Run TruffleHog
       - name: Run TruffleHog Scan
-        run: trufflehog --json ./ > ${{ steps.setup.outputs.report-path }}
+        run: trufflehog --json ./ > "${{ steps.setup.outputs.report-path }}"
 
 
       # Step 5: Debug (list files)
