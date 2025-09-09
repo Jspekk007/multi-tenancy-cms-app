@@ -23,9 +23,15 @@ jobs:
       - name: Setup Scan Environment
         uses: ./.github/actions/scan-setup
         id: setup
+        with:
+          scan-target: ${{ inputs.scan-target }}
+          artifact-name: ${{ inputs.artifact-name }}
+
+      - name: "Debug: Check report directory"
+        run: ls -l "$(dirname "${REPORT_PATH}")"
+        shell: bash
         env:
-          SCAN_TARGET: ${{ inputs.scan-target }}
-          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+          REPORT_PATH: ${{ steps.setup.outputs.report-path }}
 
       # Step 3: Install TruffleHog
       - name: Install TruffleHog
