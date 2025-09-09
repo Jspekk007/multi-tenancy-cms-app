@@ -33,12 +33,11 @@ jobs:
         env:
           REPORT_PATH: ${{ steps.setup.outputs.report-path }}
 
-      # Step 2: Set up Python with pip cache
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       # Step 3: Install TruffleHog
       - name: Install TruffleHog
