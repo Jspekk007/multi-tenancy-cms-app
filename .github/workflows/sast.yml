@@ -33,29 +33,94 @@ jobs:
         env:
           REPORT_PATH: ${{ steps.setup.outputs.report-path }}
 
-      # Step 2: Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      # Step 3: Install TruffleHog
+      # Step 2: Install TruffleHog (resolve latest Linux binary via GitHub API)
       - name: Install TruffleHog
-        run: pip install --upgrade pip && pip install "trufflehog>=3.66.0,<4.0.0"
+        shell: bash
+        run: |
+          set -euo pipefail
 
-      # Step 4: Run TruffleHog Scan
+          # Ensure jq is available
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update -y
+            sudo apt-get install -y jq
+          fi
+
+          ARCHITECTURE="amd64"
+          case "$(uname -m)" in
+            x86_64|amd64) ARCHITECTURE="amd64" ;;
+            aarch64|arm64) ARCHITECTURE="arm64" ;;
+            *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+          esac
+
+          echo "Detecting latest TruffleHog release asset for linux/${ARCHITECTURE}..."
+          ASSET_URL=$(curl -fsSL https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
+            | jq -r --arg arch "$ARCHITECTURE" '
+                .assets[]
+                | select((.name | test("linux"; "i")) and (.name | test($arch; "i")))
+                | .browser_download_url
+              ' | head -n1)
+
+          if [[ -z "$ASSET_URL" ]]; then
+            echo "Could not resolve TruffleHog asset URL for linux/${ARCHITECTURE}." >&2
+            exit 1
+          fi
+
+          echo "Downloading: $ASSET_URL"
+          curl -fsSL "$ASSET_URL" -o trufflehog_asset
+
+          # If the asset is a tar.gz archive, extract the binary; otherwise treat as raw binary
+          if file trufflehog_asset | grep -qi 'gzip compressed'; then
+            tar -xzf trufflehog_asset trufflehog || tar -xzf trufflehog_asset
+            if [[ -f trufflehog ]]; then
+              sudo mv trufflehog /usr/local/bin/trufflehog
+            else
+              # Try to locate the binary within extracted contents
+              EXTRACT_DIR=$(mktemp -d)
+              tar -xzf trufflehog_asset -C "$EXTRACT_DIR"
+              BIN_PATH=$(find "$EXTRACT_DIR" -type f -name 'trufflehog' | head -n1)
+              if [[ -z "$BIN_PATH" ]]; then
+                echo "Failed to locate trufflehog binary in archive." >&2
+                exit 1
+              fi
+              sudo mv "$BIN_PATH" /usr/local/bin/trufflehog
+            fi
+          else
+            chmod +x trufflehog_asset
+            sudo mv trufflehog_asset /usr/local/bin/trufflehog
+          fi
+
+          trufflehog --version
+
+      # Step 3: Run TruffleHog Scan (scoped to target dir and excluding noise)
       - name: Run TruffleHog Scan
-        run: trufflehog --json ./ > "$REPORT_PATH"
         shell: bash
         env:
           REPORT_PATH: ${{ steps.setup.outputs.report-path }}
+        run: |
+          set -e
+          TARGET_DIR="."
+          case "${{ inputs.scan-target }}" in
+            backend) TARGET_DIR="./backend" ;;
+            frontend) TARGET_DIR="./frontend" ;;
+            root|.) TARGET_DIR="." ;;
+          esac
 
+          if [[ "$TARGET_DIR" != "." ]] && [[ ! -d "$TARGET_DIR" ]]; then
+            echo "Error: Target directory '$TARGET_DIR' not found after checkout."
+            exit 1
+          fi
 
-      # Step 5: Debug (list files)
+          EXCLUDE_FILE=$(mktemp)
+          printf '%s\n' '^\.git/' '(^|/)yarn\.lock$' > "$EXCLUDE_FILE"
+
+          echo "Running trufflehog on $TARGET_DIR (excluding .git and yarn.lock)"
+          trufflehog filesystem --json --exclude-paths "$EXCLUDE_FILE" "$TARGET_DIR" > "$REPORT_PATH" || true
+
+      # Step 4: Debug (list files)
       - name: Debug report files
         run: ls -l ./sast-reports/${{ inputs.scan-target }}
 
-      # Step 6: Upload artifact
+      # Step 5: Upload artifact
       - name: Upload TruffleHog Report
         uses: actions/upload-artifact@v4
         with:
