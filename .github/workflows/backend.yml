@@ -225,7 +225,7 @@ jobs:
           # --- Process Downloaded SCA Report ---
           echo "[DEBUG Summary] Checking for downloaded SCA report file..."
           ls -lR ./sca-reports/ # Verify download directory content
-          SCA_REPORT_TO_PROCESS="./sca-reports/backend/retire-report-backend.json"
+          SCA_REPORT_TO_PROCESS="./sca-reports/backend/backend-retirejs-report.json"
           if [[ -f "$SCA_REPORT_TO_PROCESS" ]]; then
              echo "[DEBUG Summary] Processing SCA report: $SCA_REPORT_TO_PROCESS"
              process_report "$SCA_REPORT_TO_PROCESS" "backend"
@@ -237,11 +237,11 @@ jobs:
           # --- Process Downloaded SAST Report (Uncomment if backend_sast job is active) ---
           echo "[DEBUG Summary] Checking for downloaded SAST report file..."
           ls -lR ./sast-reports/backend # Verify download directory content
-          
+
           echo "------ BEGIN SAST REPORT CONTENT ------"
           cat ./sast-reports/backend/backend-trufflehog-report.json
           echo "------ END SAST REPORT CONTENT ------"
-          
+
           SAST_REPORT_TO_PROCESS="./sast-reports/backend/backend-trufflehog-report.json"
           if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
              echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
@@ -269,7 +269,7 @@ jobs:
           fi
 
           # --- Log and Post Comment ---
-          echo "--- Generated Comment (backend Security Scans) ---"
+          echo "--- Generated Comment (Backend Security Scans) ---"
           printf '%s\n' "$COMMENT" # Log the final comment using printf to show newlines
           echo "--- End Comment ---"
 
