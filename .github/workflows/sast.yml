@@ -31,9 +31,9 @@ jobs:
       - name: Setup Scan Environment
         uses: ./.github/actions/scan-setup
         id: setup
-        env:
-          SCAN_TARGET: ${{ inputs.scan-target }}
-          ARTIFACT_NAME: ${{ inputs.artifact-name }}
+        with:
+          scan-target: ${{ inputs.scan-target }}
+          artifact-name: ${{ inputs.artifact-name }}
 
       - name: "Debug: Check report directory"
         run: ls -l "$(dirname "${REPORT_PATH}")"
