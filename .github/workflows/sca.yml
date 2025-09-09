@@ -58,7 +58,7 @@ jobs:
           scan-target: ${{ inputs.scan-target }}
           artifact-name: ${{ inputs.artifact-name }}
 
-      # STEP 3: Setup Node.js - Also necessary here
+      # STEP 2: Setup Node.js - Also necessary here
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
