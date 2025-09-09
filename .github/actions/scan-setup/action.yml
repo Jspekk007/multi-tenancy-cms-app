@@ -33,10 +33,3 @@ runs:
           REPORT_PATH="sca-reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}.json"
         fi
         echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
-
-    # Step 3: Set full report path output
-    - name: Set report path output
-      shell: bash
-      run: |
-        REPORT_PATH="reports/${{ inputs.scan-target }}/${{ inputs.artifact-name }}"
-        echo "report-path=$REPORT_PATH" >> $GITHUB_OUTPUT
