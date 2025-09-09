@@ -31,6 +31,9 @@ jobs:
       - name: Install TruffleHog
         run: pip install trufflehog
 
+      - name: Debug report path
+        run: echo "Report path is ${{ steps.setup.outputs.report-path }}"
+
       # Step 4: Run TruffleHog
       - name: Run TruffleHog Scan
         run: trufflehog --json ./ > "${{ steps.setup.outputs.report-path }}"
