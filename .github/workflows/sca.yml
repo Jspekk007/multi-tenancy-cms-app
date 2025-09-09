@@ -31,13 +31,7 @@ jobs:
       report-artifact-name: ${{ inputs.artifact-name }}
 
     steps:
-      # STEP 1: Checkout code - NECESSARY within the reusable workflow's job
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Keep if retire needs full history, else can remove
-
-      # STEP 2: Set up scan environment (prepare report path)
+      # STEP 1: Set up scan environment (prepare report path)
       - name: Setup Scan Environment
         id: setup
         uses: ./.github/actions/scan-setup
@@ -45,22 +39,18 @@ jobs:
           scan-target: ${{ inputs.scan-target }}
           artifact-name: ${{ inputs.artifact-name }}
 
-      # STEP 3: Setup Node.js - Also necessary here
+      # STEP 2: Setup Node.js - Also necessary here
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "yarn" # Enable caching based on yarn.lock
 
-      # STEP 4: Install dependencies - Necessary here, but cache makes it fast
+      # STEP 3: Install dependencies - Necessary here, but cache makes it fast
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      # STEP 5: Install Retire.js globally
-      - name: Install Retire.js
-        run: yarn global add retire@latest
-
-      # STEP 6: Run Retire.js Scan
+      # STEP 4: Run Retire.js Scan using npx (no global install)
       - name: Run Retire.js scan for ${{ inputs.scan-target }}
         id: retire_scan
         shell: bash
@@ -81,7 +71,7 @@ jobs:
           fi
 
           echo "Running retire scan on $TARGET_DIR, outputting to $REPORT_PATH"
-          retire "$TARGET_DIR" --outputformat json --outputpath "$REPORT_PATH" --exitwith 0 || true
+          npx --yes retire "$TARGET_DIR" --outputformat json --outputpath "$REPORT_PATH" --exitwith 0 || true
 
           if [[ -f "$REPORT_PATH" ]]; then
             echo "Successfully created report file at $REPORT_PATH"
@@ -89,7 +79,7 @@ jobs:
             echo "Warning: Report file $REPORT_PATH was NOT created by retire."
           fi
 
-      # STEP 7: Check Report Content
+      # STEP 5: Check Report Content
       - name: Check Report Content
         id: check_report
         shell: bash
@@ -117,7 +107,7 @@ jobs:
           fi
           echo "vulnerabilities-found=$VULNS_FOUND" >> $GITHUB_OUTPUT
 
-      # STEP 8: Upload Artifact
+      # STEP 6: Upload Artifact
       - name: Upload Retire.js Report (${{ inputs.scan-target }})
         uses: actions/upload-artifact@v4
         with:
