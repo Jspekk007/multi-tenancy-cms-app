@@ -23,9 +23,9 @@ jobs:
       - name: Setup Scan Environment
         uses: ./.github/actions/scan-setup
         id: setup
-        with:
-          scan-target: ${{ inputs.scan-target }}
-          artifact-name: ${{ inputs.artifact-name }}
+        env:
+          SCAN_TARGET: ${{ inputs.scan-target }}
+          ARTIFACT_NAME: ${{ inputs.artifact-name }}
 
       # Step 3: Install TruffleHog
       - name: Install TruffleHog
