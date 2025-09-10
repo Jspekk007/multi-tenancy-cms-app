@@ -20,7 +20,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      security-events: write
 
     steps:
       # Step 0: Checkout repository (required before using local actions)
