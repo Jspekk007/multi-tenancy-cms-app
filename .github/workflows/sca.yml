@@ -33,10 +33,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-<<<<<<< HEAD
-=======
-      security-events: write
->>>>>>> e6bdd77 (fix dependencies)
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ inputs.artifact-name }}
@@ -54,23 +50,25 @@ jobs:
           scan-target: ${{ inputs.scan-target }}
           artifact-name: ${{ inputs.artifact-name }}
 
-      # STEP 2: Set up scan environment (prepare report path)
-      - name: Setup Scan Environment
-        id: setup
-        uses: ./.github/actions/scan-setup
-        with:
-          scan-target: ${{ inputs.scan-target }}
-          artifact-name: ${{ inputs.artifact-name }}
-
       # STEP 2: Setup Node.js - Also necessary here
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "20"
           cache: "yarn" # Enable caching based on yarn.lock
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ inputs.scan-target }}/node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-${{ inputs.scan-target }}-${{ hashFiles('${{ inputs.scan-target }}/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-${{ inputs.scan-target }}-
 
       # STEP 3: Install dependencies - Necessary here, but cache makes it fast
       - name: Install dependencies
@@ -141,8 +139,4 @@ jobs:
           name: ${{ inputs.artifact-name }}
           path: ${{ steps.setup.outputs.report-path }}
           if-no-files-found: warn
-<<<<<<< HEAD
           retention-days: 7
-=======
-          retention-days: 7
->>>>>>> e6bdd77 (fix dependencies)
