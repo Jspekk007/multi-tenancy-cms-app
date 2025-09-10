@@ -15,20 +15,17 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
     - name: Download SCA Report
       uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.sca-artifact }}
-        path: ./sca-report/${{ inputs.scan-target }}
+        path: ./sca-reports/${{ inputs.scan-target }}
 
     - name: Download SAST Report
       uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.sast-artifact }}
-        path: ./sast-report/${{ inputs.scan-target }}
+        path: ./sast-reports/${{ inputs.scan-target }}
     
     - name: Summarize and Post Comment
       shell: bash
