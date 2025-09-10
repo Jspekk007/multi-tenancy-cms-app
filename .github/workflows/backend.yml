@@ -62,23 +62,22 @@ jobs:
       # Set up Node.js environment with caching enabled for yarn
       - name: Set up Node.js
         uses: actions/setup-node@v4
-        
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        with:
+          node-version: "20"
+          cache: "yarn" # Enable caching based on yarn.lock
 
-      # Explicitly cache node_modules for potential use in other jobs (optional but can help)
-      # Note: setup-node cache is often sufficient, but this provides an explicit layer
-      - name: Cache node_modules
+      - name: Restore Backend Cache
         uses: actions/cache@v4
         with:
           path: |
-            node_modules
-            backend/node_modules # Cache specific workspace deps too if applicable
-            backend/node_modules  # Cache specific workspace deps too if applicable
-          # Key based on OS and the hash of the yarn lock file
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            backend/node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-backend-${{ hashFiles('backend/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-yarn-backend-
+        
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       # Run ESLint specifically on the backend workspace
       - name: Run ESLint on backend

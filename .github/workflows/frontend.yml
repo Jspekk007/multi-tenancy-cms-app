@@ -19,311 +19,68 @@ permissions:
   pull-requests: write
 
 jobs:
-  frontend_sca:
-    name: Frontend SCA Scan
+  sca-scan:
     uses: ./.github/workflows/sca.yml
     with:
       scan-target: "frontend"
       artifact-name: "frontend-retirejs-report"
     secrets: inherit
 
-  frontend_sast:
-    name: SAST Scan
+  sast-scan:
     uses: ./.github/workflows/sast.yml
     with:
       scan-target: "frontend"
       artifact-name: "frontend-trufflehog-report"
     secrets: inherit
 
-  summarize_security_results:
-    name: Summarize Security Results
+  summarize:
     runs-on: ubuntu-latest
-    needs: [frontend_sca]
-    if: github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: write # Needed for commenting via gh api
-      actions: read # Needed to download artifacts from other jobs
-    env:
-      # Pass GitHub token for gh api authentication
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    needs: [sca-scan, sast-scan]
     steps:
-      - name: Download Frontend SCA Report
-        uses: actions/download-artifact@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Summarize and Post Comment
+        uses: ./.github/actions/summarize
         with:
-          name: frontend-retirejs-report
-          path: ./sca-reports/frontend
+          scan-target: "frontend"
+          sca-artifact: "frontend-retirejs-report"
+          sast-artifact: "frontend-trufflehog-report"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download Frontend SAST Report
-        uses: actions/download-artifact@v4
-        with:
-          name: frontend-trufflehog-report
-          path: ./sast-reports/frontend
-
-      - name: Process Reports and Comment
-        id: summary
-        run: |
-          # Exit script immediately if any command fails
-          set -e
-          # Optional: Enable detailed command tracing for debugging
-          # set -x
-
-          # --- Initialization ---
-          PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-          COMMENT="" # Initialize empty comment body
-          # Initialize vulnerability flag - will be set by process_report if issues found
-          OVERALL_VULNS_FOUND=false
-
-          # --- START: Full process_report function definition ---
-          # Processes a single Retire.js JSON report file.
-          # Appends formatted results (header + body/success) to the global $COMMENT variable.
-          # Sets the global $OVERALL_VULNS_FOUND flag to true if vulnerabilities are detected in this report.
-          process_report() {
-              local REPORT_FILE="$1"    # Path to the retirejs JSON report
-              local REPORT_NAME="$2"    # Identifier ("root", "backend", "frontend")
-              echo "[DEBUG process_report] Received: $REPORT_NAME, File: $REPORT_FILE"
-
-              local SECTION_TITLE SECTION_HEADER FILTERED_RESULTS SUMMARY COUNT JQ_EXIT_CODE
-              local COMMENT_ADD_HEADER="" COMMENT_ADD_BODY=""
-              local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
-
-              # Determine Section Title and Header based on input name
-              case "$REPORT_NAME" in
-                "root")     SECTION_TITLE="Root Dependencies";;
-                "backend")  SECTION_TITLE="Backend Dependencies";;
-                "frontend") SECTION_TITLE="Frontend Dependencies";;
-                *)
-                  echo "[DEBUG process_report] Error: Unknown report name '$REPORT_NAME'" >&2
-                  printf -v COMMENT_ADD_BODY '⚠️ **Internal Error:** Unknown report section requested: %s\n\n' "$REPORT_NAME"
-                  COMMENT+="${COMMENT_ADD_BODY}"
-                  return 1
-                  ;;
-              esac
-              SECTION_HEADER="📦 **${SECTION_TITLE}**" # Format header with Markdown
-              echo "[DEBUG process_report] Header defined as: $SECTION_HEADER"
-
-              # Add header to the main comment if it's not already there
-              if ! printf '%s' "$COMMENT" | grep -qF -- "$SECTION_HEADER"; then
-                  echo "[DEBUG process_report] Adding header..."
-                  printf -v COMMENT_ADD_HEADER '%s\n\n' "$SECTION_HEADER"
-              else
-                  echo "[DEBUG process_report] Header check - already found or grep failed?"
-              fi
-              COMMENT+="${COMMENT_ADD_HEADER}" # Append header (if defined)
-              echo "[DEBUG process_report] Comment after header attempt: [$COMMENT]"
-
-              # Check if the report file actually exists
-              if [[ ! -f "$REPORT_FILE" ]]; then
-                  echo "[DEBUG process_report] Report file NOT found: $REPORT_FILE"
-                  printf -v COMMENT_ADD_BODY 'ℹ️ Could not find report file (or it was empty): %s\n\n' "$REPORT_FILE"
-                  COMMENT+="${COMMENT_ADD_BODY}" # Append info message
-                  return 0 # Exit function for this report
-              fi
-              echo "[DEBUG process_report] Report file found. Processing..."
-
-              # Filter report data using jq, excluding common non-app paths
-              FILTERED_RESULTS=$(jq --exit-status '
-                  .data
-                  | map(select(.file | test("/(bower_components|vendor|dist|build|test|spec|public)/") | not))
-                  | map(.file as $f | . + {results: [.results[] | select(.vulnerabilities | length > 0)] } )
-                  | map(select(.results | length > 0))
-              ' "$REPORT_FILE")
-              JQ_EXIT_CODE=$?
-
-              # Handle jq execution results
-              if [[ $JQ_EXIT_CODE -ne 0 ]]; then
-                  if [[ $JQ_EXIT_CODE -eq 4 ]]; then # jq found no matches
-                      echo "[DEBUG process_report] jq produced no matching results for $REPORT_FILE (exit code 4)."
-                      FILTERED_RESULTS="[]"
-                  else # Actual jq error
-                      echo "[DEBUG process_report] Error: jq failed to process '$REPORT_FILE' (exit code: $JQ_EXIT_CODE)" >&2
-                      printf -v COMMENT_ADD_BODY '⚠️ Error processing Retire.js report for %s (jq exit code %d).\n\n' "$SECTION_TITLE" "$JQ_EXIT_CODE"
-                      COMMENT+="${COMMENT_ADD_BODY}"
-                      return 1
-                  fi
-              elif [[ -z "$FILTERED_RESULTS" ]]; then # Handle empty output edge case
-                  echo "[DEBUG process_report] jq produced empty output for $REPORT_FILE."
-                  FILTERED_RESULTS="[]"
-              fi
-
-              # Count vulnerabilities found in the filtered results
-              COUNT=$(echo "$FILTERED_RESULTS" | jq 'map(.results[].vulnerabilities[]) | length')
-              echo "[DEBUG process_report] Vulnerability count for $REPORT_NAME: $COUNT"
-
-              # Generate the body content (vulnerability list or success message)
-              if [[ "$COUNT" -gt 0 ]]; then
-                  VULNS_IN_THIS_REPORT=true # Mark that this specific report had vulns
-                  OVERALL_VULNS_FOUND=true # Set the global flag for the entire job
-                  SUMMARY=$(echo "$FILTERED_RESULTS" | jq -r '
-                      map(
-                          .file as $filename | .results[] |
-                           "- `" + .component + " " + .version + "` ⚠️ " +
-                           (try (.vulnerabilities | map(.info | join("; ")) | join(", ")) catch "N/A") +
-                           " (in `" + ($filename // "Unknown file") + "`)"
-                      ) | join("\n") # Join findings with newlines
-                  ')
-                  # Format the vulnerability list with trailing newlines
-                  printf -v COMMENT_ADD_BODY '%s\n\n' "$SUMMARY"
-              else
-                  # Format the success message with trailing newlines
-                  printf -v COMMENT_ADD_BODY '✅ Retire.js scan passed for %s — no vulnerabilities found.\n\n' "$SECTION_TITLE"
-              fi
-
-              # Append the generated body (list or success message) to the main comment
-              COMMENT+="${COMMENT_ADD_BODY}"
-              echo "[DEBUG process_report] Finished. Final Comment piece added: [$COMMENT_ADD_BODY]"
-              echo "[DEBUG process_report] VULNS_IN_THIS_REPORT: $VULNS_IN_THIS_REPORT"
-
-              return 0 # Indicate successful processing of this report
-          }
-          # --- END: Full process_report function definition ---
-          
-          # --- START: Process the downloaded SAST report ---
-          process_sast_report() {
-            local REPORT_FILE="$1"
-            local REPORT_NAME="$2"
-            # Check if the downloaded SAST report file exists
-            echo "[DEBUG process_trufflehog_report] Received: $REPORT_NAME, File: $REPORT_FILE"
-
-            local SECTION_HEADER="🔐 **TruffleHog Secrets Scan: ${REPORT_NAME}**"
-            local COMMENT_ADD_BODY=""
-            local VULNS_IN_THIS_REPORT=false # Track vulns specific to this report call
-
-            COMMENT+="${SECTION_HEADER}"$'\n\n'
-
-            if [[ ! -f "$REPORT_FILE" ]]; then
-                echo "[DEBUG process_trufflehog_report] Report file NOT found: $REPORT_FILE"
-                printf -v COMMENT_ADD_BODY 'ℹ️ Could not find report file (or it was empty): %s\n\n' "$REPORT_FILE"
-                COMMENT+="${COMMENT_ADD_BODY}" # Append info message
-                return 0 # Exit function for this report
-            fi
-
-            local SECRET_SUMMARY
-            SECRET_SUMMARY=$(jq -r '
-              "  - **File:** \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)" + "\n" +
-              "  - **Detector:**: \(.DetectorName)" + "\n" +
-              "  - **Redacted Secret:** \(.Redacted)" + "\n" +
-              "  - **Verified:** \(.Verified)" + "\n"
-            ' "$REPORT_FILE" 2>/dev/null || echo "")
-
-            if [[ -n "${SECRET_SUMMARY}" ]]; then
-                COMMENT+="${SECRET_SUMMARY}"$'\n'
-                OVERALL_VULNS_FOUND=true # Set the global flag for the entire job
-                VULNS_IN_THIS_REPORT=true # Mark that this specific report had vulns
-            else
-                printf -v COMMENT_ADD_BODY '✅ TruffleHog scan passed for %s — no secrets found.\n\n' "$REPORT_NAME"
-                COMMENT+="${COMMENT_ADD_BODY}"
-            fi
-
-            echo "[DEBUG process_trufflehog_report] Finished. Final Comment piece added: [$COMMENT_ADD_BODY]"
-            echo "[DEBUG process_trufflehog_report] VULNS_IN_THIS_REPORT: $VULNS_IN_THIS_REPORT"
-          }
-          # --- END: Process the downloaded SAST report ---
-
-          # --- Process Downloaded SCA Report ---
-          echo "[DEBUG Summary] Checking for downloaded SCA report file..."
-          ls -lR ./sca-reports/ # Verify download directory content
-          SCA_REPORT_TO_PROCESS="./sca-reports/frontend/frontend-retirejs-report.json"
-          if [[ -f "$SCA_REPORT_TO_PROCESS" ]]; then
-             echo "[DEBUG Summary] Processing SCA report: $SCA_REPORT_TO_PROCESS"
-             process_report "$SCA_REPORT_TO_PROCESS" "frontend"
-          else
-             echo "[DEBUG Summary] Cannot process SCA report, file not found: $SCA_REPORT_TO_PROCESS"
-             COMMENT+="⚠️ Could not find the downloaded SCA report for frontend.\n\n"
-          fi
-
-          # --- Process Downloaded SAST Report (Uncomment if frontend_sast job is active) ---
-          echo "[DEBUG Summary] Checking for downloaded SAST report file..."
-          ls -lR ./sast-reports/frontend # Verify download directory content
-
-          echo "------ BEGIN SAST REPORT CONTENT ------"
-          cat ./sast-reports/frontend/frontend-trufflehog-report.json
-          echo "------ END SAST REPORT CONTENT ------"
-
-          SAST_REPORT_TO_PROCESS="./sast-reports/frontend/frontend-trufflehog-report.json"
-          if [[ -f "$SAST_REPORT_TO_PROCESS" ]]; then
-             echo "[DEBUG Summary] Processing SAST report: $SAST_REPORT_TO_PROCESS"
-             process_sast_report "$SAST_REPORT_TO_PROCESS" "frontend"
-          else
-             echo "[DEBUG Summary] Cannot process SAST report, file not found: $SAST_REPORT_TO_PROCESS"
-             COMMENT+="⚠️ Could not find the downloaded SAST report for frontend.\n\n"
-          fi
-
-          echo "[DEBUG Summary] Comment after processing all reports: [$COMMENT]"
-          echo "[DEBUG Summary] OVERALL_VULNS_FOUND after processing all reports: $OVERALL_VULNS_FOUND"
-
-
-          # --- Final Commenting Logic (Only adds the overall summary line) ---
-          if $OVERALL_VULNS_FOUND; then
-             printf -v FINAL_SUMMARY '\n---\n%s' "*Please review the vulnerabilities listed above and update the dependencies.*"
-             COMMENT+="$FINAL_SUMMARY"
-             echo "[DEBUG Summary] Vulnerabilities found overall. Setting step output."
-             echo "vulnerabilities_found=true" >> "$GITHUB_OUTPUT" # Set step output
-          else
-             printf -v FINAL_SUMMARY '\n---\n%s' "*Security scans completed for frontend. No vulnerabilities detected.*"
-             COMMENT+="$FINAL_SUMMARY"
-             echo "[DEBUG Summary] No vulnerabilities found overall. Setting step output."
-             echo "vulnerabilities_found=false" >> "$GITHUB_OUTPUT" # Set step output
-          fi
-
-          # --- Log and Post Comment ---
-          echo "--- Generated Comment (Frontend Security Scans) ---"
-          printf '%s\n' "$COMMENT" # Log the final comment using printf to show newlines
-          echo "--- End Comment ---"
-
-          # Post the final combined comment to the PR
-          echo "Posting comment to PR $PR_NUMBER..."
-          gh api --method POST -H "Accept: application/vnd.github+json" \
-            "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            -f body="$COMMENT"
-          echo "Comment posted successfully."
-
-      - name: Fail if vulnerabilities found
-        # Reference the output of the previous step (summary)
-        if: steps.summary.outputs.vulnerabilities_found == 'true'
-        run: |
-          echo "❌ Security vulnerabilities found in frontend."
-          exit 1
-        # Note: The workflow will fail if this step is reached and vulnerabilities are found.
-
-  build_and_lint:
-    name: Frontend Lint & Cache
-    needs: [frontend_sca, frontend_sast, summarize_security_results]
+  lint-build:
+    name: Lint & Build frontend
     runs-on: ubuntu-latest
+    needs: summarize
+
     steps:
-      # Checkout the repository code
       - name: Checkout code
         uses: actions/checkout@v4
-
-      # Set up Node.js environment with caching enabled for yarn
+      
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: "20"
-          cache: "yarn" # Automatically caches yarn dependencies based on lockfile
+          cache: "yarn" # Enable caching based on yarn.lock
 
-      # Install project dependencies using the cached yarn state if available
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      # Explicitly cache node_modules for potential use in other jobs (optional but can help)
-      # Note: setup-node cache is often sufficient, but this provides an explicit layer
-      - name: Cache node_modules
+      - name: Restore Frontend Cache
         uses: actions/cache@v4
         with:
           path: |
-            node_modules
-            frontend/node_modules # Cache specific workspace deps too if applicable
-            backend/node_modules  # Cache specific workspace deps too if applicable
-          # Key based on OS and the hash of the yarn lock file
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            frontend/node_modules
+            .yarn/cache
+          key: ${{ runner.os }}-yarn-frontend-${{ hashFiles('frontend/yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
+            ${{ runner.os }}-yarn-frontend-
+      
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
       # Run ESLint specifically on the frontend workspace
-      - name: Run ESLint on Frontend
-        run: yarn workspace frontend lint # Adjust if not using Yarn workspaces
+      - name: Run ESLint on frontend
+        run: yarn workspace frontend lint:fix
 
       # Build the frontend application
-      - name: Build Frontend
-        run: yarn workspace frontend build # Adjust if not using Yarn workspaces
+      - name: Build frontend
+        run: yarn workspace frontend build
