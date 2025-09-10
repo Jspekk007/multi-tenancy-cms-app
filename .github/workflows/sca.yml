@@ -33,7 +33,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      security-events: none
     outputs:
       vulnerabilities-found: ${{ steps.check_report.outputs.vulnerabilities-found }}
       report-artifact-name: ${{ inputs.artifact-name }}
