@@ -34,13 +34,18 @@ jobs:
     secrets: inherit
 
   summarize:
-    uses: ./.github/actions/summarize
+    runs-on: ubuntu-latest
     needs: [sca-scan, sast-scan]
-    with:
-      scan-target: "backend"
-      sca-artifact: "backend-retirejs-report"
-      sast-artifact: "backend-trufflehog-report"
-    secrets: inherit
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Summarize and Post Comment
+        uses: ./.github/actions/summarize
+        with:
+          scan-target: "backend"
+          sca-artifact: "backend-retirejs-report"
+          sast-artifact: "backend-trufflehog-report"
   
   lint-build:
     name: Lint & Build backend
