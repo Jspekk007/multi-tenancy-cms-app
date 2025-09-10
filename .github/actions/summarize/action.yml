@@ -1,0 +1,143 @@
+name: Summarize Security Results
+description: "Summarize security scan results and post a comment on the PR if applicable"
+
+inputs:
+  scan-target:
+    description: "The target to scan (e.g., root, frontend, backend)"
+    required: true
+  sca-artifact:
+    description: "The name of the SCA report artifact (e.g., 'frontend-retirejs-report')"
+    required: true
+  sast-artifact:
+    description: "The name of the SAST report artifact (e.g., 'frontend-trufflehog-report')"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download SCA Report
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.sca-artifact }}
+        path: ./sca-report/${{ inputs.scan-target }}
+
+    - name: Download SAST Report
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.sast-artifact }}
+        path: ./sast-report/${{ inputs.scan-target }}
+    
+    - name: Summarize and Post Comment
+      shell: bash
+      run: |
+        set -e
+
+        PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+        COMMENT=""
+        OVERALL_VULNS_FOUND=false
+
+        ############################################
+        # FUNCTION: process_report (Retire.js / SCA)
+        ############################################
+        process_report() {
+          local REPORT_FILE="$1"
+          local REPORT_NAME="$2"
+
+          case "REPORT_NAME" in
+            "root") SECTION_TITLE="Root Dependencies" ;;
+            "backend") SECTION_TITLE="Backend Dependencies" ;;
+            "frontend") SECTION_TITLE="Frontend Dependencies" ;;
+            *) SECTION_TITLE="$REPORT_NAME" ;;
+          esac
+
+          SECTION_HEADER="📦 **${SECTION_TITLE}**"
+          COMMENT+="${SECTION_HEADER}"$'\n\n'
+
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            COMMENT+="*No report file found.*"$'\n\n'
+            return
+          fi
+
+          FILTERED_RESULTS=$(jq --exit-status '
+            .data
+            | map(select(.file | test("/(bower_components|vendor|dist|build|test|spec|public)/") | not))
+            | map(.file as $f | . + {results: [.results[] | select(.vulnerabilities | length > 0)] } )
+            | map(select(.results | length > 0))
+          ' "$REPORT_FILE" || echo "[]")
+
+          COUNT=$(echo "$FILTERED_RESULTS" | jq 'map(.results[].vulnerabilities[]) | length')
+
+          if [[ "$COUNT" -gt 0 ]]; then
+            OVERALL_VULNS_FOUND=true
+            SUMMARY=$(echo "$FILTERED_RESULTS" | jq -r '
+              map(
+                .file as $filename | .results[] |
+                 "- `" + .component + " " + .version + "` ⚠️ " +
+                 (try (.vulnerabilities | map(.info | join("; ")) | join(", ")) catch "N/A") +
+                 " (in `" + ($filename // "Unknown file") + "`)"
+              ) | join("\n")
+            ')
+            COMMENT+="$SUMMARY"$'\n\n'
+          else
+            COMMENT+="✅ Retire.js scan passed for ${SECTION_TITLE} — no vulnerabilities found."$'\n\n'
+          fi
+        }
+
+        ############################################
+        # FUNCTION: process_sast_report (TruffleHog)
+        ############################################
+        process_sast_report() {
+          local REPORT_FILE="$1"
+          local REPORT_NAME="$2"
+
+          local SECTION_HEADER="🔐 **TruffleHog Secrets Scan: ${REPORT_NAME}**"
+          COMMENT+="${SECTION_HEADER}"$'\n\n'
+
+          if [[ ! -f "$REPORT_FILE" ]]; then
+            COMMENT+="ℹ️ Could not find report file: $REPORT_FILE"$'\n\n'
+            return
+          fi
+
+          SECRET_SUMMARY=$(jq -r '
+            "  - **File:** \(.SourceMetadata.Data.Filesystem.file):\(.SourceMetadata.Data.Filesystem.line)" + "\n" +
+            "  - **Detector:** \(.DetectorName)" + "\n" +
+            "  - **Redacted Secret:** \(.Redacted)" + "\n" +
+            "  - **Verified:** \(.Verified)" + "\n"
+          ' "$REPORT_FILE" 2>/dev/null || echo "")
+
+          if [[ -n "$SECRET_SUMMARY" ]]; then
+            COMMENT+="$SECRET_SUMMARY"$'\n'
+            OVERALL_VULNS_FOUND=true
+          else
+            COMMENT+="✅ TruffleHog scan passed for ${REPORT_NAME} — no secrets found."$'\n\n'
+          fi
+        }
+
+        ###############################################
+        # Process Reports
+        ###############################################
+        SCA_REPORT="./sca-reports/${{ inputs.scan-target }}/${{ inputs.sca-artifact }}.json"
+        SAST_REPORT="./sast-reports/${{ inputs.scan-target }}/${{ inputs.sast-artifact }}.json"
+
+        process_report "$SCA_REPORT" "${{ inputs.scan-target }}"
+        process_sast_report "$SAST_REPORT" "${{ inputs.scan-target }}"
+
+        ###############################################
+        # Finalize Comment
+        ###############################################
+        if $OVERALL_VULNS_FOUND; then
+          COMMENT+="\n---\n*Please review the vulnerabilities listed above and update the dependencies.*"
+        else
+          COMMENT+="\n---\n*Security scans completed for ${{ inputs.scan-target }}. No vulnerabilities detected.*"
+        fi
+
+        echo "--- Generated Comment ---"
+        printf '%s\n' "$COMMENT"
+        echo "--- End Comment ---"
+
+        gh api --method POST -H "Accept: application/vnd.github+json" \
+          "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+          -f body="$COMMENT"
