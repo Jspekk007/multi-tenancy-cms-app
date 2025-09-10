@@ -126,9 +126,9 @@ runs:
         # Finalize Comment
         ###############################################
         if $OVERALL_VULNS_FOUND; then
-          COMMENT+="\n---\n*Please review the vulnerabilities listed above and update the dependencies.*"
+          COMMENT+="*Please review the vulnerabilities listed above and update the dependencies.*"
         else
-          COMMENT+="\n---\n*Security scans completed for ${{ inputs.scan-target }}. No vulnerabilities detected.*"
+          COMMENT+="*Security scans completed for ${{ inputs.scan-target }}. No vulnerabilities detected.*"
         fi
 
         echo "--- Generated Comment ---"
