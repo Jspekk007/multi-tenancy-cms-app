@@ -46,6 +46,9 @@ jobs:
           scan-target: "backend"
           sca-artifact: "backend-retirejs-report"
           sast-artifact: "backend-trufflehog-report"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
   
   lint-build:
     name: Lint & Build backend
