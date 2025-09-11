@@ -1,7 +1,5 @@
 name: Backend CI, SCA and SAST
 
-# ADDING A TEST COMMENT - REMOVE LATER
-
 on:
   pull_request:
     branches:
