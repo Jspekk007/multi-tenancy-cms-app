@@ -36,9 +36,29 @@ jobs:
           # Re-fetch to ensure up-to-date right before decision
           git fetch --prune origin
 
-          # Determine if there are any file changes between branches (robust across squash/rebase merges)
-          if git diff --quiet origin/main...origin/develop; then
-            echo "No file differences between origin/main and origin/develop. Skipping PR creation."
+          echo "== Diagnostics =="
+          echo "origin/main:   $(git rev-parse origin/main)"
+          echo "origin/develop: $(git rev-parse origin/develop)"
+          MERGE_BASE=$(git merge-base origin/main origin/develop)
+          echo "merge-base:    ${MERGE_BASE}"
+          echo "\nThree-dot (range) changed files: origin/main...origin/develop"
+          git diff --name-status origin/main...origin/develop || true
+          echo "\nTwo-dot (trees) changed files: origin/main vs origin/develop"
+          git diff --name-status origin/main origin/develop || true
+          echo "================"
+
+          # IMPORTANT: Use two-dot to compare actual file trees to avoid loops after squash/rebase merges
+          if git diff --quiet origin/main origin/develop; then
+            echo "No file differences between origin/main and origin/develop (two-dot tree diff)."
+
+            # If an open PR exists, close it to avoid loop
+            OPEN_PR_NUMBER=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number // empty' || true)
+            if [ -n "$OPEN_PR_NUMBER" ]; then
+              echo "Closing existing PR #$OPEN_PR_NUMBER because there are no diffs."
+              gh pr comment "$OPEN_PR_NUMBER" --body "Closing automated PR because there are no file changes between main and develop."
+              gh pr close "$OPEN_PR_NUMBER"
+            fi
+
             exit 0
           fi
 
@@ -46,8 +66,8 @@ jobs:
           if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
             echo "Generating commit summary for PR body..."
 
-            # Generate commit list between main..develop (non-merge commits)
-            COMMIT_LIST=$(git log --no-merges --pretty='- %h %s (%an)' origin/main..origin/develop || true)
+            # List only unique commits on develop not equivalent to main (ignores cherry-picked/squashed)
+            COMMIT_LIST=$(git log --no-merges --cherry --right-only --pretty='- %h %s (%an)' origin/main...origin/develop || true)
 
             # Build compare URL
             COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
@@ -78,5 +98,27 @@ jobs:
               --label automated \
               --label daily-sync
           else
-            echo "An open PR from develop to main already exists. Skipping creation."
+            echo "An open PR from develop to main already exists. Updating its body with latest info."
+
+            # Update existing PR body to reflect latest unique commits
+            EXISTING_PR_NUMBER=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
+            COMMIT_LIST=$(git log --no-merges --cherry --right-only --pretty='- %h %s (%an)' origin/main...origin/develop || true)
+            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
+            BODY_FILE=$(mktemp)
+            {
+              echo "This is an automated daily PR from \`develop\` to \`main\`."
+              echo
+              echo "✅ Please review changes before merging."
+              echo
+              echo "### Compare"
+              echo "${COMPARE_URL}"
+              echo
+              echo "### Changes included"
+              if [ -n "$COMMIT_LIST" ]; then
+                echo "$COMMIT_LIST"
+              else
+                echo "- No new commits (branches are in sync)."
+              fi
+            } > "$BODY_FILE"
+            gh pr edit "$EXISTING_PR_NUMBER" --title "Daily Sync: develop → main" --body-file "$BODY_FILE"
           fi
