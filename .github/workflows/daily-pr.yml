@@ -21,20 +21,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch branches
+      - name: Fetch remote branches
         run: |
           git fetch origin main
           git fetch origin develop
-      
+
       - name: Check for new commits
         id: check_commits
         run: |
-          if [ -z "$(git log --oneline main..develop)" ]; then
-            echo "no_changes=true" >> $GITHUB_OUTPUT
-          else
+          if git log --oneline origin/main..origin/develop | grep .; then
             echo "no_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "no_changes=true" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Exit if no new commits
         if: steps.check_commits.outputs.no_changes == 'true'
         run: |
@@ -46,13 +46,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
-          echo "Generating commit summary for PR body.."
-          COMMIT_LIST=$(git log --no-merges --pretty=format:'- [%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H) %s (%an)' main..develop || true)
+          echo "Generating commit summary for PR body..."
+
+          # Ensure the branch exists on remote
+          git push origin develop
+          
+          # Commit list with clickable links and author
+          git log --no-merges --pretty=format:'- [%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H) %s (%an)' origin/main..origin/develop
+
 
           COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
           PR_DATE=$(date -u +"%Y-%m-%d")
           PR_TITLE="Daily Sync: develop → main (${PR_DATE})"
 
+          # Build PR body
           BODY_FILE=$(mktemp)
           {
             echo "This is an automated daily PR from \`develop\` to \`main\`."
@@ -70,6 +77,7 @@ jobs:
             fi
           } > "$BODY_FILE"
 
+          # Check if a PR already exists
           if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
             gh pr create \
               --base main \
