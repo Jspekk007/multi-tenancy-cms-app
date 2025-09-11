@@ -21,15 +21,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ensure both branches exist locally
+      - name: Fetch branches
         run: |
-          git fetch origin main:main || true
-          git fetch origin develop:develop || true
+          git fetch origin main
+          git fetch origin develop
       
       - name: Check for new commits
         id: check_commits
         run: |
-          if [ -z "$(git log --oneline origin/main..origin/develop)" ]; then
+          if [ -z "$(git log --oneline main..develop)" ]; then
             echo "no_changes=true" >> $GITHUB_OUTPUT
           else
             echo "no_changes=false" >> $GITHUB_OUTPUT
@@ -47,7 +47,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
           echo "Generating commit summary for PR body.."
-          COMMIT_LIST=$(git log --no-merges --pretty=format:'- [%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H) %s (%an)' origin/main..origin/develop || true)
+          COMMIT_LIST=$(git log --no-merges --pretty=format:'- [%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H) %s (%an)' main..develop || true)
 
           COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
           PR_DATE=$(date -u +"%Y-%m-%d")
@@ -81,4 +81,3 @@ jobs:
           else
             echo "An open PR from develop to main already exists. Skipping creation."
           fi
-          
