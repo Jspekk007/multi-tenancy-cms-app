@@ -25,45 +25,60 @@ jobs:
         run: |
           git fetch origin main:main || true
           git fetch origin develop:develop || true
+      
+      - name: Check for new commits
+        id: check_commits
+        run: |
+          if [ -z "$(git log --oneline origin/main..origin/develop)" ]; then
+            echo "no_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "no_changes=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Exit if no new commits
+        if: steps.check_commits.outputs.no_changes == 'true'
+        run: |
+          echo "No new commits from develop to main. Exiting."
+          exit 0
 
       - name: Create or update PR develop -> main
+        if: steps.check_commits.outputs.no_changes == 'false'
         env:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
-          # Check if a PR already exists
+          echo "Generating commit summary for PR body.."
+          COMMIT_LIST=$(git log --no-merges --pretty=format:'- [%h](https://github.com/${GITHUB_REPOSITORY}/commit/%H) %s (%an)' origin/main..origin/develop || true)
+
+          COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
+          PR_DATE=$(date -u +"%Y-%m-%d")
+          PR_TITLE="Daily Sync: develop → main (${PR_DATE})"
+
+          BODY_FILE=$(mktemp)
+          {
+            echo "This is an automated daily PR from \`develop\` to \`main\`."
+            echo
+            echo "✅ Please review changes before merging."
+            echo
+            echo "### Compare"
+            echo "${COMPARE_URL}"
+            echo
+            echo "### Changes included"
+            if [ -n "$COMMIT_LIST" ]; then
+              echo "$COMMIT_LIST"
+            else
+              echo "- No new commits (branches are in sync)."
+            fi
+          } > "$BODY_FILE"
+
           if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
-            echo "Generating commit summary for PR body..."
-            # Generate commit list between main..develop (non-merge commits)
-            COMMIT_LIST=$(git log --no-merges --pretty='- %h %s (%an)' main..develop || true)
-
-            # Build compare URL
-            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
-
-            # Create a temporary body file
-            BODY_FILE=$(mktemp)
-            {
-              echo "This is an automated daily PR from \`develop\` to \`main\`."
-              echo
-              echo "✅ Please review changes before merging."
-              echo
-              echo "### Compare"
-              echo "${COMPARE_URL}"
-              echo
-              echo "### Changes included"
-              if [ -n "$COMMIT_LIST" ]; then
-                echo "$COMMIT_LIST"
-              else
-                echo "- No new commits (branches are in sync)."
-              fi
-            } > "$BODY_FILE"
-
             gh pr create \
               --base main \
               --head develop \
-              --title "Daily Sync: develop → main" \
+              --title "${PR_TITLE}" \
               --body-file "$BODY_FILE" \
               --label automated \
               --label daily-sync
           else
             echo "An open PR from develop to main already exists. Skipping creation."
           fi
+          
