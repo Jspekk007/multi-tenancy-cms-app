@@ -109,6 +109,87 @@ Requirements:
 - GitHub Pages must be enabled with source set to GitHub Actions for Storybook.
 - The default release branch is `main`.
 
+# 📝 Import GitHub Issues Script
+
+This repository includes a Bash script to create GitHub issues from a CSV file. The script handles multiple labels per issue and ensures that the issue title and body are correctly parsed.
+
+### Prerequisites
+
+Before using the script, make sure you have:
+
+GitHub CLI (gh) installed and authenticated
+
+Install: https://cli.github.com/
+
+Authenticate:
+
+gh auth login
+
+
+Python 3 installed
+
+jq installed for JSON parsing
+
+Install: brew install jq (macOS) or sudo apt-get install jq (Linux)
+
+CSV Format
+
+The script expects a CSV file with the following columns:
+
+Column	Description
+title	The title of the GitHub issue
+body	The content of the issue
+labels	Comma-separated list of labels to apply
+
+Example:
+
+title,body,labels
+Add Storybook for frontend components,Set up Storybook to develop and test UI components.,frontend
+Improve authentication flow,Review login/logout flow and token persistence.,frontend
+
+
+⚠️ Important: Commas in the body may break the script if not removed or handled. For simplicity, it is recommended to avoid commas in the body text.
+
+Usage
+
+Place your CSV file in the repository root and name it github_issues.csv (or update the script to point to your file).
+
+Make the script executable:
+
+chmod +x create_issue.sh
+
+
+Run the script:
+
+./create_issue.sh
+
+
+The script will:
+
+Read each row from the CSV
+
+Parse the title, body, and labels
+
+Create a GitHub issue in the repository you are authenticated with
+
+Handle multiple labels per issue automatically
+
+Notes
+
+Each row in the CSV creates one GitHub issue.
+
+Labels must already exist in the repository; the script does not create new labels.
+
+Ensure your CSV encoding is UTF-8.
+
+Troubleshooting
+
+Issue not created: Check that you are authenticated with gh and have repository write access.
+
+Labels not applied correctly: Ensure they match exactly the labels in your GitHub repository (case-sensitive).
+
+Commas in the body break issues: Either remove commas or use a CSV-aware parser (future improvement).
+
 ## Contributing
 
 1. Create a new branch for your feature
