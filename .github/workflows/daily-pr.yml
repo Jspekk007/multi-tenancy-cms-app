@@ -21,20 +21,33 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Ensure both branches exist locally
+      - name: Fetch and sync branches
         run: |
-          git fetch origin main:main || true
-          git fetch origin develop:develop || true
+          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --prune --tags origin
+          # Ensure local tracking branches mirror remote tips
+          git checkout -B main origin/main
+          git checkout -B develop origin/develop
 
       - name: Create or update PR develop -> main
         env:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
+          # Re-fetch to ensure up-to-date right before decision
+          git fetch --prune origin
+
+          # Determine if there are any file changes between branches (robust across squash/rebase merges)
+          if git diff --quiet origin/main...origin/develop; then
+            echo "No file differences between origin/main and origin/develop. Skipping PR creation."
+            exit 0
+          fi
+
           # Check if a PR already exists
           if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
             echo "Generating commit summary for PR body..."
+
             # Generate commit list between main..develop (non-merge commits)
-            COMMIT_LIST=$(git log --no-merges --pretty='- %h %s (%an)' main..develop || true)
+            COMMIT_LIST=$(git log --no-merges --pretty='- %h %s (%an)' origin/main..origin/develop || true)
 
             # Build compare URL
             COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
