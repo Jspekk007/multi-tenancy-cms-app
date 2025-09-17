@@ -38,7 +38,16 @@ jobs:
 
           # Determine if there are any file changes between branches (robust across squash/rebase merges)
           if git diff --quiet origin/main...origin/develop; then
-            echo "No file differences between origin/main and origin/develop. Skipping PR creation."
+            echo "No file differences between origin/main and origin/develop."
+
+            # If an open PR exists, close it to avoid loop
+            OPEN_PR_NUMBER=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number // empty' || true)
+            if [ -n "$OPEN_PR_NUMBER" ]; then
+              echo "Closing existing PR #$OPEN_PR_NUMBER because there are no diffs."
+              gh pr comment "$OPEN_PR_NUMBER" --body "Closing automated PR because there are no file changes between main and develop."
+              gh pr close "$OPEN_PR_NUMBER"
+            fi
+
             exit 0
           fi
 
@@ -78,5 +87,27 @@ jobs:
               --label automated \
               --label daily-sync
           else
-            echo "An open PR from develop to main already exists. Skipping creation."
+            echo "An open PR from develop to main already exists. Updating its body with latest info."
+
+            # Update existing PR body to reflect latest commits
+            EXISTING_PR_NUMBER=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
+            COMMIT_LIST=$(git log --no-merges --pretty='- %h %s (%an)' origin/main..origin/develop || true)
+            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
+            BODY_FILE=$(mktemp)
+            {
+              echo "This is an automated daily PR from \`develop\` to \`main\`."
+              echo
+              echo "✅ Please review changes before merging."
+              echo
+              echo "### Compare"
+              echo "${COMPARE_URL}"
+              echo
+              echo "### Changes included"
+              if [ -n "$COMMIT_LIST" ]; then
+                echo "$COMMIT_LIST"
+              else
+                echo "- No new commits (branches are in sync)."
+              fi
+            } > "$BODY_FILE"
+            gh pr edit "$EXISTING_PR_NUMBER" --title "Daily Sync: develop → main" --body-file "$BODY_FILE"
           fi
