@@ -30,79 +30,67 @@ jobs:
           git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
           git fetch --prune --tags origin
 
-      - name: Determine ahead/behind
-        id: ahead
+      - name: Diagnostics
         run: |
-          # Count commits ahead/behind: left=develop, right=main
-          COUNTS=$(git rev-list --left-right --count origin/develop...origin/main)
-          AHEAD_MAIN=$(echo "$COUNTS" | awk '{print $2}')
-          BEHIND_MAIN=$(echo "$COUNTS" | awk '{print $1}')
-          echo "origin/main ahead of origin/develop by: $AHEAD_MAIN"
-          echo "origin/develop ahead of origin/main by: $BEHIND_MAIN"
-          echo "ahead_main=$AHEAD_MAIN" >> $GITHUB_OUTPUT
-          echo "ahead_develop=$BEHIND_MAIN" >> $GITHUB_OUTPUT
+          echo "origin/main:   $(git rev-parse origin/main)"
+          echo "origin/develop: $(git rev-parse origin/develop)"
+          MB=$(git merge-base origin/main origin/develop)
+          echo "merge-base:    ${MB}"
+          echo "\nThree-dot changed files (history diff):"
+          git diff --name-status origin/main...origin/develop || true
+          echo "\nTwo-dot changed files (tree diff):"
+          git diff --name-status origin/main origin/develop || true
 
-      - name: Fast-forward develop to main when possible
-        if: steps.ahead.outputs.ahead_main != '0'
+      - name: Decide if sync is needed (tree diff)
+        id: need
         run: |
-          set -e
-          git checkout -B develop origin/develop
-          # Try fast-forward first
-          if git merge --ff-only origin/main; then
-            echo "Fast-forwarded develop to main."
-            git push origin develop
-            exit 0
+          if git diff --quiet origin/main origin/develop; then
+            echo "need_sync=false" >> $GITHUB_OUTPUT
+          else
+            echo "need_sync=true" >> $GITHUB_OUTPUT
           fi
 
-          echo "Fast-forward not possible. Attempting a no-ff merge."
-          # Attempt a no-ff merge (expected to be trivial when main was created from develop via PR)
-          if git merge --no-ff --no-edit origin/main; then
-            echo "Merged main into develop. Pushing..."
-            git push origin develop
-            exit 0
-          fi
-
-          echo "Merge conflict detected. Aborting merge and will open a PR from main -> develop."
-          git merge --abort || true
-          exit 2
-
-      - name: Open PR main -> develop when conflicts exist
-        if: failure() && steps.ahead.outputs.ahead_main != '0'
+      - name: Open or update PR main -> develop
+        if: steps.need.outputs.need_sync == 'true'
         env:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
           # Avoid duplicate PRs
-          if gh pr list --base develop --head main --state open --json number --jq 'length' | grep -q '^0$'; then
-            COMMIT_LIST=$(git log --no-merges --cherry --right-only --pretty='- %h %s (%an)' origin/develop...origin/main || true)
-            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/develop...main"
-            BODY_FILE=$(mktemp)
-            {
-              echo "Automated sync PR: \`main\` → \`develop\`."
-              echo
-              echo "This PR syncs changes merged into main back to develop."
-              echo
-              echo "### Compare"
-              echo "$COMPARE_URL"
-              echo
-              echo "### Unique commits on main"
-              if [ -n "$COMMIT_LIST" ]; then
-                echo "$COMMIT_LIST"
-              else
-                echo "- No unique commits (unexpected)."
-              fi
-            } > "$BODY_FILE"
+          OPEN=$(gh pr list --base develop --head main --state open --json number --jq '.[0].number // empty' || true)
 
+          COMMIT_LIST=$(git log --no-merges --cherry --right-only --pretty='- %h %s (%an)' origin/develop...origin/main || true)
+          COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/develop...main"
+
+          BODY_FILE=$(mktemp)
+          {
+            echo "Automated sync PR: \`main\` → \`develop\`."
+            echo
+            echo "This PR syncs changes merged into main back to develop."
+            echo
+            echo "### Compare"
+            echo "$COMPARE_URL"
+            echo
+            echo "### Unique commits on main"
+            if [ -n "$COMMIT_LIST" ]; then
+              echo "$COMMIT_LIST"
+            else
+              echo "- No unique commits (histories differ, but trees changed)."
+            fi
+          } > "$BODY_FILE"
+
+          if [ -z "$OPEN" ]; then
             gh pr create \
               --base develop \
               --head main \
               --title "Sync: main → develop" \
               --body-file "$BODY_FILE" \
               --label automated \
-              --label sync
+              --label daily-sync
           else
-            echo "An open PR from main to develop already exists. Skipping creation."
+            echo "PR #$OPEN already open. Updating body."
+            gh pr edit "$OPEN" --title "Sync: main → develop" --body-file "$BODY_FILE"
           fi
 
       - name: Nothing to sync
-        if: steps.ahead.outputs.ahead_main == '0'
-        run: echo "origin/main is not ahead of origin/develop. Nothing to sync." 
+        if: steps.need.outputs.need_sync != 'true'
+        run: echo "No file differences between origin/main and origin/develop. Nothing to sync." 
