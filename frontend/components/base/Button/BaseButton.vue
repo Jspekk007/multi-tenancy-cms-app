@@ -18,7 +18,7 @@
       },
     ]"
     v-bind="$attrs"
-    @click="$emit('click', $event)"
+    @click="emit('click', $event)"
   >
     <span
       class="button-content"
@@ -40,7 +40,7 @@
 import { computed, type PropType } from 'vue'
 import { oneOf } from '../../../utils/validators'
 
-const _emit = defineEmits<{
+const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void
 }>()
 

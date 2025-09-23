@@ -1,10 +1,30 @@
-import withNuxt from './.nuxt/eslint.config.mjs'
+// frontend/eslint.config.mjs
+import { defineFlatConfig } from 'eslint-define-config'
+import tsPlugin from '@typescript-eslint/eslint-plugin'
+import tsParser from '@typescript-eslint/parser'
+import stylisticPlugin from '@stylistic/eslint-plugin'
+import vuePlugin from 'eslint-plugin-vue'
+import vueParser from 'vue-eslint-parser'
 
-export default withNuxt([
+export default defineFlatConfig([
+  // Main frontend files
   {
-    root: true,
-    extends: ['../../.eslintrc.cjs'],
+    ignores: ['.nuxt/**', 'dist/**', 'node_modules/**', ".storybook/**"],
     files: ['**/*.{js,ts,vue}'],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tsParser,
+        tsconfigRootDir: new URL('.', import.meta.url).pathname,
+        project: './tsconfig.json', // frontend/tsconfig.json
+        extraFileExtensions: ['.vue'],
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+      vue: vuePlugin,
+      '@stylistic': stylisticPlugin,
+    },
     rules: {
       // Vue template formatting
       'vue/max-attributes-per-line': ['error', { singleline: 1, multiline: 1 }],
@@ -19,21 +39,16 @@ export default withNuxt([
       'vue/html-self-closing': [
         'error',
         {
-          html: {
-            void: 'always',
-            normal: 'never',
-            component: 'always',
-          },
+          html: { void: 'always', normal: 'never', component: 'always' },
           svg: 'always',
           math: 'always',
         },
       ],
       'vue/attribute-hyphenation': ['error', 'always'],
       'vue/no-v-html': 'warn',
-      // Ensure valid option shape for vue/object-property-newline on ESLint 9 + plugin-vue 10
       'vue/object-property-newline': ['error', { allowAllPropertiesOnSameLine: false }],
 
-      // Array/object formatting
+      // Array/Object formatting
       'array-bracket-newline': ['error', { multiline: true, minItems: 2 }],
       'array-element-newline': ['error', { multiline: true, minItems: 2 }],
       'object-curly-newline': ['error', { multiline: true, consistent: true }],
@@ -74,6 +89,7 @@ export default withNuxt([
     },
   },
 
+  // Test files
   {
     files: ['*.spec.ts', '*.test.ts'],
     rules: {
