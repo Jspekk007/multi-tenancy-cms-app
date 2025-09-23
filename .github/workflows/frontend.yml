@@ -79,7 +79,7 @@ jobs:
 
       # Run ESLint specifically on the frontend workspace
       - name: Run ESLint on frontend
-        run: yarn frontend:fix
+        run: yarn frontend:lint
 
       # Build the frontend application
       - name: Build frontend
