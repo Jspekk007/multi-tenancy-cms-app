@@ -4,7 +4,8 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend"
+    "backend",
+    "backend-express"
   ],
   "scripts": {
     "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:backend\"",
