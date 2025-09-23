@@ -6,5 +6,5 @@ export const publicProcedure = t.procedure;
 
 export const router = t.router;
 
-export const createContext = ({ req, res }: any) => ({ });
+export const createContext = ({ _req, _res }: { _req: Request; _res: Response }): {} => ({});
 export type Context = ReturnType<typeof createContext>;
