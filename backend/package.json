@@ -1,13 +1,16 @@
 {
-  "name": "backend-express",
+  "name": "backend",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --ext .ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
