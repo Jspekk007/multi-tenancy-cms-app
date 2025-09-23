@@ -4,8 +4,7 @@
   "private": true,
   "workspaces": [
     "frontend",
-    "backend",
-    "backend-express"
+    "backend"
   ],
   "scripts": {
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
