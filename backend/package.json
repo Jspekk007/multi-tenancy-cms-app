@@ -1,113 +1,28 @@
 {
-  "name": "backend",
+  "name": "backend-express",
   "version": "0.1.0",
-  "description": "",
-  "author": "",
   "private": true,
-  "license": "UNLICENSED",
-  "type": "module",
+  "main": "src/index.ts",
   "scripts": {
-    "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "start": "node dist/main.js",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main.js",
-    "lint:fix": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "typeorm-ts-node-commonjs",
-    "migration:generate": "yarn typeorm -- migration:generate -d src/config/data-source.ts",
-    "migration:run": "yarn typeorm -- migration:run -d src/config/data-source.ts",
-    "migration:revert": "yarn typeorm -- migration:revert -d src/config/data-source.ts"
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@nestjs/common": "^10.4.20",
-    "@nestjs/config": "^3.3.0",
-    "@nestjs/core": "^10.4.20",
-    "@nestjs/jwt": "^11.0.0",
-    "@nestjs/passport": "^10.0.3",
-    "@nestjs/platform-express": "^10.4.20",
-    "@nestjs/swagger": "^7.4.2",
-    "@nestjs/typeorm": "^10.0.2",
-    "@prisma/client": "^6.15.0",
-    "@types/passport-jwt": "^4.0.1",
-    "backend": "^0.0.0",
-    "bcrypt": "^5.1.1",
-    "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1",
-    "jsonwebtoken": "^9.0.2",
-    "nest-commander": "^3.19.0",
-    "nestjs-cls": "^5.4.3",
-    "passport": "^0.7.0",
-    "passport-jwt": "^4.0.1",
-    "passport-local": "^1.0.0",
-    "pg": "^8.16.3",
-    "reflect-metadata": "^0.2.1",
-    "rxjs": "^7.8.1",
-    "typeorm": "^0.3.26"
+    "@prisma/client": "^6.16.2",
+    "@supabase/supabase-js": "^2.57.4",
+    "@trpc/client": "^11.5.1",
+    "@trpc/react-query": "^11.5.1",
+    "@trpc/server": "^11.5.1",
+    "express": "^5.1.0",
+    "prisma": "^6.16.2",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
-    "@nestjs/cli": "^10.4.9",
-    "@nestjs/schematics": "^10.2.3",
-    "@nestjs/testing": "^11.1.6",
-    "@swc/cli": "^0.6.0",
-    "@swc/core": "^1.13.5",
-    "@types/bcrypt": "^5.0.2",
-    "@types/express": "^4.17.23",
-    "@types/jest": "^30.0.0",
-    "@types/node": "^20.19.11",
-    "@types/passport-jwt": "^4.0.1",
-    "@types/passport-local": "^1.0.38",
-    "@types/supertest": "^6.0.2",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-nestjs": "^1.2.3",
-    "globals": "^16.3.0",
-    "jest": "^29.7.0",
-    "prettier": "^3.6.2",
-    "prisma": "^5.22.0",
-    "source-map-support": "^0.5.21",
-    "supertest": "^6.3.4",
-    "ts-jest": "^29.4.1",
-    "ts-loader": "^9.5.4",
-    "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "~5.5.4",
-    "typescript-eslint": "^8.41.0",
-    "workspace": "^0.0.1-preview.2"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coveragePathIgnorePatterns": [
-      "src/config",
-      "src/seed"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node",
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      }
-    }
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.5.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.2"
   }
 }
