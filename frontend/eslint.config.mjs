@@ -2,6 +2,8 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt([
   {
+    root: true,
+    extends: ['../../.eslintrc.cjs'],
     files: ['**/*.{js,ts,vue}'],
     rules: {
       // Vue template formatting
