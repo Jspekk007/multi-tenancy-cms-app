@@ -7,7 +7,7 @@ export default [
     languageOptions: {
       parserOptions: {
         tsconfigRootDir: new URL('.', import.meta.url).pathname,
-        project: './tsconfig.json', // backend-express/tsconfig.json
+        project: './tsconfig.json',
       },
     },
     rules: {

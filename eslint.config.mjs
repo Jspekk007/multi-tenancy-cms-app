@@ -1,7 +1,6 @@
 import { defineFlatConfig } from 'eslint-define-config'
 import tsPlugin from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
-import importPlugin from 'eslint-plugin-import'
 import unusedImportsPlugin from 'eslint-plugin-unused-imports'
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort'
 
@@ -17,7 +16,6 @@ export default defineFlatConfig([
     },
     plugins: {
       '@typescript-eslint': tsPlugin,
-      import: importPlugin,
       'unused-imports': unusedImportsPlugin,
       'simple-import-sort': simpleImportSortPlugin,
     },
@@ -28,13 +26,7 @@ export default defineFlatConfig([
       'unused-imports/no-unused-imports': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
-      'import/order': [
-        'error',
-        {
-          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
-          'newlines-between': 'always',
-        },
-      ],
+      'import/order': 'off', // in favor of simple-import-sort
 
       // Prettier rules inline
       'arrow-body-style': 'off',
