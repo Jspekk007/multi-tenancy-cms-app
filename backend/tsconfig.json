@@ -1,6 +1,12 @@
 {
   "compilerOptions": {
     "rootDir": "src",
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
     "outDir": "dist",
     "types": ["node", "express"],
     "typeRoots": ["../node_modules/@types", "./src/types"]
