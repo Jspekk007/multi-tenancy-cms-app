@@ -1,11 +1,8 @@
-import { Router } from "express";
 
-import { AuthController } from "./auth.controller";
 
-const router = Router();
+import { router } from '../../trpc'
+import { signupProcedure } from './_procedures/signup.procedure';
 
-router.post("/signup", AuthController.signup);
-router.post("/login", AuthController.login);
-router.post("/logout", AuthController.logout);
-
-export default router;
+export const authRouter = router({
+  signup: signupProcedure
+});
