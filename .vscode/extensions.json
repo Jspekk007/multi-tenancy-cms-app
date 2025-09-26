@@ -1,10 +1,5 @@
 {
-    "recommendations": [
-      "dbaeumer.vscode-eslint",
-      "esbenp.prettier-vscode",
-      "stylelint.vscode-stylelint",
-      "EditorConfig.EditorConfig",
-      "Vue.volar"
-    ]
-  }
-  
+  "recommendations": [
+    "denoland.vscode-deno"
+  ]
+}

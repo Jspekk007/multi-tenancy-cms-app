@@ -2,10 +2,6 @@ import { resolve } from 'path'
 import { defineNuxtConfig } from 'nuxt/config'
 
 export default defineNuxtConfig({
-  modules: [
-    '@nuxt/eslint',
-    '@nuxtjs/storybook',
-  ],
   devtools: { enabled: true },
   css: ['@/assets/scss/tokens/main.scss'],
   compatibilityDate: '2025-05-15',
@@ -29,11 +25,6 @@ export default defineNuxtConfig({
           `,
         },
       },
-    },
-  },
-  eslint: {
-    config: {
-      stylistic: true,
     },
   },
 })

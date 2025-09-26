@@ -3,9 +3,19 @@
     <BaseButton
       type="button"
       variant="primary"
-      @click="() => alert('Button clicked!')"
+      @click="handleClick"
     >
       Click Me
     </BaseButton>
   </div>
 </template>
+
+<script>
+export default {
+  methods: {
+    handleClick() {
+      window.alert('Button clicked!')
+    },
+  },
+}
+</script>
