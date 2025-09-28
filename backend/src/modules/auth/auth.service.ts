@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 import { ApiError } from '../../lib/errors';
 import { customLogger } from '../../lib/logger';
@@ -34,7 +34,7 @@ export class AuthService {
       throw new ApiError('User or domain already exists', 409);
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const tenant = await tx.tenant.create({
         data: {
           name: input.name,
