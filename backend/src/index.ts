@@ -4,28 +4,35 @@ import { Request, Response } from "express";
 import pinoHttp from 'pino-http';
 
 import { ApiError } from './lib/errors';
-import { logger } from './lib/logger';
+import { customLogger } from './lib/logger';
 import { authRouter } from './modules/auth/auth.router';
 import { createContext } from "./trpc"
 
 const PORT = process.env.PORT || 4000;
 const app = express();
-const httpLogger = pinoHttp({ logger });
+const httpLogger = pinoHttp({ logger: customLogger });
+app.use(express.json());
+app.use(httpLogger);
+
 
 function errorMiddleware(error: Error, req: Request, res: Response): Response {
     if (error instanceof ApiError) {
-        logger.warn({ err: error}, 'API error occurred');
+        customLogger.warn({ err: error}, 'API error occurred');
         return res.status(error.statusCode).json({
             message: error.message
         })
     }
 
-    logger.error({ err: error }, 'Unexpected error occurred');
+    customLogger.error({ err: error }, 'Unexpected error occurred');
     return res.status(500).json({
         message: 'Internal Server Error'
     });
 }
-app.use(httpLogger);
+
+
+app.get("/ping", (req, res) => {
+    res.send("pong");
+});
 
 app.use(
     "/api/v1/auth",
@@ -33,7 +40,7 @@ app.use(
         router: authRouter,
         createContext,
         onError: ({ error, path, input}) => {
-            logger.error(
+            customLogger.error(
                 {
                     code: error.code,
                     path,
@@ -47,9 +54,10 @@ app.use(
     }),
 );
 
+
 app.use(errorMiddleware)
 
 app.listen(PORT, () => {
-    logger.info(`Backend-Express server is running on http://localhost:${PORT}`);
+    customLogger.info(`Backend-Express server is running on http://localhost:${PORT}`);
 });
 

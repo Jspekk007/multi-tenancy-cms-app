@@ -1,13 +1,31 @@
 import rootConfig from '../eslint.config.mjs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default [
   ...rootConfig,
   {
-    files: ['src/**/*.ts'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      'coverage',
+      '*.config.js',
+      '*.config.cjs',
+      '*.config.mjs',
+      'scripts',
+      'tests',
+      '**/*.d.ts',
+      '**/*.spec.ts',
+      '**/*.test.ts',
+    ],
+    files: ['src/**/*.ts', 'src/**/*.d.ts'], // include declaration files
     languageOptions: {
       parserOptions: {
-        tsconfigRootDir: new URL('.', import.meta.url).pathname,
-        project: './tsconfig.json',
+        project: null,
+        tsconfigRootDir: __dirname,
       },
     },
     rules: {

@@ -12,6 +12,7 @@
     "backend:dev": "yarn workspace backend dev",
     "backend:build": "yarn workspace backend tsc -p tsconfig.json",
     "backend:lint": "yarn workspace backend lint",
+    "backend:lint:fix": "yarn workspace backend lint:fix",
     "backend:test": "yarn workspace backend test",
     "frontend:dev": "yarn workspace frontend dev",
     "frontend:build": "yarn workspace frontend build",

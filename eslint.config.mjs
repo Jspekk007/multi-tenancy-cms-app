@@ -3,15 +3,15 @@ import tsPlugin from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 import unusedImportsPlugin from 'eslint-plugin-unused-imports'
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort'
+import fs from 'fs'
 
 export default defineFlatConfig([
   {
     files: ['**/*.ts', '**/*.js', '**/*.vue'],
     languageOptions: {
-      parser: tsParser, // <- assign the imported parser, not a string
+      parser: tsParser,
       parserOptions: {
         tsconfigRootDir: new URL('.', import.meta.url).pathname,
-        project: './tsconfig.json',
       },
     },
     plugins: {
