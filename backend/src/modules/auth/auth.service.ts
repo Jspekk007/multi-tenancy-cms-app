@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { Prisma,PrismaClient } from '@prisma/client';
 
 import { ApiError } from '../../lib/errors';
 import { customLogger } from '../../lib/logger';
