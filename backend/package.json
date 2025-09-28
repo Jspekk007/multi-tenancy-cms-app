@@ -11,7 +11,8 @@
     "prisma:studio": "prisma studio --schema ./prisma/schema.prisma",
     "prisma:db-push": "prisma db push --schema ./prisma/schema.prisma",
     "build": "tsc -p tsconfig.json",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint src --ext .ts,.d.ts",
+    "lint:fix": "eslint src --ext .ts,.d.ts --fix"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
