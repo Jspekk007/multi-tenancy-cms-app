@@ -57,11 +57,25 @@ model TenantUser {
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique
-  createdAt DateTime @default(now())
-  expiresAt DateTime
-  isRevoked Boolean  @default(false)
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+
+  // The actual refresh token is stored hashed for security
+  refreshTokenHash String   @unique
+
+  // Session lifecycle
+  createdAt        DateTime @default(now())
+  expiresAt        DateTime
+  isRevoked        Boolean  @default(false)
+
+  // Context metadata
+  tenantId         String?   // useful if a user belongs to multiple tenants
+  ipAddress        String?   // capture client IP at login
+  userAgent        String?   // browser/device info
+  deviceName       String?   // friendly name (e.g., "MacBook Pro", "iPhone")
+  lastUsedAt       DateTime? // updated whenever refresh token is used
+
+  @@index([userId])
+  @@index([tenantId])
 }
