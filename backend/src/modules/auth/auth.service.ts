@@ -1,10 +1,10 @@
-import { Prisma,PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 import { ApiError } from '../../lib/errors';
 import { customLogger } from '../../lib/logger';
 import { prismaClient } from '../../lib/prisma';
-import { SignupInput } from './auth.types';
-import { hashPassword } from './auth.utils';
+import { AuthResponse, LoginInput, SignupInput } from './auth.types';
+import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 
 export class AuthService {
   private prisma: PrismaClient;
@@ -12,6 +12,9 @@ export class AuthService {
   constructor() {
     this.prisma = prismaClient;
   }
+
+  SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
+  JWT_SECRET = process.env?.JWT_SECRET;
 
   async signup(input: SignupInput): Promise<object> {
     const hashedPassword = await hashPassword(input.password);
@@ -70,5 +73,50 @@ export class AuthService {
 
       return tenant;
     });
+  }
+
+  async login(input: LoginInput): Promise<AuthResponse> {
+    customLogger.info(`Login attempt for email: ${input.email}`);
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: input.email },
+    });
+    if (!user) {
+      throw new ApiError('Invalid email or password', 401);
+    }
+
+    if (!(await verifyPassword(input.password, user.passwordHash))) {
+      throw new ApiError('Invalid email or password', 401);
+    }
+
+    const tenantUser = await this.prisma.tenantUser.findFirst({
+      where: { userId: user.id },
+      include: { tenant: true },
+    });
+    if (!tenantUser) {
+      throw new ApiError('User is not associated with any tenant', 400);
+    }
+
+    customLogger.info(`User ${user.email} logged in successfully`);
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: tenantUser.tenantId,
+      role: tenantUser.roleId,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        tenantId: tenantUser.tenantId,
+        domain: tenantUser.tenant.domain,
+        role: tenantUser.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      token,
+    };
   }
 }
