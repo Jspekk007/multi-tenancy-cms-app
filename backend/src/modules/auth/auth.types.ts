@@ -7,9 +7,34 @@ export const signupInputSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
 
-export interface LoginInput {
+export const loginInputSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters long'),
+});
+
+export interface AuthUser {
+  id: string;
   email: string;
-  password: string;
+  domain: string;
+  tenantId: string;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface JWTTokenPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  role: string;
+  iat: number;
+  exp: number;
+}
+
+export interface AuthResponse {
+  user: AuthUser;
+  token: string;
 }
 
 export type SignupInput = z.infer<typeof signupInputSchema>;
+export type LoginInput = z.infer<typeof loginInputSchema>;
