@@ -1,0 +1,251 @@
+{
+  "info": {
+    "_postman_id": "e9b6d8b2-4f7e-4a00-9b72-6ef5f2f4e001",
+    "name": "Multi-tenant CMS",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level pre-request: auto-refresh access token if near expiry",
+          "(function () {",
+          "  const accessToken = pm.environment.get('access_token') || pm.collectionVariables.get('access_token');",
+          "  const refreshToken = pm.environment.get('refresh_token') || pm.collectionVariables.get('refresh_token');",
+          "  const tokenExpiry = Number(pm.environment.get('token_expiry') || pm.collectionVariables.get('token_expiry') || 0);",
+          "  const now = Date.now();",
+          "  const leewayMs = 60 * 1000; // refresh 60s before expiry",
+          "",
+          "  console.log('Pre-request debug:', {",
+          "    hasAccessToken: !!accessToken,",
+          "    hasRefreshToken: !!refreshToken,",
+          "    tokenExpiry: tokenExpiry,",
+          "    now: now,",
+          "    needsRefresh: !accessToken || tokenExpiry <= now + leewayMs",
+          "  });",
+          "",
+          "  function setFromAccessToken(token) {",
+          "    try {",
+          "      const payload = JSON.parse(atob(token.split('.')[1]));",
+          "      const expMs = (payload.exp || 0) * 1000;",
+          "      pm.environment.set('token_expiry', String(expMs));",
+          "      pm.collectionVariables.set('token_expiry', String(expMs));",
+          "      console.log('Set token expiry to:', expMs);",
+          "    } catch (e) {",
+          "      console.warn('Failed to decode access token for expiry:', e);",
+          "      pm.environment.unset('token_expiry');",
+          "      pm.collectionVariables.unset('token_expiry');",
+          "    }",
+          "  }",
+          "",
+          "  if (accessToken && tokenExpiry > now + leewayMs) {",
+          "    console.log('Token still valid, skipping refresh');",
+          "    return;",
+          "  }",
+          "",
+          "  if (!refreshToken) {",
+          "    console.log('No refresh token available, skipping refresh');",
+          "    return;",
+          "  }",
+          "",
+          "  console.log('Refreshing access token with refresh token:', refreshToken.substring(0, 20) + '...');",
+          "  pm.sendRequest({",
+          "    url: (pm.environment.get('baseUrl') || pm.collectionVariables.get('baseUrl')) + '/auth/refresh',",
+          "    method: 'POST',",
+          "    header: { 'Content-Type': 'application/json' },",
+          "    body: { mode: 'raw', raw: JSON.stringify({ refreshToken: refreshToken }) }",
+          "  }, function (err, res) {",
+          "    if (err || !res) {",
+          "      console.error('Refresh request failed:', err);",
+          "      return;",
+          "    }",
+          "    console.log('Refresh response status:', res.code);",
+          "    if (res.code !== 200) {",
+          "      console.warn('Refresh failed with status', res.code, 'Response:', res.text());",
+          "      // Clear invalid tokens",
+          "      pm.environment.unset('access_token');",
+          "      pm.environment.unset('refresh_token');",
+          "      pm.environment.unset('token_expiry');",
+          "      pm.collectionVariables.unset('access_token');",
+          "      pm.collectionVariables.unset('refresh_token');",
+          "      pm.collectionVariables.unset('token_expiry');",
+          "      return;",
+          "    }",
+          "    try {",
+          "      const data = res.json();",
+          "      console.log('Refresh response data:', data);",
+          "      if (data && data.token && data.refreshToken) {",
+          "        pm.environment.set('access_token', data.token);",
+          "        pm.collectionVariables.set('access_token', data.token);",
+          "        pm.environment.set('refresh_token', data.refreshToken);",
+          "        pm.collectionVariables.set('refresh_token', data.refreshToken);",
+          "        setFromAccessToken(data.token);",
+          "        console.log('Access token refreshed successfully');",
+          "      } else {",
+          "        console.error('Invalid refresh response format:', data);",
+          "      }",
+          "    } catch (e) {",
+          "      console.error('Failed parsing refresh response:', e);",
+          "    }",
+          "  });",
+          "})();"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Company\",\n  \"domain\": \"mycompany.com\",\n  \"email\": \"admin@mycompany.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "signup"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.token && res.refreshToken) {",
+                  "  pm.environment.set('access_token', res.token);",
+                  "  pm.collectionVariables.set('access_token', res.token);",
+                  "  pm.environment.set('refresh_token', res.refreshToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
+                  "  try {",
+                  "    const payload = JSON.parse(atob(res.token.split('.')[1]));",
+                  "    pm.environment.set('token_expiry', String(payload.exp * 1000));",
+                  "    pm.collectionVariables.set('token_expiry', String(payload.exp * 1000));",
+                  "  } catch (e) { pm.environment.unset('token_expiry'); }",
+                  "} else {",
+                  "  console.error('No tokens in login response');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.token && res.refreshToken) {",
+                  "  pm.environment.set('access_token', res.token);",
+                  "  pm.collectionVariables.set('access_token', res.token);",
+                  "  pm.environment.set('refresh_token', res.refreshToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.refreshToken);",
+                  "  try {",
+                  "    const payload = JSON.parse(atob(res.token.split('.')[1]));",
+                  "    pm.environment.set('token_expiry', String(payload.exp * 1000));",
+                  "    pm.collectionVariables.set('token_expiry', String(payload.exp * 1000));",
+                  "  } catch (e) { pm.environment.unset('token_expiry'); }",
+                  "} else {",
+                  "  console.error('No tokens in refresh response');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res && res.success) {",
+                  "  pm.environment.unset('access_token');",
+                  "  pm.environment.unset('refresh_token');",
+                  "  pm.environment.unset('token_expiry');",
+                  "  pm.collectionVariables.unset('access_token');",
+                  "  pm.collectionVariables.unset('refresh_token');",
+                  "  pm.collectionVariables.unset('token_expiry');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:4000/api/v1", "type": "string" }]
+}

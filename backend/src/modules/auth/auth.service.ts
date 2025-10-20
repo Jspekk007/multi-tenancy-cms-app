@@ -103,21 +103,22 @@ export class AuthService {
 
     customLogger.info(`User ${user.email} logged in successfully`);
 
+    const refreshToken = await this.sessionService.generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    const createdSession = await this.sessionService.createSession({
+      userId: user.id,
+      tenantId: tenantUser.tenantId,
+      refreshToken,
+      expiresAt,
+    });
+
     const token = generateToken({
       userId: user.id,
       email: user.email,
       tenantId: tenantUser.tenantId,
       role: tenantUser.roleId,
-    });
-
-    const refreshToken = await this.sessionService.generateRefreshToken();
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
-
-    await this.sessionService.createSession({
-      userId: user.id,
-      tenantId: tenantUser.tenantId,
-      refreshToken,
-      expiresAt,
+      sessionId: createdSession.id,
     });
 
     return {
@@ -168,23 +169,24 @@ export class AuthService {
     }
 
     // Generate new tokens
-    const newToken = generateToken({
-      userId: user.id,
-      email: user.email,
-      tenantId: tenantUser.tenantId,
-      role: tenantUser.roleId,
-    });
-
     const newRefreshToken = this.sessionService.generateRefreshToken();
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
 
     // Revoke old session and create new one
     await this.sessionService.revokeSession(session.id);
-    await this.sessionService.createSession({
+    const newSession = await this.sessionService.createSession({
       userId: user.id,
       tenantId: tenantUser.tenantId,
       refreshToken: newRefreshToken,
       expiresAt,
+    });
+
+    const newToken = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: tenantUser.tenantId,
+      role: tenantUser.roleId,
+      sessionId: newSession.id,
     });
 
     customLogger.info(`Token refreshed for user ${user.email}`);
