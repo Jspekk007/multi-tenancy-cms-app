@@ -5,7 +5,9 @@ import pinoHttp from 'pino-http';
 
 import { ApiError } from './lib/errors';
 import { customLogger } from './lib/logger';
+import { prismaClient } from './lib/prisma';
 import { authRouter } from './modules/auth/auth.router';
+import { SessionService } from './modules/auth/session/session.service';
 import { createContext } from './trpc';
 
 const PORT = process.env.PORT || 4000;
@@ -49,6 +51,22 @@ app.use(
 );
 
 app.use(errorMiddleware);
+
+// Simple daily cleanup job for sessions
+const sessionService = new SessionService(prismaClient);
+setInterval(
+  async () => {
+    try {
+      const count = await sessionService.cleanupExpiredSessions();
+      if (count > 0) {
+        customLogger.info({ count }, 'Cleaned up expired/revoked sessions');
+      }
+    } catch (err) {
+      customLogger.error({ err }, 'Failed cleaning up sessions');
+    }
+  },
+  24 * 60 * 60 * 1000,
+);
 
 app.listen(PORT, () => {
   customLogger.info(`Backend-Express server is running on http://localhost:${PORT}`);

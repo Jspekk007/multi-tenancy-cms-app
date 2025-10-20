@@ -27,6 +27,7 @@ export interface JWTTokenPayload {
   email: string;
   tenantId: string;
   role: string;
+  sessionId: string;
   iat: number;
   exp: number;
 }
