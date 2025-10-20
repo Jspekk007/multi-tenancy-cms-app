@@ -34,6 +34,7 @@ export interface JWTTokenPayload {
 export interface AuthResponse {
   user: AuthUser;
   token: string;
+  refreshToken: string;
 }
 
 export type SignupInput = z.infer<typeof signupInputSchema>;
