@@ -9,6 +9,10 @@ const envSchema = z.object({
     .string()
     .default('10')
     .transform((val) => parseInt(val, 10)),
+  REFRESH_TOKEN_BYTES: z
+    .string()
+    .default('32')
+    .transform((val) => parseInt(val, 10)),
   PORT: z
     .string()
     .default('4000')
@@ -20,6 +24,7 @@ const env = envSchema.parse(process.env);
 
 export const config = {
   jwtSecret: env.JWT_SECRET,
+  refreshTokenBytes: env.REFRESH_TOKEN_BYTES,
   saltRounds: env.SALT_ROUNDS,
   port: env.PORT,
   nodeEnv: env.NODE_ENV,

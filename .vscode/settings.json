@@ -17,5 +17,6 @@
   },
   "editor.defaultFormatter": "dbaeumer.vscode-eslint",
   "editor.formatOnSave": true,
-  "makefile.configureOnOpen": false
+  "makefile.configureOnOpen": false,
+  "postman.settings.dotenv-detection-notification-visibility": false
 }
