@@ -3,7 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { ApiError } from '../../lib/errors';
 import { customLogger } from '../../lib/logger';
 import { prismaClient } from '../../lib/prisma';
-import { AuthResponse, LoginInput, SignupInput } from './auth.types';
+import { AuthResponse, AuthUser, LoginInput, SignupInput } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
 import { RefreshTokenResponse } from './session/session.types';
@@ -213,5 +213,34 @@ export class AuthService {
     }
 
     customLogger.info(`User logged out, session ${session.id} revoked`);
+  }
+
+  async getCurrentUser(userId: string): Promise<AuthUser> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const tenantUser = await this.prisma.tenantUser.findFirst({
+      where: { userId: user.id },
+      include: { tenant: true },
+    });
+
+    if (!tenantUser) {
+      throw new ApiError('User is not associated with any tenant', 400);
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      tenantId: tenantUser.tenantId,
+      domain: tenantUser.tenant.domain,
+      role: tenantUser.roleId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }
