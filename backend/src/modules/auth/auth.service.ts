@@ -5,12 +5,16 @@ import { customLogger } from '../../lib/logger';
 import { prismaClient } from '../../lib/prisma';
 import { AuthResponse, LoginInput, SignupInput } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
+import { SessionService } from './session/session.service';
+import { RefreshTokenResponse } from './session/session.types';
 
 export class AuthService {
   private prisma: PrismaClient;
+  private sessionService: SessionService;
 
   constructor() {
     this.prisma = prismaClient;
+    this.sessionService = new SessionService(this.prisma);
   }
 
   SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
@@ -106,6 +110,16 @@ export class AuthService {
       role: tenantUser.roleId,
     });
 
+    const refreshToken = await this.sessionService.generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    await this.sessionService.createSession({
+      userId: user.id,
+      tenantId: tenantUser.tenantId,
+      refreshToken,
+      expiresAt,
+    });
+
     return {
       user: {
         id: user.id,
@@ -117,6 +131,85 @@ export class AuthService {
         updatedAt: user.updatedAt,
       },
       token,
+      refreshToken,
     };
+  }
+
+  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+    customLogger.info('Refresh token attempt');
+
+    const session = await this.sessionService.findSessionByToken(refreshToken);
+    if (!session) {
+      throw new ApiError('Invalid refresh token', 401);
+    }
+
+    // Update last used timestamp
+    await this.sessionService.updateSessionLastUsed(session.id);
+
+    // Get user and tenant information
+    const user = await this.prisma.user.findUnique({
+      where: { id: session.userId },
+    });
+
+    if (!user) {
+      throw new ApiError('User not found', 404);
+    }
+
+    const tenantUser = await this.prisma.tenantUser.findFirst({
+      where: {
+        userId: user.id,
+        tenantId: session.tenantId || undefined,
+      },
+      include: { tenant: true },
+    });
+
+    if (!tenantUser) {
+      throw new ApiError('User is not associated with any tenant', 400);
+    }
+
+    // Generate new tokens
+    const newToken = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: tenantUser.tenantId,
+      role: tenantUser.roleId,
+    });
+
+    const newRefreshToken = this.sessionService.generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    // Revoke old session and create new one
+    await this.sessionService.revokeSession(session.id);
+    await this.sessionService.createSession({
+      userId: user.id,
+      tenantId: tenantUser.tenantId,
+      refreshToken: newRefreshToken,
+      expiresAt,
+    });
+
+    customLogger.info(`Token refreshed for user ${user.email}`);
+
+    return {
+      token: newToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        tenantId: tenantUser.tenantId,
+        domain: tenantUser.tenant.domain,
+        role: tenantUser.roleId,
+      },
+    };
+  }
+
+  async logout(refreshToken: string): Promise<void> {
+    customLogger.info('Logout attempt');
+
+    const session = await this.sessionService.revokeSessionByToken(refreshToken);
+    if (!session) {
+      throw new ApiError('Invalid refresh token', 401);
+    }
+
+    customLogger.info(`User logged out, session ${session.id} revoked`);
   }
 }
