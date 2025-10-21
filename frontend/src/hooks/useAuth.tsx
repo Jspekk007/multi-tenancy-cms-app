@@ -2,12 +2,12 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import Cookies from 'js-cookie';
-import api from '@/lib/api';
+import { apiFetch } from '@/lib/apiClient';
 import { AuthContextType, AuthUser, LoginInput, AuthResponse } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,34 +16,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       const storedToken = Cookies.get('token');
       const storedRefreshToken = Cookies.get('refreshToken');
-      
+
       if (storedToken && storedRefreshToken) {
         try {
-          // Verify token is still valid by making a request
-          const response = await api.get('/auth/me');
-          setUser(response.data);
+          // Verify current token
+          const data = await apiFetch<AuthUser>('/auth/me');
+          setUser(data);
           setToken(storedToken);
         } catch {
-          // Token is invalid, try to refresh
+          // Try refreshing token
           try {
-            const refreshResponse = await api.post('/auth/refresh', {
-              refreshToken: storedRefreshToken,
+            const data = await apiFetch<AuthResponse>('/auth/refresh', {
+              method: 'POST',
+              body: JSON.stringify({ refreshToken: storedRefreshToken }),
+              auth: false, // optional if apiFetch adds auth by default
             });
-            
-            const { token: newToken, refreshToken: newRefreshToken, user: userData } = refreshResponse.data;
-            
+
+            const { token: newToken, refreshToken: newRefreshToken, user: userData } = data;
+
             Cookies.set('token', newToken, { expires: 1 });
             Cookies.set('refreshToken', newRefreshToken, { expires: 30 });
-            
+
             setUser(userData);
             setToken(newToken);
-        } catch {
-          // Both token and refresh failed, clear everything
-          Cookies.remove('token');
-          Cookies.remove('refreshToken');
-          setUser(null);
-          setToken(null);
-        }
+          } catch {
+            // Failed to refresh → logout
+            Cookies.remove('token');
+            Cookies.remove('refreshToken');
+            setUser(null);
+            setToken(null);
+          }
         }
       }
       setIsLoading(false);
@@ -53,35 +55,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (credentials: LoginInput) => {
-    try {
-      const response = await api.post('/auth/login', {
-        email: credentials.email,
-        password: credentials.password,
-      });
+    const data = await apiFetch<AuthResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      auth: false,
+    });
 
-      const { user: userData, token: authToken, refreshToken } = response.data as AuthResponse;
-      
-      // Store tokens in cookies
-      Cookies.set('token', authToken, { expires: 1 });
-      Cookies.set('refreshToken', refreshToken, { expires: 30 });
-      
-      setUser(userData);
-      setToken(authToken);
-    } catch (error) {
-      throw error;
-    }
+    const { user: userData, token: authToken, refreshToken } = data;
+
+    Cookies.set('token', authToken, { expires: 1 });
+    Cookies.set('refreshToken', refreshToken, { expires: 30 });
+
+    setUser(userData);
+    setToken(authToken);
   };
 
   const logout = async () => {
     try {
       const refreshToken = Cookies.get('refreshToken');
       if (refreshToken) {
-        await api.post('/auth/logout', { refreshToken });
+        await apiFetch('/auth/logout', {
+          method: 'POST',
+          body: JSON.stringify({ refreshToken }),
+        });
       }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear everything regardless of API call success
       Cookies.remove('token');
       Cookies.remove('refreshToken');
       setUser(null);
@@ -94,19 +94,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const refreshTokenValue = Cookies.get('refreshToken');
       if (!refreshTokenValue) throw new Error('No refresh token');
 
-      const response = await api.post('/auth/refresh', {
-        refreshToken: refreshTokenValue,
+      const data = await apiFetch<AuthResponse>('/auth/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken: refreshTokenValue }),
+        auth: false,
       });
 
-      const { token: newToken, refreshToken: newRefreshToken, user: userData } = response.data;
-      
+      const { token: newToken, refreshToken: newRefreshToken, user: userData } = data;
+
       Cookies.set('token', newToken, { expires: 1 });
       Cookies.set('refreshToken', newRefreshToken, { expires: 30 });
-      
+
       setUser(userData);
       setToken(newToken);
     } catch (error) {
-      // Refresh failed, logout user
       logout();
       throw error;
     }
@@ -121,14 +122,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshToken,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
