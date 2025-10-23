@@ -1,0 +1,9 @@
+:root {
+  --button-height-sm: calc(var(--spacing-4) * 2);
+  --button-height-md: calc(var(--spacing-5) * 2);
+  --button-height-lg: calc(var(--spacing-6) * 2);
+
+  --button-radius: var(--radius-md);
+  --button-padding-x: var(--spacing-4);
+  --button-padding-y: var(--spacing-2);
+}

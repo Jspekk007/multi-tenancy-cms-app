@@ -1,9 +1,10 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import Cookies from 'js-cookie';
+
 import { apiFetch } from '@/lib/apiClient';
 import { AuthContextType, AuthUser, LoginInput, AuthResponse } from '@/types/auth';
+import Cookies from 'js-cookie';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -123,7 +124,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
@@ -131,4 +132,4 @@ export const useAuth = (): AuthContextType => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}
+};
