@@ -1,0 +1,25 @@
+@use './typography' as *;
+@use './colors' as *;
+@use './spacing' as *;
+@use './breakpoints' as *;
+@use './misc' as *;
+@use './base' as *;
+@use './a11y' as *;
+@use './grid' as *;
+@use './flex' as *;
+@use './layout' as *;
+@use './utilities' as *;
+@use './mixins' as *;
+@use './components/buttons' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: $font-family-base;
+  color: $color-gray-900;
+  background-color: $color-gray-50;
+}

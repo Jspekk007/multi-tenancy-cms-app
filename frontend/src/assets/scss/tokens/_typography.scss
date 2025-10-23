@@ -1,0 +1,80 @@
+// -------------------------
+// Font Family
+// -------------------------
+$font-family-base: 'Roboto',
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+
+// -------------------------
+// Font Weights
+// -------------------------
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// -------------------------
+// Line Heights
+// -------------------------
+$line-height-sm: 1.25; // for small text / captions
+$line-height-md: 1.5; // for body text
+$line-height-lg: 1.75; // for headings
+
+// -------------------------
+// Font Sizes
+// -------------------------
+// Headings
+$font-size-3xl: 1.875rem; // 30px
+$font-size-2xl: 1.5rem; // 24px
+$font-size-xl: 1.25rem; // 20px
+$font-size-lg: 1.125rem; // 18px
+$font-size-md: 1rem; // 16px, base body
+$font-size-sm: 0.875rem; // 14px, small text
+$font-size-xs: 0.75rem; // 12px, captions / labels
+
+// Body
+$font-size-body: $font-size-md;
+$line-height-body: $line-height-md;
+
+// Headings
+$font-size-h1: $font-size-3xl;
+$font-size-h2: $font-size-2xl;
+$font-size-h3: $font-size-xl;
+$font-size-h4: $font-size-lg;
+
+// Buttons / labels
+$font-size-label: $font-size-sm;
+$font-weight-label: $font-weight-medium;
+
+:root {
+    --font-family-base: #{$font-family-base};
+
+    --font-weight-normal: #{$font-weight-normal};
+    --font-weight-medium: #{$font-weight-medium};
+    --font-weight-semibold: #{$font-weight-semibold};
+    --font-weight-bold: #{$font-weight-bold};
+
+    --line-height-sm: #{$line-height-sm};
+    --line-height-md: #{$line-height-md};
+    --line-height-lg: #{$line-height-lg};
+
+    --font-size-3xl: #{$font-size-3xl};
+    --font-size-2xl: #{$font-size-2xl};
+    --font-size-xl: #{$font-size-xl};
+    --font-size-lg: #{$font-size-lg};
+    --font-size-md: #{$font-size-md};
+    --font-size-sm: #{$font-size-sm};
+    --font-size-xs: #{$font-size-xs};
+
+    --font-size-body: #{$font-size-body};
+    --line-height-body: #{$line-height-body};
+    --font-size-h1: #{$font-size-h1};
+    --font-size-h2: #{$font-size-h2};
+    --font-size-h3: #{$font-size-h3};
+    --font-size-h4: #{$font-size-h4};
+    --font-size-label: #{$font-size-label};
+    --font-weight-label: #{$font-weight-label};
+}
