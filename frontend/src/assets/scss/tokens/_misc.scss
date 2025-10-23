@@ -1,0 +1,46 @@
+// _misc.scss
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-2xl: 24px;
+$radius-3xl: 32px;
+$radius-full: 9999px;
+
+$shadow-sm: 0 1px 2px rgb(0 0 0 / 5%);
+$shadow-md: 0 4px 6px rgb(0 0 0 / 10%);
+$shadow-lg: 0 10px 15px rgb(0 0 0 / 15%);
+
+$z-index-dropdown: 1000;
+$z-index-modal: 1100;
+$z-index-toast: 1200;
+
+$loader-size: 1rem;
+$loader-border: 2px solid rgba(0,0,0,0.2);
+$loader-speed: 0.6s;
+
+
+
+:root {
+    --radius-none: 0;
+    --radius-sm: #{$radius-sm};
+    --radius-md: #{$radius-md};
+    --radius-lg: #{$radius-lg};
+    --radius-xl: #{$radius-xl};
+    --radius-2xl: #{$radius-2xl};
+    --radius-3xl: #{$radius-3xl};
+    --radius-full: #{$radius-full};
+    
+    --shadow-sm: #{$shadow-sm};
+    --shadow-md: #{$shadow-md};
+    --shadow-lg: #{$shadow-lg};
+    
+    --z-index-dropdown: #{$z-index-dropdown};
+    --z-index-modal: #{$z-index-modal};
+    --z-index-toast: #{$z-index-toast};
+
+    --loader-size: #{$loader-size};
+    --loader-border: #{$loader-border};
+    --loader-speed: #{$loader-speed};
+  }
+  

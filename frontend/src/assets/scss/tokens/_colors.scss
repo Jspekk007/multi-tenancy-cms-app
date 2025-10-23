@@ -1,0 +1,154 @@
+@use './typography' as *;
+
+// _colors.scss
+
+// --------------------------
+// Primary Palette
+// --------------------------
+$color-primary: #3b82f6;
+$color-primary-hover: #2563eb;
+$color-primary-active: #1d4ed8;
+$color-primary-disabled: #93c5fd;
+$color-primary-text: #ffffff;
+
+// --------------------------
+// Secondary Palette
+// --------------------------
+$color-secondary: #64748b;
+$color-secondary-hover: #4b5563;
+$color-secondary-active: #374151;
+$color-secondary-disabled: #cbd5e1;
+$color-secondary-text: #ffffff;
+
+// --------------------------
+// Accent Palette
+// --------------------------
+$color-accent: #8b5cf6;
+$color-accent-hover: #7c3aed;
+$color-accent-active: #6d28d9;
+$color-accent-disabled: #d8b4fe;
+$color-accent-text: #ffffff;
+
+// --------------------------
+// Semantic Colors
+// --------------------------
+$color-success: #22c55e;
+$color-success-hover: #16a34a;
+$color-success-active: #15803d;
+
+$color-warning: #fbbf24;
+$color-warning-hover: #f59e0b;
+$color-warning-active: #d97706;
+
+$color-danger: #ef4444;
+$color-danger-hover: #dc2626;
+$color-danger-active: #b91c1c;
+
+$color-info: #0ea5e9;
+$color-info-hover: #0284c7;
+$color-info-active: #0369a1;
+
+// --------------------------
+// Grayscale / Backgrounds
+// --------------------------
+$color-gray-900: #1f2937;
+$color-gray-800: #374151;
+$color-gray-700: #4b5563;
+$color-gray-600: #6b7280;
+$color-gray-500: #9ca3af;
+$color-gray-400: #d1d5db;
+$color-gray-300: #e5e7eb;
+$color-gray-200: #f3f4f6;
+$color-gray-100: #f9fafb;
+$color-gray-50: #ffffff;
+
+$color-bg-default: $color-gray-50;
+$color-bg-muted: $color-gray-100;
+$color-bg-hover: $color-gray-200;
+$color-bg-active: $color-gray-300;
+
+// --------------------------
+// Text Colors
+// --------------------------
+$color-text-default: $color-gray-900;
+$color-text-muted: $color-gray-600;
+$color-text-inverse: $color-gray-50;
+$color-text-link: $color-primary;
+$color-text-link-hover: $color-primary-hover;
+
+// --------------------------
+// CSS Variables
+// --------------------------
+:root {
+  /* Primary */
+  --color-primary: #{$color-primary};
+  --color-primary-hover: #{$color-primary-hover};
+  --color-primary-active: #{$color-primary-active};
+  --color-primary-disabled: #{$color-primary-disabled};
+  --color-primary-text: #{$color-primary-text};
+
+  /* Secondary */
+  --color-secondary: #{$color-secondary};
+  --color-secondary-hover: #{$color-secondary-hover};
+  --color-secondary-active: #{$color-secondary-active};
+  --color-secondary-disabled: #{$color-secondary-disabled};
+  --color-secondary-text: #{$color-secondary-text};
+
+  /* Accent */
+  --color-accent: #{$color-accent};
+  --color-accent-hover: #{$color-accent-hover};
+  --color-accent-active: #{$color-accent-active};
+  --color-accent-disabled: #{$color-accent-disabled};
+  --color-accent-text: #{$color-accent-text};
+
+  /* Semantic */
+  --color-success: #{$color-success};
+  --color-success-hover: #{$color-success-hover};
+  --color-success-active: #{$color-success-active};
+
+  --color-warning: #{$color-warning};
+  --color-warning-hover: #{$color-warning-hover};
+  --color-warning-active: #{$color-warning-active};
+
+  --color-danger: #{$color-danger};
+  --color-danger-hover: #{$color-danger-hover};
+  --color-danger-active: #{$color-danger-active};
+
+  --color-info: #{$color-info};
+  --color-info-hover: #{$color-info-hover};
+  --color-info-active: #{$color-info-active};
+
+  /* Grayscale */
+  --color-gray-50: #{$color-gray-50};
+  --color-gray-100: #{$color-gray-100};
+  --color-gray-200: #{$color-gray-200};
+  --color-gray-300: #{$color-gray-300};
+  --color-gray-400: #{$color-gray-400};
+  --color-gray-500: #{$color-gray-500};
+  --color-gray-600: #{$color-gray-600};
+  --color-gray-700: #{$color-gray-700};
+  --color-gray-800: #{$color-gray-800};
+  --color-gray-900: #{$color-gray-900};
+
+  /* Backgrounds */
+  --color-bg-default: #{$color-bg-default};
+  --color-bg-muted: #{$color-bg-muted};
+  --color-bg-hover: #{$color-bg-hover};
+  --color-bg-active: #{$color-bg-active};
+
+  /* Text */
+  --color-text-default: #{$color-text-default};
+  --color-text-muted: #{$color-text-muted};
+  --color-text-inverse: #{$color-text-inverse};
+  --color-text-link: #{$color-text-link};
+  --color-text-link-hover: #{$color-text-link-hover};
+
+  /* Typography */
+  --font-size-xs: #{$font-size-xs};
+  --font-size-sm: #{$font-size-sm};
+  --font-size-md: #{$font-size-md};
+  --font-size-lg: #{$font-size-lg};
+  --font-size-xl: #{$font-size-xl};
+  --font-size-2xl: #{$font-size-2xl};
+  --font-size-3xl: #{$font-size-3xl};
+}

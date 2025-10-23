@@ -1,7 +1,6 @@
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 interface FetchOptions extends RequestInit {
   auth?: boolean;
@@ -11,26 +10,23 @@ interface FetchOptions extends RequestInit {
 /**
  * Main API Fetcher
  */
-export const apiFetch = async <T>(
-  endpoint: string,
-  options: FetchOptions = {}
-): Promise<T> => {
+export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {
   const { auth = true, retry = true, headers, ...rest } = options;
-  const token = Cookies.get("token");
+  const token = Cookies.get('token');
 
   const requestHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
     ...(headers as Record<string, string>),
   };
 
   if (auth && token) {
-    requestHeaders["Authorization"] = `Bearer ${token}`;
+    requestHeaders['Authorization'] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...rest,
     headers: requestHeaders,
-    credentials: "include",
+    credentials: 'include',
   });
 
   if (response.ok) {
@@ -45,11 +41,11 @@ export const apiFetch = async <T>(
     }
 
     handleLogout();
-    throw new Error("Session expired. Please log in again.");
+    throw new Error('Session expired. Please log in again.');
   }
 
   const errorText = await safeParseError(response);
-  throw new Error(errorText || "Unknown API error");
+  throw new Error(errorText || 'Unknown API error');
 };
 
 const safeParseError = async (response: Response): Promise<string> => {
@@ -62,14 +58,14 @@ const safeParseError = async (response: Response): Promise<string> => {
 };
 
 const tryRefreshToken = async (): Promise<boolean> => {
-  const refreshToken = Cookies.get("refreshToken");
+  const refreshToken = Cookies.get('refreshToken');
   if (!refreshToken) return false;
 
   try {
     const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ refreshToken }),
     });
@@ -79,8 +75,8 @@ const tryRefreshToken = async (): Promise<boolean> => {
 
     const { token: newToken, refreshToken: newRefreshToken } = data;
 
-    Cookies.set("token", newToken);
-    Cookies.set("refreshToken", newRefreshToken);
+    Cookies.set('token', newToken);
+    Cookies.set('refreshToken', newRefreshToken);
     return true;
   } catch {
     return false;
@@ -88,7 +84,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
 };
 
 const handleLogout = (): void => {
-  Cookies.remove("token");
-  Cookies.remove("refreshToken");
-  window.location.href = "/login";
+  Cookies.remove('token');
+  Cookies.remove('refreshToken');
+  window.location.href = '/login';
 };

@@ -1,0 +1,39 @@
+@use './typography' as *;
+@use './colors' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: $font-family-base;
+  font-size: $font-size-md;
+  line-height: $line-height-md;
+  color: $color-gray-900;
+  background-color: $color-gray-50;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: $color-primary;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
