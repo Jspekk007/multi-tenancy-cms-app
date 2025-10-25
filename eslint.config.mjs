@@ -3,11 +3,10 @@ import tsPlugin from '@typescript-eslint/eslint-plugin'
 import tsParser from '@typescript-eslint/parser'
 import unusedImportsPlugin from 'eslint-plugin-unused-imports'
 import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort'
-import fs from 'fs'
 
 export default defineFlatConfig([
   {
-    files: ['**/*.ts', '**/*.js', '**/*.vue'],
+    files: ['**/*.ts', '**/*.js', '**/*.vue', '**/*.tsx', '**/*.jsx', '**/.stories.*'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {

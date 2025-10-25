@@ -10,6 +10,12 @@ import { ButtonProps } from './BaseButton.types';
 const meta: Meta<ButtonProps> = {
   title: 'UI/BaseButton',
   component: BaseButton,
+  tags: ['autodocs'],
+  parameters: {
+    docs: {
+      subtitle: 'A flexible and accessible button for all UI actions.',
+    },
+  },
   argTypes: {
     variant: {
       control: { type: 'select' },
@@ -42,7 +48,6 @@ const meta: Meta<ButtonProps> = {
 export default meta;
 type Story = StoryObj<ButtonProps>;
 
-// ✅ Stories
 export const Primary: Story = {
   args: {
     children: 'Primary Button',

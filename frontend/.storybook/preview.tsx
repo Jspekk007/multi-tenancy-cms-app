@@ -1,6 +1,17 @@
 import '@/assets/scss/tokens/main.scss';
 
+import React from 'react';
 import { Preview } from '@storybook/react';
+
+import {
+  Title,
+  Subtitle,
+  Description,
+  Primary,
+  Controls,
+  Stories,
+  Source,
+} from '@storybook/addon-docs/blocks';
 
 const preview: Preview = {
   parameters: {
@@ -10,6 +21,8 @@ const preview: Preview = {
         order: ['Layout', 'Design System', '*'], // Layout first, then DS
       },
     },
+
+    tags: ['autodocs'],
 
     // Add backgrounds for components
     backgrounds: {
@@ -47,10 +60,19 @@ const preview: Preview = {
       options: { checks: { colorContrast: { threshold: 4.5 } } },
     },
 
-    // Documentation styling
     docs: {
-      theme: undefined, // optional: can import a custom theme
-      source: { type: 'code' },
+      page: () => (
+      <>
+        <Title />
+        <Subtitle />
+        <Primary />
+
+        <Source dark />
+
+        <Controls />
+        <Stories />
+      </>
+      )
     },
   },
 };
