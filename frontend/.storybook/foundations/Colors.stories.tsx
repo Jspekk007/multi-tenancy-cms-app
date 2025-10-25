@@ -45,9 +45,7 @@ export const AllColors: StoryObj = {
                 {/* Swatches for each state */}
                 {states.map((state) => {
                   const varName =
-                    state === 'default'
-                      ? `--color-${color}`
-                      : `--color-${color}-${state}`;
+                    state === 'default' ? `--color-${color}` : `--color-${color}-${state}`;
                   return (
                     <div key={state} style={{ marginBottom: '4px' }}>
                       <div
@@ -58,12 +56,8 @@ export const AllColors: StoryObj = {
                           boxShadow: '0 0 2px rgba(0,0,0,0.2)',
                         }}
                       />
-                      <div style={{ fontSize: '0.75rem', marginTop: '2px' }}>
-                        {state}
-                      </div>
-                      <div style={{ fontSize: '0.65rem', color: '#555' }}>
-                        {varName}
-                      </div>
+                      <div style={{ fontSize: '0.75rem', marginTop: '2px' }}>{state}</div>
+                      <div style={{ fontSize: '0.65rem', color: '#555' }}>{varName}</div>
                     </div>
                   );
                 })}

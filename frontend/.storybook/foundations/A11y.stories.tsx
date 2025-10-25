@@ -9,7 +9,15 @@ export default meta;
 
 export const A11yHelpers: StoryObj = {
   render: () => (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div
+      style={{
+        padding: '2rem',
+        fontFamily: 'sans-serif',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
+      }}
+    >
       <div>
         <a href="#main" className="skip-link">
           Skip to main content
@@ -34,7 +42,8 @@ export const A11yHelpers: StoryObj = {
 
       <div style={{ width: '200px', border: '1px solid #ccc' }}>
         <p className="text-truncate">
-          This is a very long text that will be truncated with an ellipsis when it overflows the container.
+          This is a very long text that will be truncated with an ellipsis when it overflows the
+          container.
         </p>
       </div>
     </div>

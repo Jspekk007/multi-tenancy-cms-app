@@ -1,8 +1,8 @@
-import rootConfig from '../eslint.config.mjs'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import rootConfig from '../eslint.config.mjs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default [
   ...rootConfig,
@@ -33,4 +33,4 @@ export default [
       'no-process-exit': 'error',
     },
   },
-]
+];

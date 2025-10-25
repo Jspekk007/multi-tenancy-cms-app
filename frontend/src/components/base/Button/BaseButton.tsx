@@ -29,7 +29,7 @@ export const BaseButton: React.FC<ButtonProps> = ({
       loading,
       disabled,
     },
-    props.className
+    props.className,
   );
 
   const content = (

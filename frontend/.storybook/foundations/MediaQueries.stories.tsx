@@ -35,12 +35,8 @@ export const BreakpointDemo: StoryObj = {
             >
               {bp.toUpperCase()}
             </div>
-            <div style={{ marginTop: '4px', fontSize: '0.75rem' }}>
-              {varName}
-            </div>
-            <div style={{ fontSize: '0.65rem', color: '#555' }}>
-              {`var(${varName})`}
-            </div>
+            <div style={{ marginTop: '4px', fontSize: '0.75rem' }}>{varName}</div>
+            <div style={{ fontSize: '0.65rem', color: '#555' }}>{`var(${varName})`}</div>
           </div>
         );
       })}
