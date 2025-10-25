@@ -1,27 +1,27 @@
 @use './mixins' as *;
 
 .container {
-    max-width: var(--container-lg);
-    margin-inline: auto;
-    padding-inline: var(--spacing-md);
+  max-width: var(--container-lg);
+  margin-inline: auto;
+  padding-inline: var(--spacing-md);
 
-    @include respond-to('xl') {
-        max-width: var(--container-xl);
-    }
+  @include respond-to('xl') {
+    max-width: var(--container-xl);
+  }
 }
 
 .layout-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .layout-stack > * + * {
-    margin-top: var(--spacing-md);
+  margin-top: var(--spacing-md);
 }
 
 .layout-split {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }

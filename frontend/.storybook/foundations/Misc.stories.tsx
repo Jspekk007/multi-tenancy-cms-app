@@ -2,23 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 
 const variables: Record<string, string[]> = {
-  Radius: [
-    'radius-none',
-    'radius-sm',
-    'radius-md',
-    'radius-lg',
-    'radius-full',
-  ],
-  Shadow: [
-    'shadow-sm',
-    'shadow-md',
-    'shadow-lg',
-  ],
-  'Z-Index': [
-    'z-index-dropdown',
-    'z-index-modal',
-    'z-index-toast',
-  ],
+  Radius: ['radius-none', 'radius-sm', 'radius-md', 'radius-lg', 'radius-full'],
+  Shadow: ['shadow-sm', 'shadow-md', 'shadow-lg'],
+  'Z-Index': ['z-index-dropdown', 'z-index-modal', 'z-index-toast'],
 };
 
 const meta: Meta = {
@@ -79,12 +65,8 @@ export const AllMisc: StoryObj = {
               return (
                 <div key={v} style={{ textAlign: 'center' }}>
                   <div style={style} />
-                  <div style={{ marginTop: '4px', fontSize: '0.75rem' }}>
-                    {v}
-                  </div>
-                  <div style={{ fontSize: '0.65rem', color: '#555' }}>
-                    {varValue}
-                  </div>
+                  <div style={{ marginTop: '4px', fontSize: '0.75rem' }}>{v}</div>
+                  <div style={{ fontSize: '0.65rem', color: '#555' }}>{varValue}</div>
                 </div>
               );
             })}
