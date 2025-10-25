@@ -1,26 +1,11 @@
 import './BaseButton.scss';
 
 import clsx from 'clsx';
-import { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react';
+import { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost' | 'link';
-type Size = 'medium' | 'small' | 'large' | 'icon';
+import { ButtonProps } from './BaseButton.types';
 
-interface BaseButtonProps {
-  variant?: Variant;
-  size?: Size;
-  loading?: boolean;
-  disabled?: boolean;
-  iconOnly?: boolean;
-  iconLeft?: ReactNode;
-  iconRight?: ReactNode;
-  href?: string;
-  ariaLabel?: string;
-  children?: ReactNode;
-  className?: string;
-}
-
-export const BaseButton: React.FC<BaseButtonProps> = ({
+export const BaseButton: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'medium',
   loading = false,
