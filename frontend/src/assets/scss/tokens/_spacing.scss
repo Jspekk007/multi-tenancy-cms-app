@@ -1,14 +1,14 @@
 // _spacing.scss
 $spacing-0: 0;
-$spacing-1: 0.25rem;  // 4px
-$spacing-2: 0.5rem;   // 8px
-$spacing-3: 0.75rem;  // 12px
-$spacing-4: 1rem;     // 16px
-$spacing-5: 1.25rem;  // 20px
-$spacing-6: 1.5rem;   // 24px
-$spacing-8: 2rem;     // 32px
-$spacing-10: 2.5rem;  // 40px
-$spacing-12: 3rem;    // 48px
+$spacing-1: 0.25rem; // 4px
+$spacing-2: 0.5rem; // 8px
+$spacing-3: 0.75rem; // 12px
+$spacing-4: 1rem; // 16px
+$spacing-5: 1.25rem; // 20px
+$spacing-6: 1.5rem; // 24px
+$spacing-8: 2rem; // 32px
+$spacing-10: 2.5rem; // 40px
+$spacing-12: 3rem; // 48px
 
 $spacing-xs: $spacing-1;
 $spacing-sm: $spacing-2;
@@ -24,26 +24,26 @@ $container-xl: 1280px;
 $container-2xl: 1536px;
 
 :root {
-    --spacing-0: #{$spacing-0};
-    --spacing-1: #{$spacing-1};
-    --spacing-2: #{$spacing-2};
-    --spacing-3: #{$spacing-3};
-    --spacing-4: #{$spacing-4};
-    --spacing-5: #{$spacing-5};
-    --spacing-6: #{$spacing-6};
-    --spacing-8: #{$spacing-8};
-    --spacing-10: #{$spacing-10};
-    --spacing-12: #{$spacing-12};
+  --spacing-0: #{$spacing-0};
+  --spacing-1: #{$spacing-1};
+  --spacing-2: #{$spacing-2};
+  --spacing-3: #{$spacing-3};
+  --spacing-4: #{$spacing-4};
+  --spacing-5: #{$spacing-5};
+  --spacing-6: #{$spacing-6};
+  --spacing-8: #{$spacing-8};
+  --spacing-10: #{$spacing-10};
+  --spacing-12: #{$spacing-12};
 
-    --spacing-xs: #{$spacing-xs};
-    --spacing-sm: #{$spacing-sm};
-    --spacing-md: #{$spacing-md};
-    --spacing-lg: #{$spacing-lg};
-    --spacing-xl: #{$spacing-xl};
+  --spacing-xs: #{$spacing-xs};
+  --spacing-sm: #{$spacing-sm};
+  --spacing-md: #{$spacing-md};
+  --spacing-lg: #{$spacing-lg};
+  --spacing-xl: #{$spacing-xl};
 
-    --container-sm: #{$container-sm};
-    --container-md: #{$container-md};
-    --container-lg: #{$container-lg};
-    --container-xl: #{$container-xl};
-    --container-2xl: #{$container-2xl};
+  --container-sm: #{$container-sm};
+  --container-md: #{$container-md};
+  --container-lg: #{$container-lg};
+  --container-xl: #{$container-xl};
+  --container-2xl: #{$container-2xl};
 }

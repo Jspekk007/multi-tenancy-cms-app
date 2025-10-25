@@ -1,19 +1,41 @@
 @use './spacing' as *;
 
-.mt-sm { margin-top: $spacing-3; }
-.mb-md { margin-bottom: $spacing-4; }
-.p-lg { padding: $spacing-6; }
+.mt-sm {
+  margin-top: $spacing-3;
+}
+.mb-md {
+  margin-bottom: $spacing-4;
+}
+.p-lg {
+  padding: $spacing-6;
+}
 
-.hidden { display: none !important; }
-.block { display: block !important; }
-.inline-block { display: inline-block !important; }
+.hidden {
+  display: none !important;
+}
+.block {
+  display: block !important;
+}
+.inline-block {
+  display: inline-block !important;
+}
 
-.text-left { text-align: left; }
-.text-center { text-align: center; }
-.text-right { text-align: right; }
+.text-left {
+  text-align: left;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
 
-.w-full { width: 100%; }
-.h-full { height: 100%; }
+.w-full {
+  width: 100%;
+}
+.h-full {
+  height: 100%;
+}
 
 .max-w-screen-md {
   max-width: 768px;

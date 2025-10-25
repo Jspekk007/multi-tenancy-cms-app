@@ -12,7 +12,9 @@ export const Playground: StoryObj = {
     const [flexDirection, setFlexDirection] = useState<'row' | 'column'>('row');
     const [flexWrap, setFlexWrap] = useState<'wrap' | 'nowrap'>('wrap');
     const [alignItems, setAlignItems] = useState<'flex-start' | 'center' | 'flex-end'>('center');
-    const [justifyContent, setJustifyContent] = useState<'flex-start' | 'center' | 'space-between' | 'flex-end'>('space-between');
+    const [justifyContent, setJustifyContent] = useState<
+      'flex-start' | 'center' | 'space-between' | 'flex-end'
+    >('space-between');
     const [gridColumns, setGridColumns] = useState(3);
 
     const flexItems = ['Item 1', 'Item 2', 'Item 3'];
@@ -46,7 +48,10 @@ export const Playground: StoryObj = {
           </label>
           <label>
             Justify Content:
-            <select value={justifyContent} onChange={(e) => setJustifyContent(e.target.value as any)}>
+            <select
+              value={justifyContent}
+              onChange={(e) => setJustifyContent(e.target.value as any)}
+            >
               <option value="flex-start">Start</option>
               <option value="center">Center</option>
               <option value="space-between">Space Between</option>

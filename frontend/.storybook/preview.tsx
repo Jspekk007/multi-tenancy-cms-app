@@ -62,17 +62,17 @@ const preview: Preview = {
 
     docs: {
       page: () => (
-      <>
-        <Title />
-        <Subtitle />
-        <Primary />
+        <>
+          <Title />
+          <Subtitle />
+          <Primary />
 
-        <Source dark />
+          <Source dark />
 
-        <Controls />
-        <Stories />
-      </>
-      )
+          <Controls />
+          <Stories />
+        </>
+      ),
     },
   },
 };

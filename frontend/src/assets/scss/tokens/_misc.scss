@@ -16,31 +16,28 @@ $z-index-modal: 1100;
 $z-index-toast: 1200;
 
 $loader-size: 1rem;
-$loader-border: 2px solid rgba(0,0,0,0.2);
+$loader-border: 2px solid rgba(0, 0, 0, 0.2);
 $loader-speed: 0.6s;
 
-
-
 :root {
-    --radius-none: 0;
-    --radius-sm: #{$radius-sm};
-    --radius-md: #{$radius-md};
-    --radius-lg: #{$radius-lg};
-    --radius-xl: #{$radius-xl};
-    --radius-2xl: #{$radius-2xl};
-    --radius-3xl: #{$radius-3xl};
-    --radius-full: #{$radius-full};
-    
-    --shadow-sm: #{$shadow-sm};
-    --shadow-md: #{$shadow-md};
-    --shadow-lg: #{$shadow-lg};
-    
-    --z-index-dropdown: #{$z-index-dropdown};
-    --z-index-modal: #{$z-index-modal};
-    --z-index-toast: #{$z-index-toast};
+  --radius-none: 0;
+  --radius-sm: #{$radius-sm};
+  --radius-md: #{$radius-md};
+  --radius-lg: #{$radius-lg};
+  --radius-xl: #{$radius-xl};
+  --radius-2xl: #{$radius-2xl};
+  --radius-3xl: #{$radius-3xl};
+  --radius-full: #{$radius-full};
 
-    --loader-size: #{$loader-size};
-    --loader-border: #{$loader-border};
-    --loader-speed: #{$loader-speed};
-  }
-  
+  --shadow-sm: #{$shadow-sm};
+  --shadow-md: #{$shadow-md};
+  --shadow-lg: #{$shadow-lg};
+
+  --z-index-dropdown: #{$z-index-dropdown};
+  --z-index-modal: #{$z-index-modal};
+  --z-index-toast: #{$z-index-toast};
+
+  --loader-size: #{$loader-size};
+  --loader-border: #{$loader-border};
+  --loader-speed: #{$loader-speed};
+}
