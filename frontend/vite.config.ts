@@ -1,6 +1,8 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, PluginOption } from 'vite';
+
+const plugins: PluginOption[] = [react() as PluginOption];
 
 export default defineConfig({
-  plugins: [react()],
+  plugins,
 });
