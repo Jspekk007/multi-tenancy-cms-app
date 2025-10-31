@@ -1,20 +1,20 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import Cookies from 'js-cookie';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 import { apiFetch } from '@/lib/apiClient';
-import { AuthContextType, AuthUser, LoginInput, AuthResponse } from '@/types/auth';
-import Cookies from 'js-cookie';
+import { AuthContextType, AuthResponse, AuthUser, LoginInput } from '@/types/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
+    const initAuth = async (): Promise<void> => {
       const storedToken = Cookies.get('token');
       const storedRefreshToken = Cookies.get('refreshToken');
 
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     initAuth();
   }, []);
 
-  const login = async (credentials: LoginInput) => {
+  const login = async (credentials: LoginInput): Promise<void> => {
     const data = await apiFetch<AuthResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(authToken);
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       const refreshToken = Cookies.get('refreshToken');
       if (refreshToken) {
@@ -90,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const refreshToken = async () => {
+  const refreshToken = async (): Promise<void> => {
     try {
       const refreshTokenValue = Cookies.get('refreshToken');
       if (!refreshTokenValue) throw new Error('No refresh token');

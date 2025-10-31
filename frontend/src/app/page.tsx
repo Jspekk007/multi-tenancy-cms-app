@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
 
-export default function HomePage() {
+export default function HomePage(): JSX.Element | null {
   const router = useRouter();
   const { user, isLoading } = useAuth();
 

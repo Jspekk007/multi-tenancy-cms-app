@@ -1,11 +1,11 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
 
-export default function DashboardPage() {
+export default function DashboardPage(): JSX.Element | null {
   const router = useRouter();
   const { user, logout, isLoading } = useAuth();
 
@@ -15,8 +15,8 @@ export default function DashboardPage() {
     }
   }, [user, isLoading, router]);
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = async (): Promise<void> => {
+    logout();
     router.push('/login');
   };
 

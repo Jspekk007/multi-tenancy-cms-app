@@ -5,7 +5,6 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default [
-  ...rootConfig,
   {
     ignores: [
       'node_modules/**',
@@ -20,7 +19,14 @@ export default [
       '**/*.d.ts',
       '**/*.spec.ts',
       '**/*.test.ts',
+      '**/*.spec.tsx',
+      '**/*.test.tsx',
+      '**/*.stories.tsx',
+      '.storybook/**',
     ],
+  },
+  ...rootConfig,
+  {
     files: ['src/**/*.ts', 'src/**/*.d.ts', 'src/**/*.tsx'], // include declaration files
     languageOptions: {
       parserOptions: {
