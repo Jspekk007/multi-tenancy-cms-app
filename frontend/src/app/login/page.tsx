@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-
-import { useAuth } from '@/hooks/useAuth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { useAuth } from '@/hooks/useAuth';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -15,7 +15,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
+export default function LoginPage(): JSX.Element {
   const router = useRouter();
   const { login, user, isLoading } = useAuth();
   const [error, setError] = useState<string>('');
@@ -35,14 +35,14 @@ export default function LoginPage() {
     }
   }, [user, isLoading, router]);
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: LoginFormData): Promise<void> => {
     try {
       setIsSubmitting(true);
       setError('');
       await login(data);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error?.message || 'Login failed. Please try again.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err?.message : 'Login failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
