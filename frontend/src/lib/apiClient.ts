@@ -7,20 +7,23 @@ interface FetchOptions extends RequestInit {
   retry?: boolean;
 }
 
-/**
- * Main API Fetcher
- */
 export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {
   const { auth = true, retry = true, headers, ...rest } = options;
   const token = Cookies.get('token');
 
+  let normalizedHeaders: Record<string, string> = {};
+
+  if (headers && !(headers instanceof Headers) && !Array.isArray(headers)) {
+    normalizedHeaders = headers as Record<string, string>;
+  }
+
   const requestHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(headers as Record<string, string>),
+    ...normalizedHeaders,
   };
 
   if (auth && token) {
-    requestHeaders['Authorization'] = `Bearer ${token}`;
+    requestHeaders.Authorization = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -30,18 +33,17 @@ export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}):
   });
 
   if (response.ok) {
-    return response.json();
+    return (await response.json()) as T;
   }
 
   if (response.status === 401 && retry) {
     const refreshSuccess = await tryRefreshToken();
 
     if (refreshSuccess) {
-      return apiFetch(endpoint, { ...options, retry: false });
+      return apiFetch<T>(endpoint, { ...options, retry: false });
     }
 
     handleLogout();
-    throw new Error('Session expired. Please log in again.');
   }
 
   const errorText = await safeParseError(response);
@@ -50,10 +52,16 @@ export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}):
 
 const safeParseError = async (response: Response): Promise<string> => {
   try {
-    const data = await response.json();
-    return data.message || JSON.stringify(data);
+    const data: unknown = await response.json();
+
+    if (data && typeof data === 'object' && 'message' in data) {
+      const message = (data as { message?: string }).message;
+      return message ?? JSON.stringify(data);
+    }
+
+    return JSON.stringify(data);
   } catch {
-    return response.statusText;
+    return response.statusText || 'Unknown API error';
   }
 };
 
@@ -62,22 +70,23 @@ const tryRefreshToken = async (): Promise<boolean> => {
   if (!refreshToken) return false;
 
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    const data = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
     });
 
-    if (!res.ok) return false;
-    const data = await res.json();
+    if (data && typeof data === 'object' && 'token' in data && 'refreshToken' in data) {
+      const { token: newToken, refreshToken: newRefreshToken } = data as {
+        token: string;
+        refreshToken: string;
+      };
 
-    const { token: newToken, refreshToken: newRefreshToken } = data;
-
-    Cookies.set('token', newToken);
-    Cookies.set('refreshToken', newRefreshToken);
-    return true;
+      Cookies.set('token', newToken);
+      Cookies.set('refreshToken', newRefreshToken);
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
@@ -86,5 +95,8 @@ const tryRefreshToken = async (): Promise<boolean> => {
 const handleLogout = (): void => {
   Cookies.remove('token');
   Cookies.remove('refreshToken');
-  window.location.href = '/login';
+
+  if (typeof window !== 'undefined') {
+    window.location.href = '/login';
+  }
 };
