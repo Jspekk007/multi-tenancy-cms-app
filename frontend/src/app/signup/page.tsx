@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+
+import { ErrorResponseSchema } from '../../../../packages/api-contract/schemas/auth';
 
 const signupSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters long'),
@@ -17,7 +18,7 @@ const signupSchema = z.object({
 
 type SignupFormData = z.infer<typeof signupSchema>;
 
-export default function SignupPage() {
+export default function SignupPage(): JSX.Element {
   const router = useRouter();
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +31,7 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   });
 
-  const onSubmit = async (data: SignupFormData) => {
+  const onSubmit = async (data: SignupFormData): Promise<void> => {
     try {
       setIsSubmitting(true);
       setError('');
@@ -44,8 +45,14 @@ export default function SignupPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Signup failed');
+        const data = await response.json();
+        const parsed = ErrorResponseSchema.safeParse(data);
+
+        if (parsed.success) {
+          throw new Error(parsed.data.error.message);
+        }
+
+        throw new Error('Signup failed. Please try again.');
       }
 
       // Redirect to login after successful signup

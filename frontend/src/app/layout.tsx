@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: 'A multi-tenant content management system',
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: React.ReactNode }): JSX.Element {
   return (
     <html lang="en">
       <body className={inter.className}>

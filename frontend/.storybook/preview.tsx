@@ -1,17 +1,15 @@
 import '@/assets/scss/tokens/main.scss';
 
-import React from 'react';
-import { Preview } from '@storybook/react';
-
 import {
-  Title,
-  Subtitle,
-  Description,
-  Primary,
   Controls,
-  Stories,
+  Primary,
   Source,
+  Stories,
+  Subtitle,
+  Title,
 } from '@storybook/addon-docs/blocks';
+import { Preview } from '@storybook/react';
+import React from 'react';
 
 const preview: Preview = {
   parameters: {
