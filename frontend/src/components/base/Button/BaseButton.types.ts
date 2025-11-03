@@ -1,5 +1,7 @@
 import { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
+import { IconName } from '../icon/Icons';
+
 type Variant = 'primary' | 'secondary' | 'danger' | 'link' | 'outline';
 type Size = 'small' | 'medium' | 'large';
 
@@ -12,6 +14,8 @@ interface BaseButtonProps {
   ariaLabel?: string;
   iconLeft?: React.ReactNode;
   iconRight?: React.ReactNode;
+  icon?: IconName;
+  iconVariant: 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
   href?: string;
   onClick?: () => void;
 }
