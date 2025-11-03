@@ -1,8 +1,6 @@
-// src/components/base/BaseButton.stories.tsx
 import './BaseButton.scss';
 
 import type { Meta, StoryObj } from '@storybook/react';
-import React from 'react';
 
 import { BaseButton } from './BaseButton';
 import { ButtonProps } from './BaseButton.types';
@@ -87,7 +85,8 @@ export const IconOnly: Story = {
   args: {
     children: null,
     iconOnly: true,
-    iconLeft: <span>🔥</span>, // example icon
+    icon: 'arrow-right',
+    iconVariant: 'primary',
     ariaLabel: 'Fire Button',
   },
 };
