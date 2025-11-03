@@ -3,6 +3,7 @@ import './BaseButton.scss';
 import clsx from 'clsx';
 import { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
+import { BaseIcon } from '../icon/BaseIcon';
 import { ButtonProps } from './BaseButton.types';
 
 export const BaseButton: React.FC<ButtonProps> = ({
@@ -13,6 +14,8 @@ export const BaseButton: React.FC<ButtonProps> = ({
   iconOnly = false,
   iconLeft,
   iconRight,
+  icon,
+  iconVariant,
   href,
   children,
   ariaLabel,
@@ -32,11 +35,16 @@ export const BaseButton: React.FC<ButtonProps> = ({
     props.className,
   );
 
+  // automatically render icon if 'icon' prop is provided
+  const leftIconNode =
+    iconLeft ?? (icon ? <BaseIcon icon={icon} variant={iconVariant || variant} /> : null);
+  const rightIconNode = iconRight;
+
   const content = (
     <span className="base-button-content">
-      {iconLeft}
+      {leftIconNode}
       {children}
-      {iconRight}
+      {rightIconNode}
     </span>
   );
 

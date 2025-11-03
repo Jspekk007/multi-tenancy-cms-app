@@ -102,10 +102,12 @@
   }
 
   // States
-  &.disabled {
+  &.disabled,
+  &:disabled {
     cursor: not-allowed;
-    opacity: var(--opacity-disabled);
+    opacity: 0.6;
     pointer-events: none;
+    user-select: none;
   }
 
   &.loading {
