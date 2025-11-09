@@ -9,7 +9,7 @@
     "lint": "node ../node_modules/eslint/bin/eslint.js . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "node ../node_modules/eslint/bin/eslint.js --fix . --ext .ts,.tsx,.js,.jsx",
     "format": "node ../node_modules/prettier/bin/prettier.cjs --write .",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006  --no-open",
     "build-storybook": "storybook build -s public"
   },
   "dependencies": {
