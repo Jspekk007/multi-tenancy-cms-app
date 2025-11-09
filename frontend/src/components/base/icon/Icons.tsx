@@ -107,6 +107,31 @@ export const User: SvgIcon = (props) => (
   </svg>
 );
 
+export const Eye: SvgIcon = (props) => (
+  <svg {...baseProps} {...props}>
+    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+export const EyeOff: SvgIcon = (props) => (
+  <svg
+    {...baseProps}
+    {...props}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M3.98 8.223A10.46 10.46 0 0 0 1 12s4 7 11 7a10.7 10.7 0 0 0 5.07-1.32" />
+    <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" />
+    <path d="M21 21 3 3" />
+    <path d="M10.73 5.08A10.7 10.7 0 0 1 12 5c7 0 11 7 11 7a20.29 20.29 0 0 1-2.17 3.11" />
+  </svg>
+);
+
 // Mapping
 export const Icons = {
   add: Add,
@@ -122,6 +147,8 @@ export const Icons = {
   search: Search,
   settings: Settings,
   user: User,
+  eye: Eye,
+  'eye-off': EyeOff,
 } as const;
 
 export type IconName = keyof typeof Icons;
