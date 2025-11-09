@@ -11,6 +11,10 @@
     opacity 0.2s ease,
     transform 0.2s ease;
 
+  &.default {
+    color: var(--color-text-default);
+  }
+
   &.primary {
     color: var(--color-primary);
   }

@@ -60,9 +60,15 @@ $color-gray-400: #d1d5db;
 $color-gray-300: #e5e7eb;
 $color-gray-200: #f3f4f6;
 $color-gray-100: #f9fafb;
-$color-gray-50: #ffffff;
 
-$color-bg-default: $color-gray-50;
+// --------------------------
+// Base Neutral Colors
+// --------------------------
+$color-white: #ffffff;
+$color-black: #000000;
+$color-transparent: transparent;
+
+$color-bg-default: $color-white;
 $color-bg-muted: $color-gray-100;
 $color-bg-hover: $color-gray-200;
 $color-bg-active: $color-gray-300;
@@ -72,13 +78,10 @@ $color-bg-active: $color-gray-300;
 // --------------------------
 $color-text-default: $color-gray-900;
 $color-text-muted: $color-gray-600;
-$color-text-inverse: $color-gray-50;
+$color-text-inverse: $color-white;
 $color-text-link: $color-primary;
 $color-text-link-hover: $color-primary-hover;
 
-// --------------------------
-// CSS Variables
-// --------------------------
 :root {
   /* Primary */
   --color-primary: #{$color-primary};
@@ -119,7 +122,6 @@ $color-text-link-hover: $color-primary-hover;
   --color-info-active: #{$color-info-active};
 
   /* Grayscale */
-  --color-gray-50: #{$color-gray-50};
   --color-gray-100: #{$color-gray-100};
   --color-gray-200: #{$color-gray-200};
   --color-gray-300: #{$color-gray-300};
@@ -143,12 +145,7 @@ $color-text-link-hover: $color-primary-hover;
   --color-text-link: #{$color-text-link};
   --color-text-link-hover: #{$color-text-link-hover};
 
-  /* Typography */
-  --font-size-xs: #{$font-size-xs};
-  --font-size-sm: #{$font-size-sm};
-  --font-size-md: #{$font-size-md};
-  --font-size-lg: #{$font-size-lg};
-  --font-size-xl: #{$font-size-xl};
-  --font-size-2xl: #{$font-size-2xl};
-  --font-size-3xl: #{$font-size-3xl};
+  --color-white: #{$color-white};
+  --color-black: #{$color-black};
+  --color-transparent: #{$color-transparent};
 }

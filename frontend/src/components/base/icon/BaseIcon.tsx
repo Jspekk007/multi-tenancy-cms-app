@@ -8,7 +8,7 @@ export interface BaseIconProps extends HTMLAttributes<HTMLDivElement> {
   icon: IconName;
   className?: string;
   rotate?: number;
-  variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
   title?: string; // optional tooltip / accessibility
   ariaLabel?: string; // screen reader
 }
@@ -17,7 +17,7 @@ export const BaseIcon = ({
   icon,
   className = '',
   rotate,
-  variant = 'primary',
+  variant = 'default',
   title,
   ariaLabel,
   ...props
