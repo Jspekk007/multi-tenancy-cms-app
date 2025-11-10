@@ -1,0 +1,38 @@
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 42px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-gray-400);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+
+  &__thumb {
+    position: absolute;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    background-color: var(--color-white);
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  &--checked {
+    background-color: var(--color-primary);
+
+    .switch__thumb {
+      transform: translateX(20px);
+    }
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
