@@ -4,9 +4,11 @@ export interface SelectOption {
 }
 
 export interface SelectProps {
+  label: string;
+  name: string;
+  value: string | null;
   options: SelectOption[];
-  value?: SelectOption | null;
-  onChange?: (option: SelectOption) => void;
+  onChange?: (option: string) => void;
   placeholder?: string;
   disabled?: boolean;
 }
