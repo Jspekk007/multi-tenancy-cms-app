@@ -20,10 +20,16 @@ const options: SelectOption[] = [
 
 export const Default: Story = {
   render: () => {
-    const [selected, setSelected] = useState<SelectOption | null>(null);
+    const [selected, setSelected] = useState<string | null>(null);
     return (
       <div style={{ width: 240, padding: 40 }}>
-        <Select options={options} value={selected} onChange={setSelected} />
+        <Select
+          label="default"
+          name="default"
+          options={options}
+          value={selected}
+          onChange={setSelected}
+        />
       </div>
     );
   },
@@ -31,10 +37,16 @@ export const Default: Story = {
 
 export const Preselected: Story = {
   render: () => {
-    const [selected, setSelected] = useState<SelectOption>({ label: 'Orange', value: 'orange' });
+    const [selected, setSelected] = useState<string>('orange');
     return (
       <div style={{ width: 240, padding: 40 }}>
-        <Select options={options} value={selected} onChange={setSelected} />
+        <Select
+          label="preselected"
+          name="preselected"
+          options={options}
+          value={selected}
+          onChange={setSelected}
+        />
       </div>
     );
   },
@@ -43,7 +55,7 @@ export const Preselected: Story = {
 export const Disabled: Story = {
   render: () => (
     <div style={{ width: 240, padding: 40 }}>
-      <Select options={options} value={null} disabled />
+      <Select label="disabled" name="disabled" options={options} value={null} disabled />
     </div>
   ),
 };
