@@ -1,7 +1,8 @@
 import './FormFactory.scss';
 
+import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
-import { Controller, DefaultValues, FieldValues, Path, useForm } from 'react-hook-form';
+import { Controller, FieldValues, Path, Resolver, SubmitHandler, useForm } from 'react-hook-form';
 
 import { BaseButton } from '../../button/BaseButton';
 import { Select } from '../select/Select';
@@ -9,14 +10,20 @@ import { Switch } from '../switch/Switch';
 import { TextInput } from '../text-input/TextInput';
 import { FormFactoryProps, FormField } from './FormFactory.types';
 
-export const FormFactory = <T extends FieldValues>({
+export const FormFactory = <TFieldValues extends FieldValues>({
   fields,
   onSubmit,
   resetButton,
-  defaultValues = {},
-}: FormFactoryProps<T>): React.ReactNode => {
-  const { control, handleSubmit } = useForm<T>({
-    defaultValues: defaultValues as DefaultValues<T>,
+  defaultValues,
+  schema,
+}: FormFactoryProps<TFieldValues>): React.ReactNode => {
+  const resolver: Resolver<TFieldValues> | undefined = schema
+    ? (zodResolver(schema) as unknown as Resolver<TFieldValues>)
+    : undefined;
+
+  const { control, handleSubmit } = useForm<TFieldValues>({
+    resolver,
+    defaultValues,
   });
 
   const renderField = (field: FormField): React.ReactNode => {
@@ -26,15 +33,17 @@ export const FormFactory = <T extends FieldValues>({
         return (
           <Controller
             key={field.name}
-            name={field.name as Path<T>}
+            name={field.name as Path<TFieldValues>}
             control={control}
-            render={({ field: controllerField }) => (
+            render={({ field: controllerField, fieldState }) => (
               <TextInput
                 {...controllerField}
+                value={controllerField.value || ''}
                 type={field.type}
                 label={field.label}
                 placeholder={field.placeholder}
                 disabled={field.disabled}
+                error={fieldState.error?.message}
               />
             )}
           />
@@ -44,16 +53,17 @@ export const FormFactory = <T extends FieldValues>({
         return (
           <Controller
             key={field.name}
-            name={field.name as Path<T>}
+            name={field.name as Path<TFieldValues>}
             control={control}
-            render={({ field: { value, onChange } }) => (
+            render={({ field: { value, onChange }, fieldState }) => (
               <Select
                 label={field.label}
                 name={field.name}
                 options={field.options ? field.options : []}
-                value={value}
+                value={value ?? ''}
                 disabled={field.disabled}
                 onChange={onChange}
+                error={fieldState.error?.message}
               />
             )}
           />
@@ -62,15 +72,16 @@ export const FormFactory = <T extends FieldValues>({
         return (
           <Controller
             key={field.name}
-            name={field.name as Path<T>}
+            name={field.name as Path<TFieldValues>}
             control={control}
-            render={({ field: { value, onChange } }) => (
+            render={({ field: { value, onChange }, fieldState }) => (
               <Switch
                 label={field.label}
                 name={field.name}
-                checked={value}
+                checked={!!value}
                 disabled={field.disabled}
                 onChange={onChange}
+                error={fieldState.error?.message}
               />
             )}
           />
@@ -81,7 +92,10 @@ export const FormFactory = <T extends FieldValues>({
   };
 
   return (
-    <form className="form-container" onSubmit={handleSubmit(onSubmit)}>
+    <form
+      className="form-container"
+      onSubmit={handleSubmit(onSubmit as SubmitHandler<TFieldValues>)}
+    >
       {fields.map((field) => (
         <div key={field.name} style={{ marginBottom: '16px' }}>
           {renderField(field)}

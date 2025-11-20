@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { FormFactory } from './FormFactory';
 import type { FormField } from './FormFactory.types';
+import { z } from 'zod';
 
 const meta: Meta<typeof FormFactory> = {
   title: 'UI/Form/FormFactory',
@@ -41,6 +42,13 @@ const fields: FormField[] = [
   },
 ];
 
+const validationSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  role: z.string().min(1, 'Please select a role'), // Ensures a selection is made
+  notifications: z.boolean().optional(),
+});
+
 // Default story
 export const Default: Story = {
   args: {
@@ -68,5 +76,21 @@ export const withResetButton: Story = {
     fields,
     resetButton: true,
     onSubmit: (data) => console.log('Form Submitted with Reset Button', data),
+  },
+};
+
+export const WithValidation: Story = {
+  args: {
+    fields,
+    schema: validationSchema, // Pass the schema here
+    onSubmit: (data) => alert(JSON.stringify(data, null, 2)),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This form prevents submission until the Zod schema is satisfied. Try clicking "Submit" with empty fields.',
+      },
+    },
   },
 };

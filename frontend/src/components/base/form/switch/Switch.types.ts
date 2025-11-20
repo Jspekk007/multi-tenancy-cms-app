@@ -4,4 +4,5 @@ export interface SwitchProps {
   onChange: (checked: boolean) => void;
   name?: string;
   disabled?: boolean;
+  error?: string;
 }

@@ -11,4 +11,5 @@ export interface SelectProps {
   onChange?: (option: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  error?: string;
 }
