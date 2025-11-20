@@ -2,4 +2,5 @@ export interface TextInputProps extends Omit<React.InputHTMLAttributes<HTMLInput
   label?: string;
   showPasswordToggle?: boolean;
   size?: 'small' | 'medium' | 'large';
+  error?: string;
 }

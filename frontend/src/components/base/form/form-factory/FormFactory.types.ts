@@ -1,12 +1,13 @@
-import type { FieldValues } from 'react-hook-form';
+import type { DefaultValues, FieldValues, SubmitHandler } from 'react-hook-form';
 import type { ZodType } from 'zod';
 
-export interface FormFactoryProps<T extends FieldValues> {
+export interface FormFactoryProps<TFieldValues extends FieldValues> {
   fields: FormField[];
-  onSubmit: (data: T) => void;
+  onSubmit: SubmitHandler<TFieldValues>;
   resetButton?: boolean;
-  defaultValues?: Partial<T>;
-  schema?: ZodType<T>;
+  defaultValues?: DefaultValues<TFieldValues>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  schema?: ZodType<any, any, any>;
 }
 
 export type FormField = {
