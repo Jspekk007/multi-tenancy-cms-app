@@ -8,6 +8,7 @@ export interface FormFactoryProps<TFieldValues extends FieldValues> {
   defaultValues?: DefaultValues<TFieldValues>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schema?: ZodType<any, any, any>;
+  isLoading: boolean;
 }
 
 export type FormField = {

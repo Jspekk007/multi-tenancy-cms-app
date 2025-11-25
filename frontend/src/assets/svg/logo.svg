@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <title>Atlas Symbol - Clean Pivot</title>
+  <defs>
+    <linearGradient id="brandGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6"/> 
+      <stop offset="100%" stop-color="#8b5cf6"/> 
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(50, 50) scale(0.85)">
+    <path d="M-40 -10 
+             Q -40 -40, -10 -40 
+             L 10 -40 
+             Q 10 -10, -10 10 
+             L -40 40 
+             Z" 
+          fill="url(#brandGrad)"/>
+
+    <path d="M40 10 
+             Q 40 40, 10 40 
+             L -10 40 
+             Q -10 10, 10 -10 
+             L 40 -40 
+             Z" 
+          fill="url(#brandGrad)"/>
+    
+    </g>
+</svg>
