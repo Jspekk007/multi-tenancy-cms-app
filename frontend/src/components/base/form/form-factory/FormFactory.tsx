@@ -16,6 +16,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
   resetButton,
   defaultValues,
   schema,
+  isLoading = false,
 }: FormFactoryProps<TFieldValues>): React.ReactNode => {
   const resolver: Resolver<TFieldValues> | undefined = schema
     ? (zodResolver(schema) as unknown as Resolver<TFieldValues>)
@@ -102,7 +103,13 @@ export const FormFactory = <TFieldValues extends FieldValues>({
         </div>
       ))}
       <div className="form-actions">
-        <BaseButton variant="primary" type="submit" size="medium" iconVariant="primary">
+        <BaseButton
+          variant="primary"
+          type="submit"
+          size="medium"
+          iconVariant="primary"
+          disabled={isLoading || control._formState.isSubmitting}
+        >
           Submit
         </BaseButton>
         {resetButton && (
@@ -111,9 +118,8 @@ export const FormFactory = <TFieldValues extends FieldValues>({
             type="button"
             size="medium"
             iconVariant="secondary"
-            onClick={() => {
-              // Reset logic can be added here
-            }}
+            onClick={() => {}}
+            disabled={isLoading || control._formState.isSubmitting}
           >
             Reset
           </BaseButton>
