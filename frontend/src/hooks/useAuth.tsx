@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
             setUser(userData);
             setToken(newToken);
           } catch {
-            // Failed to refresh → logout
             Cookies.remove('token');
             Cookies.remove('refreshToken');
             setUser(null);
