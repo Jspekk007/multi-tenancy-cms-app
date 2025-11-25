@@ -14,20 +14,20 @@ type Story = StoryObj<typeof Switch>;
 export const Default: Story = {
   render: () => {
     const [checked, setChecked] = useState(false);
-    return <Switch checked={checked} onChange={setChecked} />;
+    return <Switch label="Story" checked={checked} onChange={setChecked} />;
   },
 };
 
 export const checked: Story = {
   render: () => {
     const [checked, setChecked] = useState(true);
-    return <Switch checked={checked} onChange={setChecked} />;
+    return <Switch label="Story" checked={checked} onChange={setChecked} />;
   },
 };
 
 export const Disabled: Story = {
   render: () => {
     const [checked, setChecked] = useState(false);
-    return <Switch checked={checked} onChange={setChecked} disabled />;
+    return <Switch label="Story" checked={checked} onChange={setChecked} disabled />;
   },
 };
