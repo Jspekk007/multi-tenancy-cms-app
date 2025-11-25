@@ -39,7 +39,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Summarize and Post Comment
         uses: ./.github/actions/summarize
         with:
@@ -57,7 +57,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+        with:
+          fetch-depth: 0
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -73,7 +75,7 @@ jobs:
           key: ${{ runner.os }}-yarn-frontend-${{ hashFiles('frontend/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-frontend-
-      
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
