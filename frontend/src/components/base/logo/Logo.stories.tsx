@@ -9,9 +9,8 @@ const meta: Meta<typeof Logo> = {
   argTypes: {
     assetType: {
       control: { type: 'select' },
-      options: ['symbol', 'wordmark', 'loader'],
-      description:
-        'Defines which asset to render: Icon (symbol), Text+Icon (wordmark), or Animation (loader).',
+      options: ['symbol', 'wordmark'],
+      description: 'Defines which asset to render: Icon (symbol) or Text+Icon (wordmark).',
     },
     size: {
       control: { type: 'select' },
