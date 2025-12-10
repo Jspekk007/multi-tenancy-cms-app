@@ -21,16 +21,17 @@
     "dev": "concurrently \"yarn backend:dev\" \"yarn frontend:dev\"",
     "build": "yarn backend:build && yarn frontend:build",
     "test": "yarn backend:test && yarn frontend:test",
-    "prepare": "husky"
+    "prepare": "husky install"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
     "@eslint/eslintrc": "^3",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.4",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
-    "typescript": "5.9.2",
     "concurrently": "^9.2.1",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
@@ -38,10 +39,11 @@
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
     "eslint-plugin-unused-imports": "^3.1.0",
-    "husky": "^8.0.0",
-    "lint-staged": "^14.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.0.0",
-    "semantic-release": "^24.2.7"
+    "semantic-release": "^24.2.7",
+    "typescript": "5.9.2"
   },
   "lint-staged": {
     "frontend/**/*.{js,jsx,ts,tsx}": [
