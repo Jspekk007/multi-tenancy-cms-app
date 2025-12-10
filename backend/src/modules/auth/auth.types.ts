@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const signupInputSchema = z.object({
+export const registerInputSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters long'),
   domain: z.string().min(3, 'Domain must be at least 3 characters long'),
   email: z.string().email('Invalid email address'),
@@ -38,5 +38,5 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
-export type SignupInput = z.infer<typeof signupInputSchema>;
+export type RegisterInput = z.infer<typeof registerInputSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;

@@ -5,4 +5,5 @@ export interface SwitchProps {
   name?: string;
   disabled?: boolean;
   error?: string;
+  required?: boolean;
 }

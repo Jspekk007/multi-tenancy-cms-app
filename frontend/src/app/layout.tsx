@@ -8,8 +8,11 @@ import { AuthProvider } from '@/components/AuthProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Multi-tenant CMS',
+  title: 'Atlas CMS - Multi-Tenant Content Management System',
   description: 'A multi-tenant content management system',
+  icons: {
+    icon: { url: '/favicon.svg', type: 'image/svg+xml' },
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }): JSX.Element {

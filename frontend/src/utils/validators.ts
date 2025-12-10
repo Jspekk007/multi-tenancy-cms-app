@@ -10,7 +10,7 @@ export const loginSchema = z.object({
   password: passwordSchema,
 });
 
-export const signupSchema = z.object({
+export const registerSchema = z.object({
   name: nameSchema,
   domain: domainSchema,
   email: emailSchema,
@@ -18,4 +18,4 @@ export const signupSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
-export type SignupInput = z.infer<typeof signupSchema>;
+export type RegisterInput = z.infer<typeof registerSchema>;

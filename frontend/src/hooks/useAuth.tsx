@@ -1,5 +1,6 @@
 'use client';
 
+import { RegisterInput } from '@utils/validators';
 import Cookies from 'js-cookie';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
@@ -59,6 +60,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       method: 'POST',
       body: JSON.stringify(credentials),
       auth: false,
+      retry: false,
+    });
+
+    const { user: userData, token: authToken, refreshToken } = data;
+
+    Cookies.set('token', authToken, { expires: 1 });
+    Cookies.set('refreshToken', refreshToken, { expires: 30 });
+
+    setUser(userData);
+    setToken(authToken);
+  };
+
+  const register = async (registrationData: RegisterInput): Promise<void> => {
+    const data = await apiFetch<AuthResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(registrationData),
+      auth: false,
+      retry: false,
     });
 
     const { user: userData, token: authToken, refreshToken } = data;
@@ -118,6 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     token,
     isLoading,
     login,
+    register,
     logout,
     refreshToken,
   };

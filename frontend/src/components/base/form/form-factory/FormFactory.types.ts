@@ -18,4 +18,5 @@ export type FormField = {
   options?: { label: string; value: string }[];
   placeholder?: string;
   disabled?: boolean;
+  required?: boolean;
 };
