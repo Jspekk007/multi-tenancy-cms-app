@@ -3,7 +3,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { ApiError } from '../../lib/errors';
 import { customLogger } from '../../lib/logger';
 import { prismaClient } from '../../lib/prisma';
-import { AuthResponse, AuthUser, LoginInput, SignupInput } from './auth.types';
+import { AuthResponse, AuthUser, LoginInput, RegisterInput } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
 import { RefreshTokenResponse } from './session/session.types';
@@ -20,10 +20,10 @@ export class AuthService {
   SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
   JWT_SECRET = process.env?.JWT_SECRET;
 
-  async signup(input: SignupInput): Promise<object> {
+  async register(input: RegisterInput): Promise<object> {
     const hashedPassword = await hashPassword(input.password);
 
-    customLogger.info('Signup process started');
+    customLogger.info('Register process started');
 
     customLogger.info(
       `Attempting to sign up user with email: ${input.email} and domain: ${input.domain}`,

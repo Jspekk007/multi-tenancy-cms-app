@@ -51,9 +51,9 @@ function errorMiddleware(error: Error, req: Request, res: Response, _next: NextF
 // Auth routes
 const authService = new AuthService();
 
-app.post('/auth/signup', async (req: Request, res: Response, next: NextFunction) => {
+app.post('/auth/register', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const result = await authService.signup(req.body);
+    const result = await authService.register(req.body);
     res.json(result);
   } catch (error) {
     next(error);

@@ -45,6 +45,8 @@ export const FormFactory = <TFieldValues extends FieldValues>({
                 placeholder={field.placeholder}
                 disabled={field.disabled}
                 error={fieldState.error?.message}
+                showPasswordToggle={field.type === 'password' ? true : false}
+                required={field.required ? true : false}
               />
             )}
           />
@@ -65,6 +67,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
                 disabled={field.disabled}
                 onChange={onChange}
                 error={fieldState.error?.message}
+                required={field.required ? true : false}
               />
             )}
           />
@@ -83,6 +86,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
                 disabled={field.disabled}
                 onChange={onChange}
                 error={fieldState.error?.message}
+                required={field.required ? true : false}
               />
             )}
           />
@@ -109,6 +113,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
           size="medium"
           iconVariant="primary"
           disabled={isLoading || control._formState.isSubmitting}
+          loading={isLoading || control._formState.isSubmitting}
         >
           Submit
         </BaseButton>

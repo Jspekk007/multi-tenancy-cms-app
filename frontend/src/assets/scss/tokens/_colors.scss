@@ -41,8 +41,11 @@ $color-warning-hover: #f59e0b;
 $color-warning-active: #d97706;
 
 $color-danger: #ef4444;
-$color-danger-hover: #dc2626;
 $color-danger-active: #b91c1c;
+$color-danger-bg: #fee2e2;
+$color-danger-border: #fca5a5;
+$color-danger-text: #b91c1c;
+$color-danger-hover: #f87171;
 
 $color-info: #0ea5e9;
 $color-info-hover: #0284c7;
@@ -116,6 +119,9 @@ $color-text-link-hover: $color-primary-hover;
   --color-danger: #{$color-danger};
   --color-danger-hover: #{$color-danger-hover};
   --color-danger-active: #{$color-danger-active};
+  --color-danger-bg: #{$color-danger-bg};
+  --color-danger-border: #{$color-danger-border};
+  --color-danger-text: #{$color-danger-text};
 
   --color-info: #{$color-info};
   --color-info-hover: #{$color-info-hover};

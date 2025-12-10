@@ -19,7 +19,7 @@ export interface LoginInput {
   password: string;
 }
 
-export interface SignupInput {
+export interface RegisterInput {
   name: string;
   domain: string;
   email: string;
@@ -31,6 +31,7 @@ export interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (credentials: LoginInput) => Promise<void>;
+  register: (data: RegisterInput) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
 }
