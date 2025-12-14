@@ -1,14 +1,16 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "baseUrl": "./src",
     "module": "es2022",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "outDir": "dist",
     "types": ["node", "express"],
-    "typeRoots": ["../node_modules/@types", "./src/types"]
+    "paths": {
+      "@/core/*": ["../../packages/core/*"]
+    }
   },
   "include": ["src", "src/types"],
   "exclude": ["node_modules", "dist"]

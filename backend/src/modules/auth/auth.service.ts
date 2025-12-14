@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { ApiError } from '../../lib/errors';
+import { ErrorFactory } from '../../lib/errors/ErrorFactory';
 import { customLogger } from '../../lib/logger';
 import { prismaClient } from '../../lib/prisma';
 import { AuthResponse, AuthUser, LoginInput, RegisterInput } from './auth.types';
@@ -38,7 +38,7 @@ export class AuthService {
     });
 
     if (existingUser || existingDomain) {
-      throw new ApiError('User or domain already exists', 409);
+      throw ErrorFactory.conflict('User or Domain already exists.');
     }
 
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -85,12 +85,13 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: input.email },
     });
+
     if (!user) {
-      throw new ApiError('Invalid email or password', 401);
+      throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
     if (!(await verifyPassword(input.password, user.passwordHash))) {
-      throw new ApiError('Invalid email or password', 401);
+      throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
     const tenantUser = await this.prisma.tenantUser.findFirst({
@@ -98,7 +99,7 @@ export class AuthService {
       include: { tenant: true },
     });
     if (!tenantUser) {
-      throw new ApiError('User is not associated with any tenant', 400);
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
     customLogger.info(`User ${user.email} logged in successfully`);
@@ -141,7 +142,7 @@ export class AuthService {
 
     const session = await this.sessionService.findSessionByToken(refreshToken);
     if (!session) {
-      throw new ApiError('Invalid refresh token', 401);
+      throw ErrorFactory.unauthorized('Invalid refresh token.');
     }
 
     // Update last used timestamp
@@ -153,7 +154,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ApiError('User not found', 404);
+      throw ErrorFactory.notFound('User not found.');
     }
 
     const tenantUser = await this.prisma.tenantUser.findFirst({
@@ -165,7 +166,7 @@ export class AuthService {
     });
 
     if (!tenantUser) {
-      throw new ApiError('User is not associated with any tenant', 400);
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
     // Generate new tokens
@@ -209,7 +210,7 @@ export class AuthService {
 
     const session = await this.sessionService.revokeSessionByToken(refreshToken);
     if (!session) {
-      throw new ApiError('Invalid refresh token', 401);
+      throw ErrorFactory.unauthorized('Invalid refresh token.');
     }
 
     customLogger.info(`User logged out, session ${session.id} revoked`);
@@ -221,7 +222,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ApiError('User not found', 404);
+      throw ErrorFactory.notFound('User not found.');
     }
 
     const tenantUser = await this.prisma.tenantUser.findFirst({
@@ -230,7 +231,7 @@ export class AuthService {
     });
 
     if (!tenantUser) {
-      throw new ApiError('User is not associated with any tenant', 400);
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
     return {
