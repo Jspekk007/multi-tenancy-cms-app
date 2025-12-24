@@ -20,7 +20,7 @@ export class AuthService {
   SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
   JWT_SECRET = process.env?.JWT_SECRET;
 
-  async register(input: RegisterInput): Promise<object> {
+  async register(input: RegisterInput): Promise<AuthResponse> {
     const hashedPassword = await hashPassword(input.password);
 
     customLogger.info('Register process started');
@@ -41,8 +41,8 @@ export class AuthService {
       throw ErrorFactory.conflict('User or Domain already exists.');
     }
 
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const tenant = await tx.tenant.create({
+    const { tenant, user, tenantUser } = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const createdTenant = await tx.tenant.create({
         data: {
           name: input.name,
           domain: input.domain,
@@ -52,31 +52,70 @@ export class AuthService {
       const adminRole = await tx.role.create({
         data: {
           name: 'ADMIN',
-          tenantId: tenant.id,
+          tenantId: createdTenant.id,
         },
       });
 
-      const user = await tx.user.create({
+      const createdUser = await tx.user.create({
         data: {
           email: input.email,
           passwordHash: hashedPassword,
         },
       });
 
-      await tx.tenantUser.create({
+      const createdTenantUser = await tx.tenantUser.create({
         data: {
-          tenantId: tenant.id,
-          userId: user.id,
+          tenantId: createdTenant.id,
+          userId: createdUser.id,
           roleId: adminRole.id,
+        },
+        include: {
+          tenant: true,
         },
       });
 
       customLogger.info(
-        `User ${user.email} signed up for tenant ${tenant.name} (${tenant.domain})`,
+        `User ${createdUser.email} signed up for tenant ${createdTenant.name} (${createdTenant.domain})`,
       );
 
-      return tenant;
+      return {
+        tenant: createdTenant,
+        user: createdUser,
+        tenantUser: createdTenantUser,
+      };
     });
+
+    const refreshToken = await this.sessionService.generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    const createdSession = await this.sessionService.createSession({
+      userId: user.id,
+      tenantId: tenant.id,
+      refreshToken,
+      expiresAt,
+    });
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: tenant.id,
+      role: tenantUser.roleId,
+      sessionId: createdSession.id,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        tenantId: tenant.id,
+        domain: tenant.domain,
+        role: tenantUser.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      token,
+      refreshToken,
+    };
   }
 
   async login(input: LoginInput): Promise<AuthResponse> {
@@ -201,6 +240,8 @@ export class AuthService {
         tenantId: tenantUser.tenantId,
         domain: tenantUser.tenant.domain,
         role: tenantUser.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
     };
   }

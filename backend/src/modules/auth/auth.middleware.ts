@@ -8,7 +8,12 @@ import { SessionService } from './session/session.service';
 
 const sessionService = new SessionService(prismaClient);
 
-const PUBLIC_PATHS = ['/api/v1/auth.login', '/api/v1/auth.register'];
+const PUBLIC_PATHS = [
+  '/api/v1/auth.login',
+  '/api/v1/auth.register',
+  '/api/v1/auth.refresh',
+  '/api/v1/auth.logout',
+];
 
 export const authMiddleware = async (
   req: Request & { user?: JWTTokenPayload } & { headers: { authorization?: string } },
@@ -36,6 +41,7 @@ export const authMiddleware = async (
     }
 
     req.user = payload;
+    req.tenantId = payload.tenantId;
 
     const session = await prismaClient.session.findUnique({ where: { id: payload.sessionId } });
     if (!session || session.isRevoked || session.expiresAt <= new Date()) {

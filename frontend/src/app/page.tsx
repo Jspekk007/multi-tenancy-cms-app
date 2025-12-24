@@ -14,7 +14,7 @@ export default function HomePage(): JSX.Element | null {
       if (user) {
         router.push('/dashboard');
       } else {
-        router.push('/login');
+        router.push('/auth/login');
       }
     }
   }, [user, isLoading, router]);

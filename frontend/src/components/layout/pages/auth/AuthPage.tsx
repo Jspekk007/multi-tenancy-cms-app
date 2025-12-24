@@ -12,7 +12,7 @@ interface AuthPageProps<T extends FieldValues> {
   fields: FormField[];
   schema: ZodType;
   onSubmit: SubmitHandler<T>;
-  error?: string;
+  error?: string | null;
   isLoading: boolean;
 }
 

@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { FormField } from '@/components/base/form/form-factory/FormFactory.types';
 import { AuthPage } from '@/components/layout/pages/auth/AuthPage';
 import { useAuth } from '@/hooks/useAuth';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 const loginFormFields: FormField[] = [
   {
@@ -30,7 +31,7 @@ const loginSchema = z.object({
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
-export default function LoginPage(): JSX.Element {
+const LoginPage = (): JSX.Element => {
   const router = useRouter();
   const { login, user, isLoading } = useAuth();
   const [error, setError] = useState<string>('');
@@ -40,10 +41,13 @@ export default function LoginPage(): JSX.Element {
     try {
       setIsSubmitting(true);
       setError('');
+
       await login(data);
+
       router.push('/dashboard');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err?.message : 'Login failed. Please try again.');
+      const errorMessage = getErrorMessage(err);
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -65,4 +69,6 @@ export default function LoginPage(): JSX.Element {
       isLoading={isSubmitting}
     />
   );
-}
+};
+
+export default LoginPage;

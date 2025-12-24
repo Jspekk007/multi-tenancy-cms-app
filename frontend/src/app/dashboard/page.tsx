@@ -11,13 +11,12 @@ export default function DashboardPage(): JSX.Element | null {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/login');
+      router.push('/auth/login');
     }
   }, [user, isLoading, router]);
 
   const handleLogout = async (): Promise<void> => {
-    logout();
-    router.push('/login');
+    await logout();
   };
 
   if (isLoading) {

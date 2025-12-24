@@ -1,139 +1,133 @@
 'use client';
 
-import { RegisterInput } from '@utils/validators';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { trpc } from 'trpc/trpc';
 
-import { apiFetch } from '@/lib/apiClient';
-import { AuthContextType, AuthResponse, AuthUser, LoginInput } from '@/types/auth';
+import { AuthContextType, LoginInput } from '@/types/auth';
+import { RegisterInput } from '@/utils/validators';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element => {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const initAuth = async (): Promise<void> => {
-      const storedToken = Cookies.get('token');
-      const storedRefreshToken = Cookies.get('refreshToken');
+  const utils = trpc.useUtils();
 
-      if (storedToken && storedRefreshToken) {
-        try {
-          // Verify current token
-          const data = await apiFetch<AuthUser>('/auth/me');
-          setUser(data);
-          setToken(storedToken);
-        } catch {
-          // Try refreshing token
-          try {
-            const data = await apiFetch<AuthResponse>('/auth/refresh', {
-              method: 'POST',
-              body: JSON.stringify({ refreshToken: storedRefreshToken }),
-              auth: false, // optional if apiFetch adds auth by default
-            });
+  // Query for current user
+  const {
+    data: user,
+    isLoading: isLoadingUser,
+    error: userError,
+  } = trpc.auth.me.useQuery(undefined, {
+    enabled: !!Cookies.get('token'),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
 
-            const { token: newToken, refreshToken: newRefreshToken, user: userData } = data;
+  // Mutations
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: (data) => {
+      const { user: userData, token: authToken, refreshToken } = data;
+      Cookies.set('token', authToken, { expires: 1 });
+      Cookies.set('refreshToken', refreshToken, { expires: 30 });
+      setToken(authToken);
+      utils.auth.me.setData(undefined, userData);
+    },
+  });
 
-            Cookies.set('token', newToken, { expires: 1 });
-            Cookies.set('refreshToken', newRefreshToken, { expires: 30 });
+  const registerMutation = trpc.auth.register.useMutation({
+    onSuccess: (data) => {
+      const { user: userData, token: authToken, refreshToken } = data;
+      Cookies.set('token', authToken, { expires: 1 });
+      Cookies.set('refreshToken', refreshToken, { expires: 30 });
+      setToken(authToken);
+      utils.auth.me.setData(undefined, userData);
+    },
+  });
 
-            setUser(userData);
-            setToken(newToken);
-          } catch {
-            Cookies.remove('token');
-            Cookies.remove('refreshToken');
-            setUser(null);
-            setToken(null);
-          }
-        }
-      }
-      setIsLoading(false);
-    };
+  const logoutMutation = trpc.auth.logout.useMutation({
+    onSuccess: () => {
+      handleLogout();
+    },
+    onError: () => {
+      // Even if logout fails on server, clear local state
+      handleLogout();
+    },
+  });
 
-    initAuth();
-  }, []);
+  const refreshMutation = trpc.auth.refresh.useMutation({
+    onSuccess: (data) => {
+      const { user: userData, token: authToken, refreshToken } = data;
+      Cookies.set('token', authToken, { expires: 1 });
+      Cookies.set('refreshToken', refreshToken, { expires: 30 });
+      setToken(authToken);
+      utils.auth.me.setData(undefined, userData);
+    },
+    onError: () => {
+      handleLogout();
+    },
+  });
+
+  const handleLogout = (): void => {
+    Cookies.remove('token');
+    Cookies.remove('refreshToken');
+    setToken(null);
+    utils.auth.me.reset();
+    router.push('/auth/login');
+  };
 
   const login = async (credentials: LoginInput): Promise<void> => {
-    const data = await apiFetch<AuthResponse>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-      auth: false,
-      retry: false,
-    });
-
-    const { user: userData, token: authToken, refreshToken } = data;
-
-    Cookies.set('token', authToken, { expires: 1 });
-    Cookies.set('refreshToken', refreshToken, { expires: 30 });
-
-    setUser(userData);
-    setToken(authToken);
+    await loginMutation.mutateAsync(credentials);
   };
 
   const register = async (registrationData: RegisterInput): Promise<void> => {
-    const data = await apiFetch<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(registrationData),
-      auth: false,
-      retry: false,
-    });
-
-    const { user: userData, token: authToken, refreshToken } = data;
-
-    Cookies.set('token', authToken, { expires: 1 });
-    Cookies.set('refreshToken', refreshToken, { expires: 30 });
-
-    setUser(userData);
-    setToken(authToken);
+    await registerMutation.mutateAsync(registrationData);
   };
 
   const logout = async (): Promise<void> => {
-    try {
-      const refreshToken = Cookies.get('refreshToken');
-      if (refreshToken) {
-        await apiFetch('/auth/logout', {
-          method: 'POST',
-          body: JSON.stringify({ refreshToken }),
-        });
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      Cookies.remove('token');
-      Cookies.remove('refreshToken');
-      setUser(null);
-      setToken(null);
+    const refreshToken = Cookies.get('refreshToken');
+    if (refreshToken) {
+      await logoutMutation.mutateAsync({ refreshToken });
+    } else {
+      handleLogout();
     }
   };
 
   const refreshToken = async (): Promise<void> => {
-    try {
-      const refreshTokenValue = Cookies.get('refreshToken');
-      if (!refreshTokenValue) throw new Error('No refresh token');
-
-      const data = await apiFetch<AuthResponse>('/auth/refresh', {
-        method: 'POST',
-        body: JSON.stringify({ refreshToken: refreshTokenValue }),
-        auth: false,
-      });
-
-      const { token: newToken, refreshToken: newRefreshToken, user: userData } = data;
-
-      Cookies.set('token', newToken, { expires: 1 });
-      Cookies.set('refreshToken', newRefreshToken, { expires: 30 });
-
-      setUser(userData);
-      setToken(newToken);
-    } catch (error) {
-      logout();
-      throw error;
+    const refreshTokenValue = Cookies.get('refreshToken');
+    if (!refreshTokenValue) {
+      throw new Error('No refresh token');
     }
+    await refreshMutation.mutateAsync({ refreshToken: refreshTokenValue });
   };
 
+  // Initialize token from cookies on mount
+  useEffect(() => {
+    const storedToken = Cookies.get('token');
+    if (storedToken) {
+      setToken(storedToken);
+    }
+  }, []);
+
+  // Handle auth errors - try refresh token
+  useEffect(() => {
+    if (userError) {
+      const refreshTokenValue = Cookies.get('refreshToken');
+      if (refreshTokenValue && !refreshMutation.isPending) {
+        refreshMutation.mutate({ refreshToken: refreshTokenValue });
+      } else if (!refreshTokenValue) {
+        handleLogout();
+      }
+    }
+  }, [userError]);
+
+  const isLoading = isLoadingUser || loginMutation.isPending || registerMutation.isPending;
+
   const value: AuthContextType = {
-    user,
+    user: (user as AuthContextType['user']) || null,
     token,
     isLoading,
     login,

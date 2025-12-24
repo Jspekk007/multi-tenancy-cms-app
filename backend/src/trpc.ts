@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import { CreateExpressContextOptions } from '@trpc/server/dist/adapters/express.cjs';
+import { CreateExpressContextOptions } from '@trpc/server/adapters/express';
+import superjson from 'superjson';
 import { Request } from 'express';
 
 import { ApiError } from '@/core/errors';
@@ -15,7 +16,13 @@ export interface Context {
   tenantId?: string;
 }
 
+export interface AuthenticatedContext extends Context {
+  user: AuthenticatedUser;
+  tenantId: string;
+}
+
 export const t = initTRPC.context<Context>().create({
+  transformer: superjson,
   errorFormatter({ shape, error }) {
     if (error.cause instanceof ApiError) {
       const apiError = error.cause as ApiError;
@@ -52,6 +59,7 @@ export const t = initTRPC.context<Context>().create({
           code: apiError.code,
           httpStatus: apiError.httpStatus,
           details: apiError.details,
+          correlationId: apiError.correlationId,
         },
       };
     }
@@ -62,25 +70,26 @@ export const t = initTRPC.context<Context>().create({
 export const publicProcedure = t.procedure;
 
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.req.user) {
+  if (!ctx.user) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You must be logged in to access this resource',
     });
   }
 
-  const authenticatedUser = ctx.req.user as AuthenticatedUser;
-
-  if (!ctx.req.tenantId) {
-    // This check is optional, depending on whether tenantId is required globally
+  if (!ctx.tenantId) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Tenant ID is required',
+    });
   }
 
   return next({
     ctx: {
       ...ctx,
-      user: authenticatedUser,
-      tenantId: ctx.req.tenantId,
-    },
+      user: ctx.user,
+      tenantId: ctx.tenantId,
+    } as AuthenticatedContext,
   });
 });
 
@@ -92,5 +101,7 @@ export const createContext = (opts: CreateExpressContextOptions): Context => {
   return {
     req,
     res,
+    user: req.user as AuthenticatedUser | undefined,
+    tenantId: req.tenantId as string | undefined,
   };
 };

@@ -1,12 +1,13 @@
 'use client';
 
-import { useAuth } from '@hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { FormField } from '@/components/base/form/form-factory/FormFactory.types';
 import { AuthPage } from '@/components/layout/pages/auth/AuthPage';
+import { useAuth } from '@/hooks/useAuth';
+import { getErrorMessage } from '@/utils/errorUtils';
 
 const registerFormFields: FormField[] = [
   {
@@ -76,7 +77,8 @@ export default function RegisterPage(): JSX.Element {
       await register(data);
       router.push('/dashboard');
     } catch (err: unknown) {
-      setError(err instanceof Error ? err?.message : 'Registration failed. Please try again.');
+      const userFriendlyError = getErrorMessage(err);
+      setError(userFriendlyError || 'Registration failed. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
