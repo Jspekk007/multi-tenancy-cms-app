@@ -1,34 +1,23 @@
 .image {
-  // Base container for the image/SVG
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
-  // Style for the actual img tag
   &__source {
-    display: block;
     width: 100%;
     height: 100%;
-    object-fit: contain; // Default object-fit
-
-    // Reset for SVGs injected into img tags
-    &[src$='.svg'] {
-      width: auto;
-      height: auto;
-      object-fit: initial;
-    }
   }
-
-  // --- Size Modifiers (Use these classes to set dimensions) ---
   &--small {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
   }
   &--medium {
     width: 48px;
     height: 48px;
   }
   &--large {
-    width: 96px;
-    height: 96px;
+    width: 64px;
+    height: 64px;
   }
   &--cover {
     width: 100%;
@@ -37,8 +26,6 @@
       object-fit: cover;
     }
   }
-
-  // Placeholder styles
   &--placeholder {
     background-color: var(--color-gray-200);
     border: 1px solid var(--color-gray-400);
@@ -46,7 +33,7 @@
 }
 
 // When rendering raw SVG, the wrapper IS the SVG container
-.image > svg {
+> svg {
   display: block;
   width: 100%;
   height: 100%;

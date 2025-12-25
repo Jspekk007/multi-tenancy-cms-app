@@ -1,15 +1,26 @@
 .logo {
-  flex-shrink: 0;
   display: inline-flex;
+  align-items: center; // vertical center
+  justify-content: center; // horizontal center
+  flex-shrink: 0;
 
   & > svg {
     color: var(--color-primary);
+    display: block; // remove inline gaps
   }
 
+  &--symbol,
   &--wordmark {
-    .image > svg {
-      width: 100%;
-      height: 100%;
+    .image {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      > svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
     }
   }
 }

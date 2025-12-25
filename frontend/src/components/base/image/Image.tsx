@@ -1,57 +1,44 @@
 import './Image.scss';
 
-import { ImageProps, ImageSize } from './Image.types';
+import React from 'react';
 
-const sizeMap: Record<ImageSize, string> = {
-  small: 'image--small',
-  medium: 'image--medium',
-  large: 'image--large',
-  cover: 'image--cover',
-};
+export interface ImageProps {
+  src: string;
+  alt: string;
+  className?: string;
+  width?: number;
+  height?: number;
+  style?: React.CSSProperties;
+  loading?: 'lazy' | 'eager';
+}
 
 export const Image: React.FC<ImageProps> = ({
   src,
-  svgContent,
   alt,
   className = '',
-  size = 'medium',
-  loading = 'lazy',
   width,
   height,
   style,
+  loading = 'lazy',
 }) => {
-  const rootClass = `image ${sizeMap[size]} ${className}`;
-
-  if (svgContent) {
-    return (
-      <div
-        className={rootClass}
-        style={style}
-        dangerouslySetInnerHTML={{ __html: svgContent }}
-        role="img"
-        aria-label={alt}
-      />
-    );
-  }
-
-  if (src) {
-    return (
-      <div className={rootClass} style={style}>
-        <img
-          src={src}
-          alt={alt}
-          className="image__source"
-          loading={loading}
-          width={width}
-          height={height}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className={`${rootClass} image--placeholder`} aria-label="Image Placeholder">
-      <span className="image__placeholder-text">No Image</span>
+    <div
+      className={`image ${className}`}
+      style={{
+        width,
+        height,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...style,
+      }}
+    >
+      <img
+        src={src}
+        alt={alt}
+        loading={loading}
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      />
     </div>
   );
 };

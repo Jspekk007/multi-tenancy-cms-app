@@ -11,15 +11,6 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
   },
   reactStrictMode: true,
-  webpack: (config) => {
-    config.module.rules.push({
-      test: /\.svg$/i,
-      resourceQuery: /raw/,
-      type: 'asset/source',
-    });
-
-    return config;
-  },
 
   async rewrites() {
     return [
