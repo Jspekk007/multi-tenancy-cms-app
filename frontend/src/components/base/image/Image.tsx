@@ -1,44 +1,33 @@
 import './Image.scss';
 
+import clsx from 'clsx';
 import React from 'react';
 
-export interface ImageProps {
-  src: string;
-  alt: string;
-  className?: string;
-  width?: number;
-  height?: number;
-  style?: React.CSSProperties;
-  loading?: 'lazy' | 'eager';
-}
+import { ImageProps } from './Image.types';
 
 export const Image: React.FC<ImageProps> = ({
   src,
   alt,
+  size = 'medium',
   className = '',
-  width,
-  height,
-  style,
   loading = 'lazy',
+  style,
 }) => {
   return (
     <div
-      className={`image ${className}`}
+      className={clsx('image', `image--${size}`, className)}
       style={{
-        width,
-        height,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         ...style,
       }}
     >
-      <img
-        src={src}
-        alt={alt}
-        loading={loading}
-        style={{ width: '100%', height: '100%', display: 'block' }}
-      />
+      {src ? (
+        <img className="image__source" src={src} alt={alt} loading={loading} />
+      ) : (
+        <div className="image__placeholder" aria-hidden />
+      )}
     </div>
   );
 };
