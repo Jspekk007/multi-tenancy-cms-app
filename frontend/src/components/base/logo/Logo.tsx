@@ -41,8 +41,7 @@ export const Logo: React.FC<LogoProps> = ({
     <Image
       src={src}
       alt={alt}
-      width={width}
-      height={height}
+      style={{ width, height }}
       className={`logo logo--${assetType} ${className}`}
     />
   );
