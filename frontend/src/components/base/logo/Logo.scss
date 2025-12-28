@@ -1,46 +1,26 @@
-@use '../Image/Image.scss';
-
 .logo {
-  flex-shrink: 0;
   display: inline-flex;
+  align-items: center; // vertical center
+  justify-content: center; // horizontal center
+  flex-shrink: 0;
 
   & > svg {
     color: var(--color-primary);
+    display: block; // remove inline gaps
   }
 
-  &--loader {
-    .image > svg {
-      width: 100%;
-      height: 100%;
-    }
-  }
-
-  .logo__loader-mask-rect {
-    animation: atlas-rise 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  }
-
+  &--symbol,
   &--wordmark {
-    .image > svg {
-      width: 100%;
-      height: 100%;
+    .image {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      > svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
     }
-  }
-}
-
-@keyframes atlas-rise {
-  0% {
-    transform: translateY(55px);
-  }
-
-  50% {
-    transform: translateY(-55px);
-  }
-
-  50.01% {
-    transform: translateY(55px);
-  }
-
-  100% {
-    transform: translateY(55px);
   }
 }

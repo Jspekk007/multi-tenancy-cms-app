@@ -3,9 +3,14 @@
   flex-direction: column;
 
   &__label {
-    margin-bottom: 0.25rem;
-    font-weight: 500;
-    font-size: 0.95rem;
+    margin-bottom: 0.375rem;
+    font-weight: var(--font-weight-medium);
+    font-size: var(--font-size-xs);
+
+    &__required {
+      margin-left: 0.125rem;
+      color: var(--color-danger-text);
+    }
   }
 
   .password-toggle {

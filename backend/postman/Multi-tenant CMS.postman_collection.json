@@ -110,7 +110,7 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Signup",
+          "name": "Register",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -119,9 +119,9 @@
               "raw": "{\n  \"name\": \"My Company\",\n  \"domain\": \"mycompany.com\",\n  \"email\": \"admin@mycompany.com\",\n  \"password\": \"admin123\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/signup",
+              "raw": "{{baseUrl}}/auth/register",
               "host": ["{{baseUrl}}"],
-              "path": ["auth", "signup"]
+              "path": ["auth", "register"]
             }
           },
           "response": []

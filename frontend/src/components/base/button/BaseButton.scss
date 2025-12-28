@@ -1,8 +1,11 @@
+@use '../../../assets//scss/tokens/mixins' as *;
+
 .base-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
+  width: 100%;
   border: none;
   border-radius: var(--radius-md); // medium-rounded like Tailwind's rounded-md
   font-weight: var(--font-weight-medium);

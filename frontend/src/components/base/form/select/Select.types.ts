@@ -12,4 +12,5 @@ export interface SelectProps {
   placeholder?: string;
   disabled?: boolean;
   error?: string;
+  required?: boolean;
 }
