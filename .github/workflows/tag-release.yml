@@ -1,0 +1,35 @@
+name: Tag Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create Release Tag
+        env:
+          GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+        run: |
+          DATE=$(date +'%Y-%m-%d')
+          TAG="release-${DATE}"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists, skipping tag creation."
+            exit 0
+          fi
+
+          git tag -a "$TAG" -m "Release $DATE"
+          git push origin "$TAG"
