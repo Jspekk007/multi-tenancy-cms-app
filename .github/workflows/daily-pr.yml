@@ -51,14 +51,12 @@ jobs:
               --jq '.[0].number // empty')
 
             TITLE="Release $(date +'%Y-%m-%d')"
-            BODY=$(cat <<EOF
-Automated daily release PR.
 
-This PR contains all changes currently on \`develop\` that are ready to be released to \`main\`.
+            BODY="Automated daily release PR.
 
-Merging this PR **is the release**.
-EOF
-            )
+            This PR contains all changes currently on develop that are ready to be released to main.
+
+            Merging this PR **is the release**."
 
             if [ -z "$PR_NUMBER" ]; then
               echo "Creating new release PR"
