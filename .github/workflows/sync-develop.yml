@@ -1,4 +1,3 @@
-# .github/workflows/sync-develop.yml
 name: Sync develop with main
 
 on:

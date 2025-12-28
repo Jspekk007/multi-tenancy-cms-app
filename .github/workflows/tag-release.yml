@@ -7,10 +7,9 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  tag-release:
+  tag:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,15 +18,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create Release Tag
-        env:
-          GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create release tag
         run: |
           DATE=$(date +'%Y-%m-%d')
           TAG="release-${DATE}"
 
           if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists, skipping tag creation."
+            echo "Tag $TAG already exists, skipping"
             exit 0
           fi
 
