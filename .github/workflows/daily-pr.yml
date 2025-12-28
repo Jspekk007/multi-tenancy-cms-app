@@ -1,3 +1,4 @@
+# .github/workflows/daily-pr.yml
 name: Daily Release PR (develop → main)
 
 on:
@@ -15,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -23,14 +24,24 @@ jobs:
       - name: Fetch branches
         run: git fetch origin
 
-      - name: Create or update release PR
+      - name: Create or update daily release PR
         env:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
           set -e
 
-          if git merge-base --is-ancestor origin/main origin/develop; then
-            echo "develop is ahead of main → release needed"
+          MAIN_SHA=$(git rev-parse origin/main)
+          DEVELOP_SHA=$(git rev-parse origin/develop)
+
+          echo "origin/main    @ $MAIN_SHA"
+          echo "origin/develop @ $DEVELOP_SHA"
+          echo
+          echo "Commit graph (main...develop):"
+          git log --oneline --left-right --graph origin/main...origin/develop || true
+          echo
+
+          if git merge-base --is-ancestor "$MAIN_SHA" "$DEVELOP_SHA" && [ "$MAIN_SHA" != "$DEVELOP_SHA" ]; then
+            echo "✅ develop is ahead of main — release needed"
 
             PR_NUMBER=$(gh pr list \
               --base main \
@@ -41,26 +52,31 @@ jobs:
 
             TITLE="Release $(date +'%Y-%m-%d')"
             BODY=$(cat <<EOF
-          Automated daily release PR.
+Automated daily release PR.
 
-          Merge this PR to release all changes currently in \`develop\` to \`main\`.
-          EOF
-          )
+This PR contains all changes currently on \`develop\` that are ready to be released to \`main\`.
+
+Merging this PR **is the release**.
+EOF
+            )
 
             if [ -z "$PR_NUMBER" ]; then
+              echo "Creating new release PR"
               gh pr create \
                 --base main \
                 --head develop \
                 --title "$TITLE" \
                 --body "$BODY" \
-                --label release
+                --label release \
+                --label automated
             else
+              echo "Updating existing release PR #$PR_NUMBER"
               gh pr edit "$PR_NUMBER" \
                 --title "$TITLE" \
                 --body "$BODY"
             fi
           else
-            echo "No changes to release"
+            echo "ℹ️ No changes to release — develop and main are in sync"
 
             PR_NUMBER=$(gh pr list \
               --base main \
@@ -70,6 +86,7 @@ jobs:
               --jq '.[0].number // empty')
 
             if [ -n "$PR_NUMBER" ]; then
+              echo "Closing stale release PR #$PR_NUMBER"
               gh pr close "$PR_NUMBER" \
                 --comment "Closing PR: develop and main are in sync."
             fi
