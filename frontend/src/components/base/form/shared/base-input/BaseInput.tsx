@@ -6,7 +6,15 @@ import { BaseInputProps } from './BaseInput.types';
 
 export const BaseInput = forwardRef<HTMLInputElement, BaseInputProps>(
   (
-    { variant = 'default', size = 'medium', prefix, suffix, disabled, className = '', ...rest },
+    {
+      variant = 'default',
+      size = 'medium',
+      prefix = null,
+      suffix = null,
+      disabled,
+      className = '',
+      ...rest
+    },
     ref,
   ) => {
     const variantClass = variant !== 'default' ? `input-${variant}` : '';
