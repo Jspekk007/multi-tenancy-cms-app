@@ -1,124 +1,76 @@
-# .github/workflows/daily-pr.yml
-name: Daily PR from develop to main
+name: Daily Release PR (develop → main)
 
 on:
   schedule:
-    - cron: "0 6 * * *" # 8 AM Amsterdam (summer, CEST)
-    - cron: "0 7 * * *" # 8 AM Amsterdam (winter, CET)
-  workflow_dispatch: # allow manual trigger
+    - cron: "0 6 * * *" # 08:00 CEST
+    - cron: "0 7 * * *" # 08:00 CET
+  workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  create-pr:
+  release-pr:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Fetch and sync branches
-        run: |
-          git remote set-url origin "https://github.com/${GITHUB_REPOSITORY}.git"
-          git fetch --prune --tags origin
-          # Ensure local tracking branches mirror remote tips
-          git checkout -B main origin/main
-          git checkout -B develop origin/develop
+      - name: Fetch branches
+        run: git fetch origin
 
-      - name: Create or update PR develop -> main
+      - name: Create or update release PR
         env:
           GH_TOKEN: ${{ secrets.PR_CREATE_TOKEN }}
         run: |
-          # Re-fetch to ensure up-to-date right before decision
-          git fetch --prune origin
+          set -e
 
-          echo "== Diagnostics =="
-          echo "origin/main:   $(git rev-parse origin/main)"
-          echo "origin/develop: $(git rev-parse origin/develop)"
-          MERGE_BASE=$(git merge-base origin/main origin/develop)
-          echo "merge-base:    ${MERGE_BASE}"
-          echo "\nThree-dot (range) changed files: origin/main...origin/develop"
-          git diff --name-status origin/main...origin/develop || true
-          echo "\nTwo-dot (trees) changed files: origin/main vs origin/develop"
-          git diff --name-status origin/main origin/develop || true
-          echo "================"
+          if git merge-base --is-ancestor origin/main origin/develop; then
+            echo "develop is ahead of main → release needed"
 
-          # IMPORTANT: Use two-dot to compare actual file trees to avoid loops after squash/rebase merges
-          if git diff --quiet origin/main origin/develop; then
-            echo "No file differences between origin/main and origin/develop (two-dot tree diff)."
-
-            # If an open PR exists, close it to avoid loop
-            OPEN_PR_NUMBER=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number // empty' || true)
-            if [ -n "$OPEN_PR_NUMBER" ]; then
-              echo "Closing existing PR #$OPEN_PR_NUMBER because there are no diffs."
-              gh pr comment "$OPEN_PR_NUMBER" --body "Closing automated PR because there are no file changes between main and develop."
-              gh pr close "$OPEN_PR_NUMBER"
-            fi
-
-            exit 0
-          fi
-
-          # Check if a PR already exists
-          if gh pr list --base main --head develop --state open --json number --jq 'length' | grep -q '^0$'; then
-            echo "Generating commit summary for PR body..."
-
-            # List only unique commits on develop not equivalent to main (ignores cherry-picked/squashed)
-            COMMIT_LIST=$(git log --no-merges --cherry --right-only --pretty='- %h %s (%an)' origin/main...origin/develop || true)
-
-            # Build compare URL
-            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
-
-            # Create a temporary body file
-            BODY_FILE=$(mktemp)
-            {
-              echo "This is an automated daily PR from \`develop\` to \`main\`."
-              echo
-              echo "✅ Please review changes before merging."
-              echo
-              echo "### Compare"
-              echo "${COMPARE_URL}"
-              echo
-              echo "### Changes included"
-              if [ -n "$COMMIT_LIST" ]; then
-                echo "$COMMIT_LIST"
-              else
-                echo "- No new commits (branches are in sync)."
-              fi
-            } > "$BODY_FILE"
-
-            gh pr create \
+            PR_NUMBER=$(gh pr list \
               --base main \
               --head develop \
-              --title "Daily Sync: develop → main" \
-              --body-file "$BODY_FILE" \
-              --label automated \
-              --label daily-sync
-          else
-            echo "An open PR from develop to main already exists. Updating its body with latest info."
+              --state open \
+              --json number \
+              --jq '.[0].number // empty')
 
-            # Update existing PR body to reflect latest unique commits
-            EXISTING_PR_NUMBER=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number')
-            COMMIT_LIST=$(git log --no-merges --cherry --right-only --pretty='- %h %s (%an)' origin/main...origin/develop || true)
-            COMPARE_URL="https://github.com/${GITHUB_REPOSITORY}/compare/main...develop"
-            BODY_FILE=$(mktemp)
-            {
-              echo "This is an automated daily PR from \`develop\` to \`main\`."
-              echo
-              echo "✅ Please review changes before merging."
-              echo
-              echo "### Compare"
-              echo "${COMPARE_URL}"
-              echo
-              echo "### Changes included"
-              if [ -n "$COMMIT_LIST" ]; then
-                echo "$COMMIT_LIST"
-              else
-                echo "- No new commits (branches are in sync)."
-              fi
-            } > "$BODY_FILE"
-            gh pr edit "$EXISTING_PR_NUMBER" --title "Daily Sync: develop → main" --body-file "$BODY_FILE"
+            TITLE="Release $(date +'%Y-%m-%d')"
+            BODY=$(cat <<EOF
+          Automated daily release PR.
+
+          Merge this PR to release all changes currently in \`develop\` to \`main\`.
+          EOF
+          )
+
+            if [ -z "$PR_NUMBER" ]; then
+              gh pr create \
+                --base main \
+                --head develop \
+                --title "$TITLE" \
+                --body "$BODY" \
+                --label release
+            else
+              gh pr edit "$PR_NUMBER" \
+                --title "$TITLE" \
+                --body "$BODY"
+            fi
+          else
+            echo "No changes to release"
+
+            PR_NUMBER=$(gh pr list \
+              --base main \
+              --head develop \
+              --state open \
+              --json number \
+              --jq '.[0].number // empty')
+
+            if [ -n "$PR_NUMBER" ]; then
+              gh pr close "$PR_NUMBER" \
+                --comment "Closing PR: develop and main are in sync."
+            fi
           fi
