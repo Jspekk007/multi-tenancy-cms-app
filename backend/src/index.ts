@@ -10,7 +10,6 @@ import { customLogger } from './lib/logger';
 import { prismaClient } from './lib/prisma';
 import { authMiddleware } from './modules/auth/auth.middleware';
 import { SessionService } from './modules/auth/session/session.service';
-import { initializeEmailTransporter } from './modules/mail/mail.procedure';
 
 const PORT = process.env.PORT || 4000;
 const app = express();
@@ -100,7 +99,6 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction): void |
 --------------------------------------------- */
 async function startServer(): Promise<void> {
   try {
-    await initializeEmailTransporter();
     customLogger.info('Email Transporter Ready (Ethereal)');
   } catch (error) {
     customLogger.error({ err: error }, 'Failed to initialize Email Transporter!');

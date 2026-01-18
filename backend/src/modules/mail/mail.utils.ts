@@ -1,26 +1,36 @@
-import { EmailPayload } from './mail.types';
+import fs from 'fs/promises';
+import handlebars from 'handlebars';
+import { convert } from 'html-to-text';
+import mjml2html from 'mjml';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-export const generateWelcomeEmailContent = (
-  username: string,
-): Omit<EmailPayload, 'to' | 'from'> => {
-  const subject = 'Welcome to Our Service!';
-  const html = `
-        <h1>Welcome, ${username}!</h1>
-        <p>Thank you for joining our service. We're excited to have you on board.</p>
-        <p>Feel free to explore and let us know if you have any questions.</p>
-        <br/>
-        <p>Best regards,<br/>The Team</p>
-    `;
-  const text = `
-        Welcome, ${username}!
-        
-        Thank you for joining our service. We're excited to have you on board.
-        
-        Feel free to explore and let us know if you have any questions.
-        
-        Best regards,
-        The Team
-    `;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-  return { subject, html, text };
+export const renderTemplate = async <T extends Record<string, unknown>>(
+  templateName: string,
+  context: T,
+): Promise<{ html: string; text: string }> => {
+  const templatePath = path.join(__dirname, 'templates', `${templateName}.mjml`);
+  const mjmlRaw = await fs.readFile(templatePath, 'utf-8');
+
+  const compiledMjml = handlebars.compile(mjmlRaw)(context);
+
+  const { html, errors } = mjml2html(compiledMjml);
+
+  const text = convert(html, {
+    wordwrap: 130,
+    selectors: [
+      { selector: 'img', format: 'skip' },
+      { selector: 'a', options: { hideLinkHrefIfSameAsText: true } },
+    ],
+  });
+
+  if (errors && errors.length > 0) {
+    console.error('MJML compilation errors:', errors);
+    throw new Error('Failed to compile MJML template');
+  }
+
+  return { html, text };
 };

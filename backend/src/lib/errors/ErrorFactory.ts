@@ -1,7 +1,5 @@
 import { ApiError } from '@/core/errors/ApiError';
 
-console.log(ApiError);
-
 export const ErrorFactory = {
   badRequest(message = 'Bad Request', details?: unknown): ApiError {
     return new ApiError({

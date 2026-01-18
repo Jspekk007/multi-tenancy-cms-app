@@ -1,4 +1,6 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
+import { addMailToQueue } from 'queues/emailQueue';
 
 import { ErrorFactory } from '../../lib/errors/ErrorFactory';
 import { customLogger } from '../../lib/logger';
@@ -41,49 +43,61 @@ export class AuthService {
       throw ErrorFactory.conflict('User or Domain already exists.');
     }
 
-    const { tenant, user, tenantUser } = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const createdTenant = await tx.tenant.create({
-        data: {
-          name: input.name,
-          domain: input.domain,
-        },
-      });
+    const { tenant, user, tenantUser } = await this.prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const createdTenant = await tx.tenant.create({
+          data: {
+            name: input.name,
+            domain: input.domain,
+          },
+        });
 
-      const adminRole = await tx.role.create({
-        data: {
-          name: 'ADMIN',
-          tenantId: createdTenant.id,
-        },
-      });
+        const adminRole = await tx.role.create({
+          data: {
+            name: 'ADMIN',
+            tenantId: createdTenant.id,
+          },
+        });
 
-      const createdUser = await tx.user.create({
-        data: {
-          email: input.email,
-          passwordHash: hashedPassword,
-        },
-      });
+        const createdUser = await tx.user.create({
+          data: {
+            email: input.email,
+            passwordHash: hashedPassword,
+          },
+        });
 
-      const createdTenantUser = await tx.tenantUser.create({
-        data: {
-          tenantId: createdTenant.id,
-          userId: createdUser.id,
-          roleId: adminRole.id,
-        },
-        include: {
-          tenant: true,
-        },
-      });
+        const createdTenantUser = await tx.tenantUser.create({
+          data: {
+            tenantId: createdTenant.id,
+            userId: createdUser.id,
+            roleId: adminRole.id,
+          },
+          include: {
+            tenant: true,
+          },
+        });
 
-      customLogger.info(
-        `User ${createdUser.email} signed up for tenant ${createdTenant.name} (${createdTenant.domain})`,
-      );
+        customLogger.info(
+          `User ${createdUser.email} signed up for tenant ${createdTenant.name} (${createdTenant.domain})`,
+        );
 
-      return {
-        tenant: createdTenant,
-        user: createdUser,
-        tenantUser: createdTenantUser,
-      };
-    });
+        await addMailToQueue({
+          to: createdUser.email,
+          subject: 'Welcome to Atlas CMS',
+          template: 'welcome',
+          context: {
+            name: createdUser.email || 'User',
+            domain: createdTenant.domain,
+          },
+        });
+
+        return {
+          tenant: createdTenant,
+          user: createdUser,
+          tenantUser: createdTenantUser,
+        };
+      },
+    );
 
     const refreshToken = await this.sessionService.generateRefreshToken();
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
@@ -244,6 +258,43 @@ export class AuthService {
         updatedAt: user.updatedAt,
       },
     };
+  }
+
+  async requestPasswordResetLink(email: string): Promise<void> {
+    customLogger.debug(`Password reset requested for email: ${email}`);
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    customLogger.debug(`Found user for password reset: ${user ? 'yes' : 'no'}`);
+
+    if (!user) {
+      customLogger.warn(`Password reset requested for non-existing email: ${email}`);
+      return;
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 360000); // 1 hour
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        token,
+        expiresAt: expires,
+        userId: user.id,
+      },
+    });
+
+    const resetLink = `${process.env.FRONTEND_URL}/forgot-password?token=${token}`;
+
+    await addMailToQueue({
+      to: user.email,
+      subject: 'Password Reset Request',
+      template: 'password-reset',
+      context: {
+        name: user.email || 'User',
+        resetLink,
+      },
+    });
   }
 
   async logout(refreshToken: string): Promise<void> {

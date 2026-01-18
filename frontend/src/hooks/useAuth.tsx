@@ -28,13 +28,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   });
 
   // Mutations
-  const loginMutation = trpc.auth.login.useMutation({
-    onSuccess: (data) => {
+  const loginMutation = trpc.auth.login.useMutation<{
+    user: AuthContextType['user'];
+    token: string;
+    refreshToken: string;
+  }>({
+    onSuccess: (data: { user: AuthContextType['user']; token: string; refreshToken: string }) => {
       const { user: userData, token: authToken, refreshToken } = data;
       Cookies.set('token', authToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 30 });
       setToken(authToken);
-      utils.auth.me.setData(undefined, userData);
+      if (userData) {
+        utils.auth.me.setData(undefined, userData);
+      }
     },
   });
 
@@ -44,9 +50,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       Cookies.set('token', authToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 30 });
       setToken(authToken);
-      utils.auth.me.setData(undefined, userData);
+      if (userData) {
+        utils.auth.me.setData(undefined, userData);
+      }
     },
   });
+
+  const passwordResetMutation = trpc.auth.passwordReset.useMutation();
 
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
@@ -64,7 +74,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       Cookies.set('token', authToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 30 });
       setToken(authToken);
-      utils.auth.me.setData(undefined, userData);
+      if (userData) {
+        utils.auth.me.setData(undefined, userData);
+      }
     },
     onError: () => {
       handleLogout();
@@ -76,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     Cookies.remove('refreshToken');
     setToken(null);
     utils.auth.me.reset();
-    router.push('/auth/login');
+    router.push('/login');
   };
 
   const login = async (credentials: LoginInput): Promise<void> => {
@@ -94,6 +106,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     } else {
       handleLogout();
     }
+  };
+
+  const requestPasswordReset = async (email: string): Promise<{ message: string }> => {
+    return await passwordResetMutation.mutateAsync({ email });
   };
 
   const refreshToken = async (): Promise<void> => {
@@ -134,6 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     register,
     logout,
     refreshToken,
+    requestPasswordReset,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

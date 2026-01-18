@@ -12,6 +12,10 @@ export const loginInputSchema = z.object({
   password: z.string(),
 });
 
+export const resetPasswordLinkSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
 export interface AuthUser {
   id: string;
   email: string;

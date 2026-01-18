@@ -1,7 +1,7 @@
 import { initTRPC, TRPCError } from '@trpc/server';
 import { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import superjson from 'superjson';
 import { Request } from 'express';
+import superjson from 'superjson';
 
 import { ApiError } from '@/core/errors';
 

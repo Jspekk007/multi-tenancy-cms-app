@@ -59,7 +59,7 @@ const handleLogout = (): void => {
   Cookies.remove('refreshToken');
 
   if (typeof window !== 'undefined') {
-    window.location.href = '/auth/login';
+    window.location.href = '/login';
   }
 };
 

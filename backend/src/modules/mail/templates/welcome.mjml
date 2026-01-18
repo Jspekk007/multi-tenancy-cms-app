@@ -1,0 +1,56 @@
+<mjml>
+    <mj-head>
+        <mj-title>Welcome to Our Application</mj-title>
+        <mj-preview>Get started with our application</mj-preview>
+        <mj-style>
+            .button-link {
+                text-decoration: none;
+            }
+        </mj-style>
+    </mj-head>
+    <mj-body background-color="#f4f4f4">
+        <mj-section background-color="#ffffff">
+            <mj-column>
+                <mj-image width="200px" src="https://your-domain.com/logo.png" alt="Logo"></mj-image>
+            </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#ffffff">
+            <mj-column>
+                <mj-text font-size="28px" font-weight="bold" color="#333333">
+                    Welcome!
+                </mj-text>
+                <mj-text font-size="16px" color="#666666">
+                    Hi there,
+                </mj-text>
+                <mj-text font-size="16px" color="#666666" line-height="1.6px">
+                    Thank you for signing up. We're excited to have you on board. Click the button below to verify your email and get started.
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#ffffff">
+            <mj-column>
+                <mj-button background-color="#007bff" href="https://your-domain.com/verify?token=TOKEN" font-size="16px">
+                    Verify Email
+                </mj-button>
+            </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#ffffff">
+            <mj-column>
+                <mj-text font-size="14px" color="#999999">
+                    If you didn't create this account, you can safely ignore this email.
+                </mj-text>
+            </mj-column>
+        </mj-section>
+
+        <mj-section background-color="#333333">
+            <mj-column>
+                <mj-text font-size="12px" color="#ffffff" align="center">
+                    © 2024 Your Company. All rights reserved.
+                </mj-text>
+            </mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>

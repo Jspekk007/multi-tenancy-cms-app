@@ -12,7 +12,8 @@
     "prisma:db-push": "prisma db push --schema ./prisma/schema.prisma",
     "build": "tsc -p tsconfig.json",
     "lint": "eslint src --ext .ts,.d.ts",
-    "lint:fix": "eslint src --ext .ts,.d.ts --fix"
+    "lint:fix": "eslint src --ext .ts,.d.ts --fix",
+    "worker:dev": "tsx watch src/worker.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
@@ -21,8 +22,10 @@
     "@trpc/react-query": "^11.7.2",
     "@trpc/server": "^11.7.2",
     "bcrypt": "^6.0.0",
+    "bullmq": "^5.66.4",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "ioredis": "^5.9.0",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.11",
     "pino": "^9.11.0",

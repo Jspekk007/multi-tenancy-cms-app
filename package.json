@@ -18,7 +18,9 @@
     "frontend:build": "yarn workspace frontend build",
     "frontend:lint": "yarn workspace frontend lint",
     "frontend:test": "yarn workspace frontend test",
-    "dev": "concurrently \"yarn backend:dev\" \"yarn frontend:dev\"",
+    "redis:dev": "docker-compose up redis",
+    "dev:worker": "yarn workspace backend worker:dev",
+    "dev": "concurrently \"yarn backend:dev\" \"yarn frontend:dev\" \"yarn redis:dev\" \"yarn dev:worker\"",
     "build": "yarn backend:build && yarn frontend:build",
     "test": "yarn backend:test && yarn frontend:test",
     "prepare": "husky install"

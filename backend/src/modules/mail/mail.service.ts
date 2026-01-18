@@ -1,66 +1,52 @@
-import * as nodemailer from 'nodemailer';
+import { config } from 'lib/config';
+import { customLogger } from 'lib/logger';
+import nodemailer, { Transporter } from 'nodemailer';
 
-import { customLogger } from '../../lib/logger';
-import { getEmailTransporter, getEtherealAccount } from './mail.procedure';
-import { EmailPayload, SendEmailResult } from './mail.types';
-import { generateWelcomeEmailContent } from './mail.utils';
+import { MailPayload } from './mail.types';
+import { renderTemplate } from './mail.utils';
 
-export class MailService {
-  /**
-   * Private method to handle the actual sending logic using the transporter.
-   * @param {EmailPayload} payload - The email content and recipient details.
-   * @returns {Promise<SendEmailResult>} The result containing the message ID and preview URL.
-   */
-  private async sendEmail(payload: EmailPayload): Promise<SendEmailResult> {
-    const transporter = getEmailTransporter();
-    const etherealAccount = getEtherealAccount();
+let transporter: Transporter | null = null;
 
-    const fromAddress = payload.from || '"AtlasCMS" <no-reply@atlasCMS.com>';
+const getTransporter = async (): Promise<Transporter> => {
+  if (transporter) return transporter;
 
-    const mailOptions: nodemailer.SendMailOptions = {
-      from: fromAddress,
+  const testAccount = await nodemailer.createTestAccount();
+
+  transporter = nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
+    auth: {
+      user: config.mail.user,
+      pass: config.mail.pass,
+    },
+  });
+
+  customLogger.info(`Email transporter initialised. Preview URL: ${testAccount.web}`);
+  return transporter;
+};
+
+export const sendMail = async (payload: MailPayload): Promise<void> => {
+  const client = await getTransporter();
+
+  const { html, text } = await renderTemplate(payload.template, payload.context);
+
+  try {
+    const info = await client.sendMail({
+      from: process.env.MAIL_FROM,
       to: payload.to,
       subject: payload.subject,
-      html: payload.html,
-      text: payload.text,
-      attachments: payload.attachments,
-    };
+      html,
+      text,
+    });
 
-    try {
-      let info = await transporter.sendMail(mailOptions);
-      customLogger.info(`Email sent: ${info.messageId}`);
+    const previewUrl = nodemailer.getTestMessageUrl(info);
 
-      const result: SendEmailResult = { messageId: info.messageId };
-      if (etherealAccount) {
-        const previewUrl = nodemailer.getTestMessageUrl(info);
-        customLogger.info(`Preview URL: ${previewUrl}`);
-        result.previewUrl = previewUrl || undefined;
-      }
-
-      return result;
-    } catch (error) {
-      customLogger.error(`Error sending email: ${String(error)}`);
-      throw new Error('EMAIL_SEND_FAILURE: Failed to send email via transporter');
+    if (previewUrl) {
+      customLogger.info(`🔗 Preview: ${previewUrl}`);
     }
+  } catch (error) {
+    customLogger.error(`❌ Failed to send email [${payload.template}]: ${String(error)}`);
+    throw error;
   }
-
-  /**
-   * Public method exposed to other modules (like Auth).
-   * Sends a welcome email to a newly signed-up user.
-   * @param {string} toEmail - The recipient's email address.
-   * @param {string} username - The user's display name.
-   * @returns {Promise<SendEmailResult>} The result of the email operation.
-   */
-  public async sendWelcomeEmail(toEmail: string, username: string): Promise<SendEmailResult> {
-    const content = generateWelcomeEmailContent(username);
-
-    const payload: EmailPayload = {
-      to: toEmail,
-      subject: content.subject,
-      html: content.html,
-      text: content.text,
-    };
-
-    return this.sendEmail(payload);
-  }
-}
+};

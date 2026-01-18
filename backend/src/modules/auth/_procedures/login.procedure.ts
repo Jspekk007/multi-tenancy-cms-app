@@ -1,4 +1,5 @@
-import { publicProcedure } from '../../../trpc';
+import { publicProcedure } from 'trpc';
+
 import { AuthService } from '../auth.service';
 import { loginInputSchema } from '../auth.types';
 

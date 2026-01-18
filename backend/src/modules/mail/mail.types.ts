@@ -1,23 +1,26 @@
-import { SendMailOptions, Transporter } from 'nodemailer';
+type PasswordResetData = {
+  template: 'password-reset';
+  context: { name: string; resetLink: string };
+};
 
-export interface EmailPayload {
-  to: string | string[];
-  subject: string;
-  html: string;
-  text?: string;
-  from?: string;
-  attachments?: SendMailOptions['attachments'];
-}
+type MagicLinkData = {
+  template: 'magic-link';
+  context: { loginUrl: string };
+};
 
-export interface AppTransporter extends Transporter {}
+type NotificationData = {
+  template: 'notification';
+  context: { message: string; actionUrl?: string };
+};
 
-export interface EtherealAccount {
-  user: string;
-  pass: string;
-  web: string;
-}
+type WelcomeData = {
+  template: 'welcome';
+  context: { name: string; domain: string };
+};
 
-export interface SendEmailResult {
-  messageId: string;
-  previewUrl?: string;
-}
+export type MailPayload = { to: string; subject: string } & (
+  | PasswordResetData
+  | MagicLinkData
+  | NotificationData
+  | WelcomeData
+);

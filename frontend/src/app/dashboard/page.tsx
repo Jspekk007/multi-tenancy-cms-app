@@ -11,7 +11,7 @@ export default function DashboardPage(): JSX.Element | null {
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/auth/login');
+      router.push('/login');
     }
   }, [user, isLoading, router]);
 

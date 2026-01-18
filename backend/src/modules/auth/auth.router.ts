@@ -4,11 +4,13 @@ import { logoutProcedure } from './_procedures/logout.procedure';
 import { meProcedure } from './_procedures/me.procedure';
 import { refreshProcedure } from './_procedures/refresh.procedure';
 import { registerProcedure } from './_procedures/register.procedure';
+import { forgotPasswordProcedure } from './_procedures/reset.procedure';
 
 export const authRouter = t.router({
   register: registerProcedure,
   login: loginProcedure,
   refresh: refreshProcedure,
   logout: logoutProcedure,
+  passwordReset: forgotPasswordProcedure,
   me: meProcedure,
 });

@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Tenant {
@@ -30,16 +31,17 @@ model Role {
 }
 
 model User {
-  id           String       @id @default(cuid())
-  email        String       @unique
-  passwordHash String
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String
   // A user can be a member of many tenants
-  tenants      TenantUser[]
-  sessions     Session[]
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  lastLogin    DateTime?
-  isActive     Boolean      @default(true)
+  tenants             TenantUser[]
+  sessions            Session[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  lastLogin           DateTime?
+  isActive            Boolean              @default(true)
+  passwordResetTokens PasswordResetToken[]
 }
 
 // This is our new "join" model
@@ -57,25 +59,36 @@ model TenantUser {
 }
 
 model Session {
-  id               String   @id @default(cuid())
-  userId           String
-  user             User     @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   // The actual refresh token is stored hashed for security
-  refreshTokenHash String   @unique
+  refreshTokenHash String @unique
 
   // Session lifecycle
-  createdAt        DateTime @default(now())
-  expiresAt        DateTime
-  isRevoked        Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
 
   // Context metadata
-  tenantId         String?   // useful if a user belongs to multiple tenants
-  ipAddress        String?   // capture client IP at login
-  userAgent        String?   // browser/device info
-  deviceName       String?   // friendly name (e.g., "MacBook Pro", "iPhone")
-  lastUsedAt       DateTime? // updated whenever refresh token is used
+  tenantId   String? // useful if a user belongs to multiple tenants
+  ipAddress  String? // capture client IP at login
+  userAgent  String? // browser/device info
+  deviceName String? // friendly name (e.g., "MacBook Pro", "iPhone")
+  lastUsedAt DateTime? // updated whenever refresh token is used
 
   @@index([userId])
   @@index([tenantId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }
