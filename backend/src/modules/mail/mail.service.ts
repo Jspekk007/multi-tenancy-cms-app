@@ -1,9 +1,8 @@
-import { config } from 'lib/config';
-import { customLogger } from 'lib/logger';
+import { config } from '@backend/lib/config';
+import { customLogger } from '@backend/lib/logger';
+import { MailPayload } from '@backend/modules/mail/mail.types';
+import { renderTemplate } from '@backend/modules/mail/mail.utils';
 import nodemailer, { Transporter } from 'nodemailer';
-
-import { MailPayload } from './mail.types';
-import { renderTemplate } from './mail.utils';
 
 let transporter: Transporter | null = null;
 

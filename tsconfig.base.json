@@ -14,7 +14,11 @@
       "sourceMap": true,
       "noImplicitAny": true,
       "noImplicitReturns": true,
-      "noFallthroughCasesInSwitch": true
+      "noFallthroughCasesInSwitch": true,
+      "paths": {
+        "@backend/*": ["backend/src/*"],
+        "@/*": ["frontend/src/*"]
+    }
     }
   }
   

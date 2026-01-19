@@ -1,15 +1,13 @@
+import { customLogger } from '@backend/lib/logger';
+import { prismaClient } from '@backend/lib/prisma';
+import { authMiddleware } from '@backend/modules/auth/auth.middleware';
+import { SessionService } from '@backend/modules/auth/session/session.service';
+import { ApiError } from '@backend/modules/error/ApiError';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 import pinoHttp from 'pino-http';
 import { appRouter } from 'routers/app.routers';
 import { createContext } from 'trpc';
-
-import { ApiError } from '@/core/errors';
-
-import { customLogger } from './lib/logger';
-import { prismaClient } from './lib/prisma';
-import { authMiddleware } from './modules/auth/auth.middleware';
-import { SessionService } from './modules/auth/session/session.service';
 
 const PORT = process.env.PORT || 4000;
 const app = express();

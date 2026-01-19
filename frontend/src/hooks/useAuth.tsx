@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
 
   const utils = trpc.useUtils();
 
-  // Query for current user
   const {
     data: user,
     isLoading: isLoadingUser,
@@ -28,19 +27,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   });
 
   // Mutations
-  const loginMutation = trpc.auth.login.useMutation<{
-    user: AuthContextType['user'];
-    token: string;
-    refreshToken: string;
-  }>({
-    onSuccess: (data: { user: AuthContextType['user']; token: string; refreshToken: string }) => {
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: (data) => {
       const { user: userData, token: authToken, refreshToken } = data;
       Cookies.set('token', authToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 30 });
       setToken(authToken);
-      if (userData) {
-        utils.auth.me.setData(undefined, userData);
-      }
+      utils.auth.me.setData(undefined, userData);
     },
   });
 
@@ -50,9 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       Cookies.set('token', authToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 30 });
       setToken(authToken);
-      if (userData) {
-        utils.auth.me.setData(undefined, userData);
-      }
+      utils.auth.me.setData(undefined, userData);
     },
   });
 
@@ -63,7 +54,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       handleLogout();
     },
     onError: () => {
-      // Even if logout fails on server, clear local state
       handleLogout();
     },
   });
@@ -74,9 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       Cookies.set('token', authToken, { expires: 1 });
       Cookies.set('refreshToken', refreshToken, { expires: 30 });
       setToken(authToken);
-      if (userData) {
-        utils.auth.me.setData(undefined, userData);
-      }
+      utils.auth.me.setData(undefined, userData);
     },
     onError: () => {
       handleLogout();

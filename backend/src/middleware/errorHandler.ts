@@ -1,7 +1,7 @@
+import { ApiError } from '@backend/modules/error/ApiError';
 import type { NextFunction, Request, Response } from 'express';
 
-import { ApiError } from '../lib/errors/errors';
-import { normalizeZodError } from '../lib/errors/normalizeZod';
+import { normalizeZodError } from '../modules/error/normalizeZodError';
 
 export const errorHandler = (
   err: unknown,

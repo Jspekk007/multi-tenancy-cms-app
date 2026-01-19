@@ -1,7 +1,7 @@
+import { customLogger } from '@backend/lib/logger';
+import { redisConfig } from '@backend/lib/redis.config';
+import { MailPayload } from '@backend/modules/mail/mail.types';
 import { Queue } from 'bullmq';
-import { customLogger } from 'lib/logger';
-import { redisConfig } from 'lib/redis.config';
-import { MailPayload } from 'modules/mail/mail.types';
 
 export const EMAIL_QUEUE_NAME = 'mail-queue';
 

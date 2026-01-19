@@ -1,8 +1,7 @@
+import { redisConfig } from '@backend/lib/redis.config';
+import { sendMail } from '@backend/modules/mail/mail.service';
+import { MailPayload } from '@backend/modules/mail/mail.types';
 import { Job, Worker } from 'bullmq';
-import { redisConfig } from 'lib/redis.config';
-
-import { sendMail } from './mail.service';
-import { MailPayload } from './mail.types';
 
 export const mailWorker = new Worker<MailPayload>(
   'mail-queue',

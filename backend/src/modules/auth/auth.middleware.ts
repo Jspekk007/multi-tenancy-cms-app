@@ -1,10 +1,9 @@
+import { customLogger } from '@backend/lib/logger';
+import { prismaClient } from '@backend/lib/prisma';
+import { JWTTokenPayload } from '@backend/modules/auth/auth.types';
+import { verifyToken } from '@backend/modules/auth/auth.utils';
+import { SessionService } from '@backend/modules/auth/session/session.service';
 import { NextFunction, Request, Response } from 'express';
-
-import { customLogger } from '../../lib/logger';
-import { prismaClient } from '../../lib/prisma';
-import { JWTTokenPayload } from './auth.types';
-import { verifyToken } from './auth.utils';
-import { SessionService } from './session/session.service';
 
 const sessionService = new SessionService(prismaClient);
 

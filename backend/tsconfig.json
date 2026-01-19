@@ -2,16 +2,22 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": "./src",
-    "module": "es2022",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
     "outDir": "dist",
-    "types": ["node", "express"],
+    "module": "es2022",
+    "sourceMap": false,
+    "declarationMap": false,
     "paths": {
-      "@/core/*": ["../../packages/core/*"]
+      "@backend/utils/*": ["../utils/*"],
+      "@backend/modules/*": ["./modules/*"],
+      "@backend/services/*": ["./services/*"],
+      "@backend/types/*": ["./types/*"],
+      "@backend/middlewares/*": ["./middlewares/*"],
+      "@backend/db/*": ["./db/*"],
+      "@backend/lib/*": ["./lib/*"],
+      "@backend/queues/*": ["./queues/*"],
+      "@backend/trpc": ["./trpc.ts"],
     }
   },
-  "include": ["src", "src/types"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

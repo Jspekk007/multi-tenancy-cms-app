@@ -1,5 +1,5 @@
-import { authRouter } from '../modules/auth/auth.router';
-import { createRouter } from '../trpc';
+import { authRouter } from '@backend/modules/auth/auth.router';
+import { createRouter } from '@backend/trpc';
 
 export const appRouter = createRouter({
   auth: authRouter,

@@ -18,27 +18,16 @@
     ],
     "baseUrl": "./src",
     "paths": {
-      "@/components/*": [
-        "components/*"
-      ],
-      "@/utils/*": [
-        "utils/*"
-      ],
-      "@/hooks/*": [
-        "hooks/*"
-      ],
-      "@/assets/*": [
-        "assets/*"
-      ],
-      "@/lib/*": [
-        "lib/*"
-      ],
-      "@/types/*": [
-        "types/*"
-      ],
-      "@/core/*": [
-        "../../packages/core/*"
-      ]
+      "@/components/*": ["components/*"],
+      "@/utils/*": ["utils/*"],
+      "@/hooks/*": ["hooks/*"],
+      "@/assets/*": ["assets/*"],
+      "@/lib/*": ["lib/*"],
+      "@/types/*": ["types/*"],
+      "@/core/*": ["../../packages/core/*"],
+      "@backend/*": ["../../backend/src/*"],
+      "@backend/utils/*": ["../../backend/utils/*"], 
+      "trpc": ["../../backend/src/trpc.ts"]
     },
     "jsx": "preserve",
     "noEmit": true,

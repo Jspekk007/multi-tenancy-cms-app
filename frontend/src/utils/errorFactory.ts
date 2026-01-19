@@ -1,4 +1,4 @@
-import { ApiErrorResponse } from '@/core/errors';
+import { ApiErrorResponse } from '@/types/error';
 
 const readable: Record<string, string> = {
   BAD_REQUEST: 'The data you entered is invalid.',

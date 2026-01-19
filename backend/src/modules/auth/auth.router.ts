@@ -1,10 +1,10 @@
-import { t } from '../../trpc';
-import { loginProcedure } from './_procedures/login.procedure';
-import { logoutProcedure } from './_procedures/logout.procedure';
-import { meProcedure } from './_procedures/me.procedure';
-import { refreshProcedure } from './_procedures/refresh.procedure';
-import { registerProcedure } from './_procedures/register.procedure';
-import { forgotPasswordProcedure } from './_procedures/reset.procedure';
+import { loginProcedure } from '@backend/modules/auth/_procedures/login.procedure';
+import { logoutProcedure } from '@backend/modules/auth/_procedures/logout.procedure';
+import { meProcedure } from '@backend/modules/auth/_procedures/me.procedure';
+import { refreshProcedure } from '@backend/modules/auth/_procedures/refresh.procedure';
+import { registerProcedure } from '@backend/modules/auth/_procedures/register.procedure';
+import { forgotPasswordProcedure } from '@backend/modules/auth/_procedures/reset.procedure';
+import { t } from '@backend/trpc';
 
 export const authRouter = t.router({
   register: registerProcedure,

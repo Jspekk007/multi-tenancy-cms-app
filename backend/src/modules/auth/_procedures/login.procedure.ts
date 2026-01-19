@@ -1,12 +1,12 @@
-import { publicProcedure } from 'trpc';
+import { publicProcedure } from '@backend/trpc';
 
-import { AuthService } from '../auth.service';
 import { loginInputSchema } from '../auth.types';
-
-const authService = new AuthService();
 
 export const loginProcedure = publicProcedure
   .input(loginInputSchema)
   .mutation(async ({ input }) => {
+    const { AuthService } = await import('../auth.service');
+    const authService = new AuthService();
+
     return await authService.login(input);
   });

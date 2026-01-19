@@ -1,10 +1,10 @@
+import { customLogger } from '@backend/lib/logger';
+import { prismaClient } from '@backend/lib/prisma';
+import { ErrorFactory } from '@backend/modules/error/ErrorFactory';
+import { addMailToQueue } from '@backend/queues/emailQueue';
 import { Prisma, PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
-import { addMailToQueue } from 'queues/emailQueue';
 
-import { ErrorFactory } from '../../lib/errors/ErrorFactory';
-import { customLogger } from '../../lib/logger';
-import { prismaClient } from '../../lib/prisma';
 import { AuthResponse, AuthUser, LoginInput, RegisterInput } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';

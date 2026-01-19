@@ -1,4 +1,4 @@
-import { ApiErrorResponse } from '@/core/errors';
+import { ApiErrorResponse } from '@/types/error';
 
 export const isApiErrorResponse = (err: unknown): err is ApiErrorResponse => {
   if (typeof err !== 'object' || err === null) return false;

@@ -1,13 +1,12 @@
-import { publicProcedure } from 'trpc';
-
-import { AuthService } from '../auth.service';
-import { resetPasswordLinkSchema } from '../auth.types';
-
-const authService = new AuthService();
+import { resetPasswordLinkSchema } from '@backend/modules/auth/auth.types';
+import { publicProcedure } from '@backend/trpc';
 
 export const forgotPasswordProcedure = publicProcedure
   .input(resetPasswordLinkSchema)
   .mutation(async ({ input }) => {
+    const { AuthService } = await import('../auth.service');
+    const authService = new AuthService();
+
     await authService.requestPasswordResetLink(input.email);
 
     return {

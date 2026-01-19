@@ -1,4 +1,4 @@
-import { ApiError } from '@/core/errors/ApiError';
+import { ApiError } from './ApiError';
 
 export const ErrorFactory = {
   badRequest(message = 'Bad Request', details?: unknown): ApiError {

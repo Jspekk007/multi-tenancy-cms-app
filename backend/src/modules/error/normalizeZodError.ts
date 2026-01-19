@@ -1,6 +1,7 @@
 import { ZodError } from 'zod';
 
-import { ApiError, ErrorCodes } from '@/core/errors';
+import { ApiError } from './ApiError';
+import { ErrorCodes } from './ErrorCodes';
 
 export const normalizeZodError = (err: unknown): ApiError | null => {
   if (err instanceof ZodError) {

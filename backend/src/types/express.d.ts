@@ -1,6 +1,5 @@
+import type { JWTTokenPayload } from '@backend/modules/auth/auth.types';
 import { User } from '@prisma/client';
-
-import type { JWTTokenPayload } from '../modules/auth/auth.types';
 
 declare global {
   namespace Express {
