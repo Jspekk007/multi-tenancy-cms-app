@@ -1,7 +1,6 @@
+import { config } from '@backend/lib/config';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-
-import { config } from '../../lib/config.js';
 
 export const hashPassword = async (password: string): Promise<string> =>
   await bcrypt.hash(password, config.saltRounds);

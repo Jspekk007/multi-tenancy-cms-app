@@ -1,8 +1,10 @@
+import { customLogger } from '@backend/lib/logger';
+import { prismaClient } from '@backend/lib/prisma';
+import { ErrorFactory } from '@backend/modules/error/ErrorFactory';
+import { addMailToQueue } from '@backend/queues/emailQueue';
 import { Prisma, PrismaClient } from '@prisma/client';
+import crypto from 'crypto';
 
-import { ApiError } from '../../lib/errors';
-import { customLogger } from '../../lib/logger';
-import { prismaClient } from '../../lib/prisma';
 import { AuthResponse, AuthUser, LoginInput, RegisterInput } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
@@ -20,7 +22,7 @@ export class AuthService {
   SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
   JWT_SECRET = process.env?.JWT_SECRET;
 
-  async register(input: RegisterInput): Promise<object> {
+  async register(input: RegisterInput): Promise<AuthResponse> {
     const hashedPassword = await hashPassword(input.password);
 
     customLogger.info('Register process started');
@@ -38,45 +40,96 @@ export class AuthService {
     });
 
     if (existingUser || existingDomain) {
-      throw new ApiError('User or domain already exists', 409);
+      throw ErrorFactory.conflict('User or Domain already exists.');
     }
 
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const tenant = await tx.tenant.create({
-        data: {
-          name: input.name,
-          domain: input.domain,
-        },
-      });
+    const { tenant, user, tenantUser } = await this.prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        const createdTenant = await tx.tenant.create({
+          data: {
+            name: input.name,
+            domain: input.domain,
+          },
+        });
 
-      const adminRole = await tx.role.create({
-        data: {
-          name: 'ADMIN',
-          tenantId: tenant.id,
-        },
-      });
+        const adminRole = await tx.role.create({
+          data: {
+            name: 'ADMIN',
+            tenantId: createdTenant.id,
+          },
+        });
 
-      const user = await tx.user.create({
-        data: {
-          email: input.email,
-          passwordHash: hashedPassword,
-        },
-      });
+        const createdUser = await tx.user.create({
+          data: {
+            email: input.email,
+            passwordHash: hashedPassword,
+          },
+        });
 
-      await tx.tenantUser.create({
-        data: {
-          tenantId: tenant.id,
-          userId: user.id,
-          roleId: adminRole.id,
-        },
-      });
+        const createdTenantUser = await tx.tenantUser.create({
+          data: {
+            tenantId: createdTenant.id,
+            userId: createdUser.id,
+            roleId: adminRole.id,
+          },
+          include: {
+            tenant: true,
+          },
+        });
 
-      customLogger.info(
-        `User ${user.email} signed up for tenant ${tenant.name} (${tenant.domain})`,
-      );
+        customLogger.info(
+          `User ${createdUser.email} signed up for tenant ${createdTenant.name} (${createdTenant.domain})`,
+        );
 
-      return tenant;
+        await addMailToQueue({
+          to: createdUser.email,
+          subject: 'Welcome to Atlas CMS',
+          template: 'welcome',
+          context: {
+            name: createdUser.email || 'User',
+            domain: createdTenant.domain,
+          },
+        });
+
+        return {
+          tenant: createdTenant,
+          user: createdUser,
+          tenantUser: createdTenantUser,
+        };
+      },
+    );
+
+    const refreshToken = await this.sessionService.generateRefreshToken();
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    const createdSession = await this.sessionService.createSession({
+      userId: user.id,
+      tenantId: tenant.id,
+      refreshToken,
+      expiresAt,
     });
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: tenant.id,
+      role: tenantUser.roleId,
+      sessionId: createdSession.id,
+    });
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        tenantId: tenant.id,
+        domain: tenant.domain,
+        role: tenantUser.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      },
+      token,
+      refreshToken,
+    };
   }
 
   async login(input: LoginInput): Promise<AuthResponse> {
@@ -85,12 +138,13 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: input.email },
     });
+
     if (!user) {
-      throw new ApiError('Invalid email or password', 401);
+      throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
     if (!(await verifyPassword(input.password, user.passwordHash))) {
-      throw new ApiError('Invalid email or password', 401);
+      throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
     const tenantUser = await this.prisma.tenantUser.findFirst({
@@ -98,7 +152,7 @@ export class AuthService {
       include: { tenant: true },
     });
     if (!tenantUser) {
-      throw new ApiError('User is not associated with any tenant', 400);
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
     customLogger.info(`User ${user.email} logged in successfully`);
@@ -141,7 +195,7 @@ export class AuthService {
 
     const session = await this.sessionService.findSessionByToken(refreshToken);
     if (!session) {
-      throw new ApiError('Invalid refresh token', 401);
+      throw ErrorFactory.unauthorized('Invalid refresh token.');
     }
 
     // Update last used timestamp
@@ -153,7 +207,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ApiError('User not found', 404);
+      throw ErrorFactory.notFound('User not found.');
     }
 
     const tenantUser = await this.prisma.tenantUser.findFirst({
@@ -165,7 +219,7 @@ export class AuthService {
     });
 
     if (!tenantUser) {
-      throw new ApiError('User is not associated with any tenant', 400);
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
     // Generate new tokens
@@ -200,8 +254,47 @@ export class AuthService {
         tenantId: tenantUser.tenantId,
         domain: tenantUser.tenant.domain,
         role: tenantUser.roleId,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       },
     };
+  }
+
+  async requestPasswordResetLink(email: string): Promise<void> {
+    customLogger.debug(`Password reset requested for email: ${email}`);
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    customLogger.debug(`Found user for password reset: ${user ? 'yes' : 'no'}`);
+
+    if (!user) {
+      customLogger.warn(`Password reset requested for non-existing email: ${email}`);
+      return;
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 360000); // 1 hour
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        token,
+        expiresAt: expires,
+        userId: user.id,
+      },
+    });
+
+    const resetLink = `${process.env.FRONTEND_URL}/forgot-password?token=${token}`;
+
+    await addMailToQueue({
+      to: user.email,
+      subject: 'Password Reset Request',
+      template: 'password-reset',
+      context: {
+        name: user.email || 'User',
+        resetLink,
+      },
+    });
   }
 
   async logout(refreshToken: string): Promise<void> {
@@ -209,7 +302,7 @@ export class AuthService {
 
     const session = await this.sessionService.revokeSessionByToken(refreshToken);
     if (!session) {
-      throw new ApiError('Invalid refresh token', 401);
+      throw ErrorFactory.unauthorized('Invalid refresh token.');
     }
 
     customLogger.info(`User logged out, session ${session.id} revoked`);
@@ -221,7 +314,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new ApiError('User not found', 404);
+      throw ErrorFactory.notFound('User not found.');
     }
 
     const tenantUser = await this.prisma.tenantUser.findFirst({
@@ -230,7 +323,7 @@ export class AuthService {
     });
 
     if (!tenantUser) {
-      throw new ApiError('User is not associated with any tenant', 400);
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
     return {

@@ -12,7 +12,7 @@ interface AuthPageProps<T extends FieldValues> {
   fields: FormField[];
   schema: ZodType;
   onSubmit: SubmitHandler<T>;
-  error?: string;
+  error?: string | null;
   isLoading: boolean;
 }
 
@@ -36,16 +36,21 @@ export const AuthPage = <T extends FieldValues>({
         {title?.includes('Login') && (
           <div className="auth-footer">
             <p>
-              Don't have an account? <a href="/auth/register">Register here</a>
+              Don't have an account? <a href="register">Register here</a>
             </p>
             <p>
-              Forgot your password? <a href="/auth/forgot-password">Reset it</a>
+              Forgot your password? <a href="/forgot-password">Reset it</a>
             </p>
           </div>
         )}
         {title?.includes('Register') && (
           <div className="auth-footer">
-            Already have an account? <a href="/auth/login">Login here</a>
+            Already have an account? <a href="/login">Login here</a>
+          </div>
+        )}
+        {title?.includes('Forgot') && (
+          <div className="auth-footer">
+            Remembered your password? <a href="/login">Login here</a>
           </div>
         )}
       </div>
