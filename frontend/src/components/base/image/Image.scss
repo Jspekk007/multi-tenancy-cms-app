@@ -1,53 +1,40 @@
 .image {
-  // Base container for the image/SVG
-  display: inline-block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
 
-  // Style for the actual img tag
   &__source {
-    display: block;
     width: 100%;
     height: 100%;
-    object-fit: contain; // Default object-fit
-
-    // Reset for SVGs injected into img tags
-    &[src$='.svg'] {
-      width: auto;
-      height: auto;
-      object-fit: initial;
-    }
+    object-fit: cover;
+    display: block;
   }
 
-  // --- Size Modifiers (Use these classes to set dimensions) ---
+  &__placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--color-gray-200), var(--color-gray-300));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-500);
+    font-size: 12px;
+  }
+
   &--small {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
   }
   &--medium {
     width: 48px;
     height: 48px;
   }
   &--large {
-    width: 96px;
-    height: 96px;
+    width: 64px;
+    height: 64px;
   }
   &--cover {
     width: 100%;
     height: 100%;
-    .image__source {
-      object-fit: cover;
-    }
   }
-
-  // Placeholder styles
-  &--placeholder {
-    background-color: var(--color-gray-200);
-    border: 1px solid var(--color-gray-400);
-  }
-}
-
-// When rendering raw SVG, the wrapper IS the SVG container
-.image > svg {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
