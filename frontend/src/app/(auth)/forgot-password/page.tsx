@@ -1,10 +1,13 @@
 'use client';
 
+import './page.scss';
+
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { FormField } from '@/components/base/form/form-factory/FormFactory.types';
+import { Logo } from '@/components/base/logo/Logo';
 import { AuthPage } from '@/components/layout/pages/auth/AuthPage';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/utils/errorUtils';
@@ -59,23 +62,31 @@ const ForgotPasswordPage = (): JSX.Element => {
       {isSuccess && (
         <div className="auth-wrapper">
           <div className="auth-card">
+            <Logo assetType="symbol" size="large" />
             <h2 className="auth-title">Password Reset Requested</h2>
-            <p>
+            <span className="auth-success-message">
               {message ||
                 'If an account with that email exists, a password reset link has been sent.'}
-            </p>
+            </span>
+            <div className="auth-footer">
+              <p>
+                Remembered your password? <a href="/login">Login here</a>
+              </p>
+            </div>
           </div>
         </div>
       )}
       {!isSuccess && (
-        <AuthPage<ForgotPasswordFormData>
-          title="Forgot Password"
-          fields={forgotPasswordFormFields}
-          schema={forgotPasswordSchema}
-          onSubmit={onSubmit}
-          isLoading={isSubmitting}
-          error={error}
-        />
+        <>
+          <AuthPage<ForgotPasswordFormData>
+            title="Forgot Password"
+            fields={forgotPasswordFormFields}
+            schema={forgotPasswordSchema}
+            onSubmit={onSubmit}
+            isLoading={isSubmitting}
+            error={error}
+          />
+        </>
       )}
     </>
   );

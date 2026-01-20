@@ -1,0 +1,23 @@
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-title {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.auth-logo {
+  margin-bottom: 1.5rem;
+}
+.auth-logo img {
+  width: 80px;
+  height: 80px;
+}
+
+.auth-success-message {
+  text-align: center;
+}

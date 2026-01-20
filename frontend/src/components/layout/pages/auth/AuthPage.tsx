@@ -48,6 +48,11 @@ export const AuthPage = <T extends FieldValues>({
             Already have an account? <a href="/login">Login here</a>
           </div>
         )}
+        {title?.includes('Forgot') && (
+          <div className="auth-footer">
+            Remembered your password? <a href="/login">Login here</a>
+          </div>
+        )}
       </div>
     </div>
   );
