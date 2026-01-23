@@ -41,6 +41,8 @@ export interface RefreshTokenResponse {
     tenantId: string;
     domain: string;
     role: string;
+    createdAt: Date;
+    updatedAt: Date;
   };
 }
 

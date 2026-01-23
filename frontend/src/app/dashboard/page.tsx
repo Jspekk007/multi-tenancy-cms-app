@@ -16,8 +16,7 @@ export default function DashboardPage(): JSX.Element | null {
   }, [user, isLoading, router]);
 
   const handleLogout = async (): Promise<void> => {
-    logout();
-    router.push('/login');
+    await logout();
   };
 
   if (isLoading) {

@@ -160,9 +160,9 @@
               "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/login",
+              "raw": "{{baseUrl}}/login",
               "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
+              "path": ["login"]
             }
           },
           "response": []

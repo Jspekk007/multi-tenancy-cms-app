@@ -4,8 +4,8 @@ export interface AuthUser {
   domain: string;
   tenantId: string;
   role: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface AuthResponse {
@@ -32,6 +32,7 @@ export interface AuthContextType {
   isLoading: boolean;
   login: (credentials: LoginInput) => Promise<void>;
   register: (data: RegisterInput) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  requestPasswordReset: (email: string) => Promise<{ message: string }>;
 }

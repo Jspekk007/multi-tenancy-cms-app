@@ -1,8 +1,8 @@
+import { config } from '@backend/lib/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 
-import { config } from '../../../lib/config';
 import { CreateSessionParams, SessionData } from './session.types';
 
 export class SessionService {

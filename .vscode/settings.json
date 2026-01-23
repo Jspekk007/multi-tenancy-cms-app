@@ -31,5 +31,6 @@
 ],
   "editor.formatOnSave": true,
   "makefile.configureOnOpen": false,
-  "postman.settings.dotenv-detection-notification-visibility": false
+  "postman.settings.dotenv-detection-notification-visibility": false,
+  "prisma.pinToPrisma6": true
 }

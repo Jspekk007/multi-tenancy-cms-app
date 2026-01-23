@@ -1,33 +1,114 @@
+import type { JWTTokenPayload } from '@backend/modules/auth/auth.types';
+import { ApiError } from '@backend/modules/error/ApiError';
 import { initTRPC, TRPCError } from '@trpc/server';
-import { CreateExpressContextOptions } from '@trpc/server/dist/adapters/express.cjs';
+import { CreateExpressContextOptions } from '@trpc/server/adapters/express';
+import { Request } from 'express';
+import superjson from 'superjson';
 
-export const t = initTRPC.create();
+type AuthenticatedUser = JWTTokenPayload;
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthenticatedUser;
+      tenantId?: string;
+    }
+  }
+}
+
+export interface Context {
+  req: Request;
+  res: CreateExpressContextOptions['res'];
+  user?: AuthenticatedUser;
+  tenantId?: string;
+}
+
+export interface AuthenticatedContext extends Context {
+  user: AuthenticatedUser;
+  tenantId: string;
+}
+
+export const t = initTRPC.context<Context>().create({
+  transformer: superjson,
+  errorFormatter({ shape, error }) {
+    if (error.cause instanceof ApiError) {
+      const apiError = error.cause as ApiError;
+
+      let trpcCode: TRPCError['code'];
+      switch (apiError.httpStatus) {
+        case 400:
+        case 422:
+          trpcCode = 'BAD_REQUEST';
+          break;
+        case 401:
+          trpcCode = 'UNAUTHORIZED';
+          break;
+        case 403:
+          trpcCode = 'FORBIDDEN';
+          break;
+        case 404:
+          trpcCode = 'NOT_FOUND';
+          break;
+        case 409:
+          trpcCode = 'CONFLICT';
+          break;
+        default:
+          trpcCode = 'INTERNAL_SERVER_ERROR';
+          break;
+      }
+
+      return {
+        ...shape,
+        message: apiError.message,
+        code: trpcCode,
+        data: {
+          ...shape.data,
+          code: apiError.code,
+          httpStatus: apiError.httpStatus,
+          details: apiError.details,
+          correlationId: apiError.correlationId,
+        },
+      };
+    }
+    return shape;
+  },
+});
 
 export const publicProcedure = t.procedure;
 
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  const req = (ctx as any).req;
-  if (!req.user) {
+  if (!ctx.user) {
     throw new TRPCError({
       code: 'UNAUTHORIZED',
       message: 'You must be logged in to access this resource',
     });
   }
+
+  if (!ctx.tenantId) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Tenant ID is required',
+    });
+  }
+
   return next({
     ctx: {
       ...ctx,
-      user: req.user,
-    },
+      user: ctx.user,
+      tenantId: ctx.tenantId,
+    } as AuthenticatedContext,
   });
 });
 
-export const router = t.router;
+export const createRouter = t.router;
 
-export const createContext = (
-  opts: CreateExpressContextOptions,
-): { req: typeof opts.req; res: typeof opts.res } => {
+export const createContext = (opts: CreateExpressContextOptions): Context => {
   const { req, res } = opts;
 
-  return { req, res };
+  return {
+    req,
+    res,
+    user: req.user as AuthenticatedUser | undefined,
+    tenantId: req.tenantId as string | undefined,
+  };
 };
-export type Context = ReturnType<typeof createContext>;
