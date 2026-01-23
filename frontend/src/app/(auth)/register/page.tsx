@@ -8,6 +8,7 @@ import { FormField } from '@/components/base/form/form-factory/FormFactory.types
 import { AuthPage } from '@/components/layout/pages/auth/AuthPage';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { validatePassword } from '@/utils/passwordValidation';
 
 const registerFormFields: FormField[] = [
   {
@@ -53,7 +54,10 @@ const registerSchema = z
   .object({
     name: z.string().min(2, 'Organization name must be at least 2 characters'),
     email: z.email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().refine((value) => validatePassword(value).score >= 3, {
+      message:
+        'Password must be stronger. Include uppercase, lowercase, numbers, and special characters.',
+    }),
     confirmPassword: z.string(),
     domain: z.string().min(3, 'Domain must be at least 3 characters'),
   })
