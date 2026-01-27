@@ -19,4 +19,5 @@ export type FormField = {
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  showPasswordStrength?: boolean;
 };
