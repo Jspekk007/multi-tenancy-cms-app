@@ -53,10 +53,15 @@ const registerFormFields: FormField[] = [
 const registerSchema = z
   .object({
     name: z.string().min(2, 'Organization name must be at least 2 characters'),
-    email: z.email('Invalid email address'),
-    password: z.string().refine((value) => validatePassword(value).score >= 3, {
-      message:
-        'Password must be stronger. Include uppercase, lowercase, numbers, and special characters.',
+    email: z.string().email('Invalid email address'),
+    password: z.string().superRefine((value, ctx) => {
+      const { score } = validatePassword(value);
+      if (score < 3) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Password strength is too weak. Please choose a stronger password.`,
+        });
+      }
     }),
     confirmPassword: z.string(),
     domain: z.string().min(3, 'Domain must be at least 3 characters'),
@@ -64,9 +69,7 @@ const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
-  })
-  .omit({ confirmPassword: true })
-  .required({ name: true, email: true, password: true, domain: true });
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
