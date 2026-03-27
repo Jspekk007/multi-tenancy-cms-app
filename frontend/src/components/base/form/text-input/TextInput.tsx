@@ -6,12 +6,23 @@ import { useEffect } from 'react';
 import { BaseInput } from '@/components/base/form/shared/base-input/BaseInput';
 import { BaseIcon } from '@/components/base/icon/BaseIcon';
 
+import { PasswordStrength } from '../password-strength/PasswordStrength';
 import { FormLabel } from '../shared/form-label/FormLabel';
 import { TextInputProps } from './TextInput.types';
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (
-    { type = 'text', showPasswordToggle = false, label, id, name, value = '', error, ...props },
+    {
+      type = 'text',
+      showPasswordToggle = false,
+      showPasswordStrength,
+      label,
+      id,
+      name,
+      value = '',
+      error,
+      ...props
+    },
     ref,
   ) => {
     const [visible, setVisible] = useState(false);
@@ -66,6 +77,8 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
             {error}
           </p>
         )}
+
+        {isPassword && showPasswordStrength && <PasswordStrength password={String(value)} />}
       </div>
     );
   },

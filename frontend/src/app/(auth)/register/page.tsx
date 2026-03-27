@@ -8,6 +8,7 @@ import { FormField } from '@/components/base/form/form-factory/FormFactory.types
 import { AuthPage } from '@/components/layout/pages/auth/AuthPage';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/utils/errorUtils';
+import { validatePassword } from '@/utils/passwordValidation';
 
 const registerFormFields: FormField[] = [
   {
@@ -30,6 +31,7 @@ const registerFormFields: FormField[] = [
     type: 'password',
     placeholder: 'Create a password',
     required: true,
+    showPasswordStrength: true,
   },
   {
     name: 'confirmPassword',
@@ -37,6 +39,7 @@ const registerFormFields: FormField[] = [
     type: 'password',
     placeholder: 'Confirm your password',
     required: true,
+    showPasswordStrength: true,
   },
   {
     name: 'domain',
@@ -50,17 +53,23 @@ const registerFormFields: FormField[] = [
 const registerSchema = z
   .object({
     name: z.string().min(2, 'Organization name must be at least 2 characters'),
-    email: z.email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().superRefine((value, ctx) => {
+      const { score } = validatePassword(value);
+      if (score < 3) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Password strength is too weak. Please choose a stronger password.`,
+        });
+      }
+    }),
     confirmPassword: z.string(),
     domain: z.string().min(3, 'Domain must be at least 3 characters'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
     path: ['confirmPassword'],
-  })
-  .omit({ confirmPassword: true })
-  .required({ name: true, email: true, password: true, domain: true });
+  });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
