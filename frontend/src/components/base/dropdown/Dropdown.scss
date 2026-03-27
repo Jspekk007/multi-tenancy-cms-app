@@ -4,6 +4,10 @@
   width: 100%;
 }
 
+.dropdown--custom-trigger {
+  width: auto;
+}
+
 .dropdown--disabled {
   opacity: 0.6;
   pointer-events: none;
@@ -28,6 +32,14 @@
   }
 }
 
+.dropdown__trigger--custom {
+  width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .dropdown__icon {
   transition: transform 0.2s;
 }
@@ -49,6 +61,13 @@
   animation: dropdown-fade 0.15s ease-out;
   z-index: 50;
   padding-left: 0;
+}
+
+.dropdown__menu--custom-trigger {
+  left: auto;
+  right: 0;
+  min-width: 10rem;
+  width: max-content;
 }
 
 .dropdown__option {

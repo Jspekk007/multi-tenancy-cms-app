@@ -12,6 +12,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
   onSelect,
   selected = null,
   disabled = false,
+  triggerContent,
+  triggerClassName = '',
+  triggerAriaLabel,
+  hideChevron = false,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [current, setCurrent] = useState<DropdownOption | null>(selected);
@@ -25,24 +29,34 @@ export const Dropdown: React.FC<DropdownProps> = ({
     setIsOpen(false);
   };
 
-  if (!open) return null;
-
   return (
-    <div ref={ref} className={`dropdown ${disabled ? 'dropdown--disabled' : ''}`}>
+    <div
+      ref={ref}
+      className={`dropdown ${disabled ? 'dropdown--disabled' : ''} ${triggerContent ? 'dropdown--custom-trigger' : ''}`}
+    >
       <button
         type="button"
-        className="dropdown__trigger"
+        className={`dropdown__trigger ${triggerContent ? 'dropdown__trigger--custom' : ''} ${triggerClassName}`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-label={triggerAriaLabel}
         disabled={disabled}
       >
-        <span>{current?.label ?? placeholder}</span>
-        <span className={`dropdown__icon ${isOpen ? 'dropdown__icon--open' : ''}`}>▼</span>
+        {triggerContent ? (
+          triggerContent
+        ) : (
+          <>
+            <span>{current?.label ?? placeholder}</span>
+            {!hideChevron && (
+              <span className={`dropdown__icon ${isOpen ? 'dropdown__icon--open' : ''}`}>▼</span>
+            )}
+          </>
+        )}
       </button>
 
       {isOpen && (
-        <ul className="dropdown__menu" role="listbox">
+        <ul className={`dropdown__menu ${triggerContent ? 'dropdown__menu--custom-trigger' : ''}`} role="listbox">
           {options.map((opt) => (
             <li
               key={opt.value}

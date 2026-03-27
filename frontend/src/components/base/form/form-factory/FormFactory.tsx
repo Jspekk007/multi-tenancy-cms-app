@@ -32,24 +32,27 @@ export const FormFactory = <TFieldValues extends FieldValues>({
       case 'text':
       case 'password':
         return (
-          <Controller
-            key={field.name}
-            name={field.name as Path<TFieldValues>}
-            control={control}
-            render={({ field: controllerField, fieldState }) => (
-              <TextInput
-                {...controllerField}
-                value={controllerField.value || ''}
-                type={field.type}
-                label={field.label}
-                placeholder={field.placeholder}
-                disabled={field.disabled}
-                error={fieldState.error?.message}
-                showPasswordToggle={field.type === 'password' ? true : false}
-                required={field.required ? true : false}
-              />
-            )}
-          />
+          <>
+            <Controller
+              key={field.name}
+              name={field.name as Path<TFieldValues>}
+              control={control}
+              render={({ field: controllerField, fieldState }) => (
+                <TextInput
+                  {...controllerField}
+                  value={controllerField.value || ''}
+                  type={field.type}
+                  label={field.label}
+                  placeholder={field.placeholder}
+                  disabled={field.disabled}
+                  error={fieldState.error?.message}
+                  showPasswordToggle={field.type === 'password' ? true : false}
+                  showPasswordStrength={field.showPasswordStrength}
+                  required={field.required ? true : false}
+                />
+              )}
+            />
+          </>
         );
       // Additional field types (e.g., select, checkbox) can be handled here
       case 'select':
