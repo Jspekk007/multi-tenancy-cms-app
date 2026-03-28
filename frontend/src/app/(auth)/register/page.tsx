@@ -39,7 +39,6 @@ const registerFormFields: FormField[] = [
     type: 'password',
     placeholder: 'Confirm your password',
     required: true,
-    showPasswordStrength: true,
   },
   {
     name: 'domain',
