@@ -56,7 +56,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
       </button>
 
       {isOpen && (
-        <ul className={`dropdown__menu ${triggerContent ? 'dropdown__menu--custom-trigger' : ''}`} role="listbox">
+        <ul
+          className={`dropdown__menu ${triggerContent ? 'dropdown__menu--custom-trigger' : ''}`}
+          role="listbox"
+        >
           {options.map((opt) => (
             <li
               key={opt.value}
