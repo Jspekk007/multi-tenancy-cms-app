@@ -8,6 +8,7 @@ type Size = 'small' | 'medium' | 'large';
 interface BaseButtonProps {
   variant: Variant;
   size: Size;
+  name: string;
   loading?: boolean;
   disabled?: boolean;
   iconOnly?: boolean;

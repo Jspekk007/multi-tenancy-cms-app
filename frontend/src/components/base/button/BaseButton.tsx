@@ -19,6 +19,7 @@ export const BaseButton: React.FC<ButtonProps> = ({
   href,
   children,
   ariaLabel,
+  name,
   ...props
 }) => {
   const isLink = Boolean(href);
@@ -35,7 +36,6 @@ export const BaseButton: React.FC<ButtonProps> = ({
     props.className,
   );
 
-  // automatically render icon if 'icon' prop is provided
   const leftIconNode =
     iconLeft ?? (icon ? <BaseIcon icon={icon} variant={iconVariant || variant} /> : null);
   const rightIconNode = iconRight;
@@ -73,6 +73,7 @@ export const BaseButton: React.FC<ButtonProps> = ({
       aria-label={ariaLabel}
       aria-busy={loading || undefined}
       className={className}
+      name={name}
       {...(props as ButtonHTMLAttributes<HTMLButtonElement>)}
     >
       {content}

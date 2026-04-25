@@ -115,6 +115,8 @@ export const FormFactory = <TFieldValues extends FieldValues>({
           type="submit"
           size="medium"
           iconVariant="primary"
+          name="submit button"
+          ariaLabel="Form submit button"
           disabled={isLoading || control._formState.isSubmitting}
           loading={isLoading || control._formState.isSubmitting}
         >
@@ -126,6 +128,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
             type="button"
             size="medium"
             iconVariant="secondary"
+            name="Reset button"
             onClick={() => {}}
             disabled={isLoading || control._formState.isSubmitting}
           >

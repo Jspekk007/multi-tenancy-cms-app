@@ -17,7 +17,6 @@ export const Avatar: React.FC<AvatarProps> = ({
   className = '',
   menuEnabled = true,
   menuOptions = defaultMenuOptions,
-  onMenuSelect,
 }) => {
   const avatarContent = (
     <div className="avatar-wrapper">
@@ -38,7 +37,6 @@ export const Avatar: React.FC<AvatarProps> = ({
       <div className={`avatar ${className}`}>
         <Dropdown
           options={menuOptions}
-          onSelect={onMenuSelect}
           triggerContent={avatarContent}
           triggerClassName="avatar-trigger"
           triggerAriaLabel={alt}

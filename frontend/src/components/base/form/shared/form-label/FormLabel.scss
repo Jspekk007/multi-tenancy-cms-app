@@ -1,5 +1,6 @@
 .form-label {
-  display: block;
+  display: flex;
+  justify-content: space-between;
   font-weight: 500;
   font-size: 0.875rem;
   color: #374151; // gray-700
@@ -7,6 +8,7 @@
 }
 
 .form-label-required {
+  display: inline-block;
   color: #ef4444; // red-500
   margin-left: 0.125rem;
 }

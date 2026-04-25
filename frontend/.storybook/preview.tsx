@@ -1,45 +1,32 @@
-import '@/assets/scss/tokens/main.scss';
-
-import {
-  Controls,
-  Primary,
-  Source,
-  Stories,
-  Subtitle,
-  Title,
-} from '@storybook/addon-docs/blocks';
+import { Controls, Primary, Source, Stories, Subtitle, Title } from '@storybook/addon-docs/blocks';
 import { Preview } from '@storybook/react';
-import React from 'react';
 
 const preview: Preview = {
+  tags: ['autodocs', 'test'],
+
   parameters: {
-    // Sort stories in the sidebar
     options: {
       storySort: {
-        order: ['Layout', 'Design System', '*'], // Layout first, then DS
+        order: ['Layout', 'Design System', '*'],
       },
     },
 
-    tags: ['autodocs'],
-
     // Add backgrounds for components
     backgrounds: {
-      default: 'light',
-      values: [
-        { name: 'light', value: '#ffffff' },
-        { name: 'dark', value: '#111827' },
-        { name: 'gray', value: '#f3f4f6' },
-      ],
+      options: {
+        light: { name: 'light', value: '#ffffff' },
+        dark: { name: 'dark', value: '#111827' },
+        gray: { name: 'gray', value: '#f3f4f6' },
+      },
     },
 
     // Show viewport/responsive options
     viewport: {
-      viewports: {
+      options: {
         mobile: { name: 'Mobile', styles: { width: '375px', height: '667px' } },
         tablet: { name: 'Tablet', styles: { width: '768px', height: '1024px' } },
         desktop: { name: 'Desktop', styles: { width: '1440px', height: '1024px' } },
       },
-      defaultViewport: 'desktop',
     },
 
     // Controls: show props automatically
@@ -53,7 +40,7 @@ const preview: Preview = {
 
     // Accessibility addon
     a11y: {
-      element: '#root', // test the whole story container
+      context: '#storybook-root', // test the whole story container
       config: {},
       options: { checks: { colorContrast: { threshold: 4.5 } } },
     },
@@ -71,6 +58,17 @@ const preview: Preview = {
           <Stories />
         </>
       ),
+    },
+  },
+
+  initialGlobals: {
+    viewport: {
+      value: 'desktop',
+      isRotated: false,
+    },
+
+    backgrounds: {
+      value: 'light',
     },
   },
 };

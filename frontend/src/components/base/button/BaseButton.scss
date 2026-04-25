@@ -7,15 +7,12 @@
   gap: var(--spacing-sm);
   width: 100%;
   border: none;
-  border-radius: var(--radius-md); // medium-rounded like Tailwind's rounded-md
+  border-radius: var(--radius-md);
   font-weight: var(--font-weight-medium);
   font-family: inherit;
   cursor: pointer;
   text-decoration: none;
   position: relative;
-  transition:
-    background-color var(--transition-fast) ease,
-    color var(--transition-fast) ease;
   white-space: nowrap;
   line-height: 1;
 
@@ -155,7 +152,6 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-sm);
-    transition: opacity var(--transition-fast) ease;
   }
 
   &.icon-only {

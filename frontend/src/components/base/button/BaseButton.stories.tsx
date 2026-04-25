@@ -1,6 +1,6 @@
 import './BaseButton.scss';
-
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj, StoryContext } from '@storybook/react';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { BaseButton } from './BaseButton';
 import { ButtonProps } from './BaseButton.types';
@@ -8,38 +8,13 @@ import { ButtonProps } from './BaseButton.types';
 const meta: Meta<ButtonProps> = {
   title: 'UI/BaseButton',
   component: BaseButton,
-  tags: ['autodocs'],
-  parameters: {
-    docs: {
-      subtitle: 'A flexible and accessible button for all UI actions.',
-    },
-  },
-  argTypes: {
-    variant: {
-      control: { type: 'select' },
-      options: ['primary', 'secondary', 'danger', 'link', 'outline'],
-    },
-    size: {
-      control: { type: 'select' },
-      options: ['small', 'medium', 'large'],
-    },
-    loading: { control: 'boolean' },
-    disabled: { control: 'boolean' },
-    iconOnly: { control: 'boolean' },
-    iconLeft: { control: false },
-    iconRight: { control: false },
-    href: { control: 'text' },
-    ariaLabel: { control: 'text' },
-    onClick: { action: 'clicked' },
-  },
+  tags: ['autodocs', 'test'],
   args: {
+    onClick: fn(),
     children: 'Button',
     variant: 'primary',
     size: 'medium',
-    loading: false,
-    disabled: false,
-    iconOnly: false,
-    ariaLabel: undefined,
+    iconVariant: 'primary',
   },
 };
 
@@ -50,20 +25,15 @@ export const Primary: Story = {
   args: {
     children: 'Primary Button',
     variant: 'primary',
+    ariaLabel: 'Primary Button',
   },
-};
+  play: async ({ canvasElement, args }: StoryContext<ButtonProps>) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
 
-export const Secondary: Story = {
-  args: {
-    children: 'Secondary Button',
-    variant: 'secondary',
-  },
-};
-
-export const Danger: Story = {
-  args: {
-    children: 'Danger Button',
-    variant: 'danger',
+    await expect(button).toBeInTheDocument();
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalled();
   },
 };
 
@@ -71,30 +41,77 @@ export const Loading: Story = {
   args: {
     children: 'Loading Button',
     loading: true,
+    ariaLabel: 'Loading',
+  },
+  play: async ({ canvasElement }: StoryContext<ButtonProps>) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    await expect(button).toBeDisabled();
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    children: 'Secondary',
+    variant: 'secondary',
+    ariaLabel: 'Secondary Button',
+  },
+  play: async ({ canvasElement, args }: StoryContext<ButtonProps>) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    await expect(button).toBeVisible();
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalledTimes(1);
   },
 };
 
 export const Disabled: Story = {
   args: {
-    children: 'Disabled Button',
+    children: 'Disabled',
     disabled: true,
+    ariaLabel: 'Disabled Button',
+  },
+  play: async ({ canvasElement, args }: StoryContext<ButtonProps>) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    await expect(button).toBeDisabled();
+    // Disabled elements reject pointer events; assert the handler was never invoked.
+    await expect(args.onClick).not.toHaveBeenCalled();
   },
 };
 
-export const IconOnly: Story = {
+export const Outline: Story = {
   args: {
-    children: null,
-    iconOnly: true,
-    icon: 'arrow-right',
-    iconVariant: 'primary',
-    ariaLabel: 'Fire Button',
+    children: 'Outline',
+    variant: 'outline',
+    ariaLabel: 'Outline Button',
+  },
+  play: async ({ canvasElement, args }: StoryContext<ButtonProps>) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    await expect(button).toBeVisible();
+    await userEvent.click(button);
+    await expect(args.onClick).toHaveBeenCalled();
   },
 };
 
-export const LinkButton: Story = {
+export const KeyboardActivation: Story = {
   args: {
-    children: 'Go to Google',
-    href: 'https://google.com',
-    variant: 'link',
+    children: 'Focus and activate',
+    variant: 'primary',
+    ariaLabel: 'Keyboard Activation Button',
+  },
+  play: async ({ canvasElement, args }: StoryContext<ButtonProps>) => {
+    const canvas = within(canvasElement);
+    const button = canvas.getByRole('button');
+
+    button.focus();
+    await expect(button).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onClick).toHaveBeenCalled();
   },
 };

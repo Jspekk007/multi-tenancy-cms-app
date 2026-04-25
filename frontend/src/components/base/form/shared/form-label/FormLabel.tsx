@@ -1,3 +1,5 @@
+import './FormLabel.scss';
+
 import { FormLabelProps } from './FormLabel.types';
 
 export const FormLabel: React.FC<FormLabelProps> = ({ required = false, children, ...props }) => {

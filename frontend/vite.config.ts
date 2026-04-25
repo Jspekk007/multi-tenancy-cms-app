@@ -5,4 +5,7 @@ const plugins: PluginOption[] = [react() as PluginOption];
 
 export default defineConfig({
   plugins,
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+  },
 });

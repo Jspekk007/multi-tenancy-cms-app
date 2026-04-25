@@ -1,7 +1,11 @@
+import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
 import type { StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const require = createRequire(import.meta.url);
 
@@ -17,7 +21,12 @@ const config: StorybookConfig = {
     '../src/**/*.stories.@(ts|tsx|js|jsx|mdx)',
     '../.storybook/foundations/**/*.stories.@(ts|tsx|js|jsx|mdx)',
   ],
-  addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-docs'],
+  addons: [
+    getAbsolutePath('@storybook/addon-links'),
+    getAbsolutePath('@storybook/addon-docs'),
+    getAbsolutePath('@storybook/addon-vitest'),
+    getAbsolutePath('@storybook/addon-a11y'),
+  ],
 
   viteFinal(config) {
     config.resolve = {
@@ -28,7 +37,6 @@ const config: StorybookConfig = {
       },
     };
 
-    // 👇 Add this section
     config.css = {
       ...config.css,
       modules: {
@@ -39,12 +47,7 @@ const config: StorybookConfig = {
         ...(config.css?.preprocessorOptions || {}),
         scss: {
           additionalData: `
-            @use "@/assets/scss/tokens/typography" as *;
-            @use "@/assets/scss/tokens/colors" as *;
-            @use "@/assets/scss/tokens/spacing" as *;
-            @use "@/assets/scss/tokens/breakpoints" as *;
-            @use "@/assets/scss/tokens/misc" as *;
-            @use "@/assets/scss/tokens/mixins" as *;
+            @use "@/assets/scss/tokens" as *;
           `,
         },
       },

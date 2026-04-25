@@ -64,10 +64,13 @@
 }
 
 .dropdown__menu--custom-trigger {
-  left: auto;
-  right: 0;
+  right: auto;
+  left: 0;
   min-width: 10rem;
   width: max-content;
+  margin-top: 0.1rem;
+  border: 1px solid var(--color-gray-300);
+  box-shadow: var(--shadow-md);
 }
 
 .dropdown__option {
@@ -83,7 +86,7 @@
 
 .dropdown__option--selected {
   background: #e6f0ff;
-  color: #0070f3;
+  color: var(--color-primary);
   font-weight: 500;
 }
 
