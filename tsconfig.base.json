@@ -1,13 +1,12 @@
 {
     "compilerOptions": {
       "target": "ES2021",
-      "module": "CommonJS",
+      "module": "es2022",
       "lib": ["ES2021"],
       "strict": true,
       "forceConsistentCasingInFileNames": true,
       "esModuleInterop": true,
       "skipLibCheck": true,
-      "moduleResolution": "node",
       "resolveJsonModule": true,
       "allowJs": false,
       "incremental": true,

@@ -16,14 +16,13 @@
     "types": [
       "node"
     ],
-    "baseUrl": "./src",
     "paths": {
-      "@/components/*": ["components/*"],
-      "@/utils/*": ["utils/*"],
-      "@/hooks/*": ["hooks/*"],
-      "@/assets/*": ["assets/*"],
-      "@/lib/*": ["lib/*"],
-      "@/types/*": ["types/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/assets/*": ["./src/assets/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/types/*": ["./src/types/*"],
       "@/core/*": ["../../packages/core/*"],
       "@backend/*": ["../../backend/src/*"],
       "@backend/utils/*": ["../../backend/utils/*"], 
