@@ -17,7 +17,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
   defaultValues,
   schema,
   isLoading = false,
-}: FormFactoryProps<TFieldValues>): React.ReactNode => {
+}: FormFactoryProps<TFieldValues>): JSX.Element => {
   const resolver: Resolver<TFieldValues> | undefined = schema
     ? (zodResolver(schema) as unknown as Resolver<TFieldValues>)
     : undefined;
