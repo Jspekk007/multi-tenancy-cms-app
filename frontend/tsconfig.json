@@ -13,6 +13,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "outDir": "dist",
+    "rootDir": "../../..",
     "types": [
       "node"
     ],
@@ -24,9 +25,9 @@
       "@/lib/*": ["./src/lib/*"],
       "@/types/*": ["./src/types/*"],
       "@/core/*": ["../../packages/core/*"],
-      "@backend/*": ["../../backend/src/*"],
-      "@backend/utils/*": ["../../backend/utils/*"], 
-      "trpc": ["../../backend/src/trpc.ts"]
+      "@backend/*": ["../../../backend/src/*"],
+      "@backend/utils/*": ["../../../backend/utils/*"], 
+      "trpc": ["../../../backend/src/trpc.ts"]
     },
     "jsx": "preserve",
     "noEmit": true,
@@ -45,6 +46,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "next.config.mts",
+    "../../backend/src/**/*.ts"
   ]
 }

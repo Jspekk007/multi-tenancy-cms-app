@@ -3,7 +3,7 @@
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { trpc } from 'trpc/trpc';
+import { trpc } from '../trpc/trpc';
 
 import { AuthContextType, LoginInput } from '@/types/auth';
 import { RegisterInput } from '@/utils/validators';
