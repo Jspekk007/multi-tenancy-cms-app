@@ -1,23 +1,26 @@
 {
-    "compilerOptions": {
-      "target": "ES2021",
-      "module": "es2022",
-      "lib": ["ES2021"],
-      "strict": true,
-      "forceConsistentCasingInFileNames": true,
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "resolveJsonModule": true,
-      "allowJs": false,
-      "incremental": true,
-      "sourceMap": true,
-      "noImplicitAny": true,
-      "noImplicitReturns": true,
-      "noFallthroughCasesInSwitch": true,
-      "paths": {
-        "@backend/*": ["backend/src/*"],
-        "@/*": ["frontend/src/*"]
-    }
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "incremental": true,
+    "sourceMap": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "useDefineForClassFields": true,
+    "importsNotUsedAsValues": "remove",
+    "paths": {
+      "@backend/*": ["backend/src/*"],
+      "@/*": ["frontend/src/*"]
     }
   }
+}
   
