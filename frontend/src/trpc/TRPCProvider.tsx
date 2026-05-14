@@ -1,12 +1,13 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { httpBatchLink, TRPCClientError } from '@trpc/client';
+import { createTRPCClient, httpBatchLink, TRPCClientError } from '@trpc/client';
 import Cookies from 'js-cookie';
 import React, { PropsWithChildren, useState } from 'react';
 import superjson from 'superjson';
 
-import { trpc } from '../trpc/trpc';
+import { AppRouter } from '../../../backend/src/routers/app.routers';
+import { trpc } from './trpc';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
@@ -44,7 +45,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
   }
 };
 
-export function TRPCProvider({ children }: PropsWithChildren): JSX.Element {
+export function TRPCProvider({ children }: PropsWithChildren<{}>): JSX.Element {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -71,7 +72,7 @@ export function TRPCProvider({ children }: PropsWithChildren): JSX.Element {
   );
 
   const [trpcClient] = useState(() =>
-    trpc.createClient({
+    createTRPCClient<AppRouter>({
       links: [
         httpBatchLink({
           url: API_BASE_URL,
