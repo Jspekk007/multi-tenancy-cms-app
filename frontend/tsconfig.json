@@ -5,7 +5,8 @@
     "target": "esnext",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "rootDir": "src",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "outDir": "dist",
     "types": ["node"],
     "paths": {
