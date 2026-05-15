@@ -1,9 +1,10 @@
-import type { JWTTokenPayload } from '@backend/modules/auth/auth.types';
-import { ApiError } from '@backend/modules/error/ApiError';
 import { initTRPC, TRPCError } from '@trpc/server';
 import { CreateExpressContextOptions } from '@trpc/server/adapters/express';
 import { Request } from 'express';
 import superjson from 'superjson';
+
+import type { JWTTokenPayload } from './modules/auth/auth.types';
+import { ApiError } from './modules/error/ApiError';
 
 type AuthenticatedUser = JWTTokenPayload;
 

@@ -1,21 +1,22 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "baseUrl": "./src",
-    "outDir": "dist",
     "module": "es2022",
     "sourceMap": false,
     "declarationMap": false,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
     "paths": {
-      "@backend/utils/*": ["../utils/*"],
-      "@backend/modules/*": ["./modules/*"],
-      "@backend/services/*": ["./services/*"],
-      "@backend/types/*": ["./types/*"],
-      "@backend/middlewares/*": ["./middlewares/*"],
-      "@backend/db/*": ["./db/*"],
-      "@backend/lib/*": ["./lib/*"],
-      "@backend/queues/*": ["./queues/*"],
-      "@backend/trpc": ["./trpc.ts"],
+      "@backend/utils/*": ["./src/utils/*"],
+      "@backend/modules/*": ["./src/modules/*"],
+      "@backend/services/*": ["./src/services/*"],
+      "@backend/types/*": ["./src/types/*"],
+      "@backend/middlewares/*": ["./src/middlewares/*"],
+      "@backend/db/*": ["./src/db/*"],
+      "@backend/lib/*": ["./src/lib/*"],
+      "@backend/queues/*": ["./src/queues/*"],
+      "@backend/trpc": ["./src/trpc.ts"]
     }
   },
   "include": ["src/**/*"],

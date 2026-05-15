@@ -6,8 +6,9 @@ import { ApiError } from '@backend/modules/error/ApiError';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import express, { NextFunction, Request, RequestHandler, Response } from 'express';
 import pinoHttp from 'pino-http';
-import { appRouter } from 'routers/app.routers';
-import { createContext } from 'trpc';
+
+import { appRouter } from './routers/app.routers';
+import { createContext } from './trpc';
 
 const PORT = process.env.PORT || 4000;
 const app = express();

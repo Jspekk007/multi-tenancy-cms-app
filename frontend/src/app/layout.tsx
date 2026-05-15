@@ -2,9 +2,10 @@ import '@/assets/scss/tokens/main.scss';
 
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { TRPCProvider } from 'trpc/TRPCProvider';
 
 import { AuthProvider } from '@/components/AuthProvider';
+
+import { TRPCProvider } from '../trpc/TRPCProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
