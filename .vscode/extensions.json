@@ -1,5 +1,19 @@
 {
   "recommendations": [
-    "denoland.vscode-deno"
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "prisma.prisma",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode-remote.remote-containers",
+    "ms-vscode.makefile-tools",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "ms-vscode.vscode-typescript-next",
+    "usernamehw.errorlens",
+    "formulahendry.docker-explorer",
+    "ms-azuretools.vscode-docker",
+    "humao.rest-client",
+    "storybook.official",
+    "ms-vscode.live-server"
   ]
 }

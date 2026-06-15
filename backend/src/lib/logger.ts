@@ -2,13 +2,16 @@ import pino from 'pino';
 
 export const customLogger = pino({
   level: process.env.LOG_LEVEL || 'info',
-  transport: {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      ignore: 'hostname',
+  ...(process.env.NODE_ENV === 'development' && {
+    transport: {
+      target: 'pino-pretty',
+      options: {
+        colorize: true,
+        ignore: 'hostname',
+        sync: true,
+      },
     },
-  },
+  }),
   formatters: {
     bindings: (bindings) => {
       return {

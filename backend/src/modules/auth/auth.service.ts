@@ -23,16 +23,17 @@ export class AuthService {
   JWT_SECRET = process.env?.JWT_SECRET;
 
   async register(input: RegisterInput): Promise<AuthResponse> {
+    const normalizedEmail = input.email.toLowerCase();
     const hashedPassword = await hashPassword(input.password);
 
     customLogger.info('Register process started');
 
     customLogger.info(
-      `Attempting to sign up user with email: ${input.email} and domain: ${input.domain}`,
+      `Attempting to sign up user with email: ${normalizedEmail} and domain: ${input.domain}`,
     );
 
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: input.email },
+      where: { email: normalizedEmail },
     });
 
     const existingDomain = await this.prisma.tenant.findUnique({
@@ -61,7 +62,7 @@ export class AuthService {
 
         const createdUser = await tx.user.create({
           data: {
-            email: input.email,
+            email: normalizedEmail,
             passwordHash: hashedPassword,
           },
         });
@@ -133,10 +134,11 @@ export class AuthService {
   }
 
   async login(input: LoginInput): Promise<AuthResponse> {
-    customLogger.info(`Login attempt for email: ${input.email}`);
+    const normalizedEmail = input.email.toLowerCase();
+    customLogger.info(`Login attempt for email: ${normalizedEmail}`);
 
     const user = await this.prisma.user.findUnique({
-      where: { email: input.email },
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
