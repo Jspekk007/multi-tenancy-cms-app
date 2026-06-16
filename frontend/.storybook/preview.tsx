@@ -1,13 +1,6 @@
 import '@/assets/scss/tokens/main.scss';
 
-import {
-  Controls,
-  Primary,
-  Source,
-  Stories,
-  Subtitle,
-  Title,
-} from '@storybook/addon-docs/blocks';
+import { Controls, Primary, Source, Stories, Subtitle, Title } from '@storybook/addon-docs/blocks';
 import { Preview } from '@storybook/react';
 import React from 'react';
 

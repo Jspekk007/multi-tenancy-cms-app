@@ -20,6 +20,8 @@ export default [
       '**/*.d.ts',
       '**/*.spec.ts',
       '**/*.test.ts',
+      'src/**/*.js',
+      'src/**/*.js.map',
     ],
     files: ['src/**/*.ts', 'src/**/*.d.ts'], // include declaration files
     languageOptions: {

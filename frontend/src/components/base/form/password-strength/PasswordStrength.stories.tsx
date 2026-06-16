@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
-import { PasswordStrength } from './PasswordStrength';
+
 import { TextInput } from '../text-input/TextInput';
+import { PasswordStrength } from './PasswordStrength';
 
 const meta: Meta<typeof PasswordStrength> = {
   title: 'UI/Form/PasswordStrength',

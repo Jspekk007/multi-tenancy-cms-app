@@ -1,4 +1,5 @@
 import { Meta, StoryObj } from '@storybook/react';
+
 import { Logo } from './Logo';
 import { LogoProps } from './Logo.types';
 

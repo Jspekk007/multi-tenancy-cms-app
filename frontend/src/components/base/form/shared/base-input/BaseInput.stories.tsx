@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { BaseInput } from './BaseInput';
 
 const meta: Meta<typeof BaseInput> = {

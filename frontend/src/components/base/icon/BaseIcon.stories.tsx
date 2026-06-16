@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
+
 import { BaseIcon } from './BaseIcon';
 import type { IconName } from './BaseIcons.types';
 
