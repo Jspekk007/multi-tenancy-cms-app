@@ -1,8 +1,11 @@
-import React from 'react';
-import { Meta, StoryObj } from '@storybook/react';
-import { FormFieldWrapper } from './form-field-wrapper/FormFieldWrapper';
-import { BaseIcon } from '@/components/base/icon/BaseIcon';
 import './Form.scss'; // optional global form styles for layout
+
+import { Meta, StoryObj } from '@storybook/react';
+import React from 'react';
+
+import { BaseIcon } from '@/components/base/icon/BaseIcon';
+
+import { FormFieldWrapper } from './form-field-wrapper/FormFieldWrapper';
 
 const meta: Meta = {
   title: 'Form/FullForm',

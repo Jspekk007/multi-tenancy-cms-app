@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
+import { z } from 'zod';
+
 import { FormFactory } from './FormFactory';
 import type { FormField } from './FormFactory.types';
-import { z } from 'zod';
 
 const meta: Meta<typeof FormFactory> = {
   title: 'UI/Form/FormFactory',
