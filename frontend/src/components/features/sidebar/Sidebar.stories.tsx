@@ -9,9 +9,7 @@ import { getSidebarItems } from './SidebarItems';
 const activeHrefOptions = getSidebarItems().map((item) => item.href);
 
 const SidebarPreview = ({ activeHref, defaultCollapsed }: SidebarProps): JSX.Element => {
-  const [currentActiveHref, setCurrentActiveHref] = useState(
-    activeHref ?? activeHrefOptions[0],
-  );
+  const [currentActiveHref, setCurrentActiveHref] = useState(activeHref ?? activeHrefOptions[0]);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed ?? false);
 
   useEffect(() => {
@@ -54,7 +52,7 @@ const SidebarPreview = ({ activeHref, defaultCollapsed }: SidebarProps): JSX.Ele
   );
 };
 
-const meta: Meta<SidebarProps> = {
+const meta: Meta<typeof SidebarPreview> = {
   title: 'UI/Sidebar',
   tags: ['autodocs'],
   parameters: {
@@ -78,7 +76,7 @@ const meta: Meta<SidebarProps> = {
 
 export default meta;
 
-type Story = StoryObj<typeof Sidebar>;
+type Story = StoryObj<typeof SidebarPreview>;
 
 export const Default: Story = {};
 
