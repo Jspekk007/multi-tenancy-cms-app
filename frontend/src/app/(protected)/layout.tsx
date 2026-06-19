@@ -5,7 +5,7 @@ import './protected-layout.scss';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import { AppHeader } from '@/components/layout/app-header/AppHeader';
+import { AppHeader } from '@/components/features/app-header/AppHeader';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function ProtectedLayout({
