@@ -8,23 +8,23 @@
 .input-wrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #d1d5db; // gray-300
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
   padding: 0.5rem;
   transition: all 0.2s;
-  background-color: #fff;
+  background-color: var(--color-surface-panel);
 
   &:focus-within {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-color: var(--color-focus-border);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 
   &.error {
-    border-color: #ef4444; // red-500
+    border-color: var(--color-danger);
   }
 
   &.disabled {
-    background-color: #f9fafb; // gray-50
+    background-color: var(--color-surface-disabled);
     opacity: 0.7;
     pointer-events: none;
   }

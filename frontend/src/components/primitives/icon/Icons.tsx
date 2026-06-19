@@ -93,6 +93,40 @@ export const Search: SvgIcon = (props) => (
   </svg>
 );
 
+export const Bell: SvgIcon = (props) => (
+  <svg {...baseProps} {...props}>
+    <path d="M10.27 21a2 2 0 0 0 3.46 0" />
+    <path d="M4 17h16" />
+    <path d="M6 17c1.1-1.28 2-2.83 2-7a4 4 0 0 1 8 0c0 4.17.9 5.72 2 7" />
+  </svg>
+);
+
+export const HelpCircle: SvgIcon = (props) => (
+  <svg {...baseProps} {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.75 9.5a2.5 2.5 0 0 1 4.77 1.03c0 1.63-1.37 2.17-2.08 2.8-.38.34-.44.67-.44 1.17" />
+    <path d="M12 17h.01" />
+  </svg>
+);
+
+export const Rocket: SvgIcon = (props) => (
+  <svg {...baseProps} {...props}>
+    <path d="M4.5 16.5c-1.5 1.26-2 4-2 4s2.74-.5 4-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z" />
+    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z" />
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+  </svg>
+);
+
+export const Tenant: SvgIcon = (props) => (
+  <svg {...baseProps} {...props}>
+    <rect x="4" y="4" width="16" height="16" rx="4" />
+    <path d="M8.5 9h7" />
+    <path d="M8.5 12h7" />
+    <path d="M8.5 15h4" />
+  </svg>
+);
+
 export const Settings: SvgIcon = (props) => (
   <svg {...baseProps} {...props}>
     <circle cx="12" cy="12" r="3" />
@@ -170,6 +204,16 @@ export const Users: SvgIcon = (props) => (
   </svg>
 );
 
+export const PanelLeft: SvgIcon = (props) => (
+  <svg {...baseProps} {...props}>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 4v16" />
+    <path d="M6 8h.01" />
+    <path d="M6 12h.01" />
+    <path d="M6 16h.01" />
+  </svg>
+);
+
 export const DashBoard: SvgIcon = (props) => (
   <svg
     {...baseProps}
@@ -203,6 +247,52 @@ export const Content: SvgIcon = (props) => (
   </svg>
 );
 
+export const Support: SvgIcon = (props) => (
+  <svg
+    {...baseProps}
+    {...props}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M18 8a6 6 0 0 0-9.33-5" />
+    <path d="M6.29 6.29A6 6 0 0 0 18 14" />
+    <path d="M18 2v4" />
+    <path d="M21.17 7.17 19.83 5.83" />
+    <path d="M22 12h-4" />
+    <path d="M22 16h-4" />
+    <path d="M3 12h4" />
+    <path d="M3 16h4" />
+  </svg>
+);
+
+export const Logs: SvgIcon = (props) => (
+  <svg
+    {...baseProps}
+    {...props}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    viewBox="0 0 24 24"
+  >
+    <path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" />
+    <path d="M8.5 7h.01" />
+    <path d="M8.5 11h.01" />
+    <path d="M8.5 15h.01" />
+    <path d="M12.5 7h.01" />
+    <path d="M12.5 11h.01" />
+    <path d="M12.5 15h.01" />
+    <path d="M16.5 7h.01" />
+    <path d="M16.5 11h.01" />
+    <path d="M16.5 15h.01" />
+  </svg>
+);
+
 // Mapping
 export const Icons = {
   add: Add,
@@ -216,14 +306,21 @@ export const Icons = {
   delete: Delete,
   edit: Edit,
   search: Search,
+  bell: Bell,
+  'help-circle': HelpCircle,
+  rocket: Rocket,
+  tenant: Tenant,
   settings: Settings,
   user: User,
   eye: Eye,
   'eye-off': EyeOff,
   media: Media,
   users: Users,
+  'panel-left': PanelLeft,
   dashboard: DashBoard,
   content: Content,
+  support: Support,
+  logs: Logs,
 } as const;
 
 export type IconName = keyof typeof Icons;

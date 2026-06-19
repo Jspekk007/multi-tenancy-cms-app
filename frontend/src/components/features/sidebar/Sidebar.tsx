@@ -1,48 +1,94 @@
+'use client';
+
 import './Sidebar.scss';
 
-import { Button } from '@/components/primitives/button/Button';
-import { Icon } from '@/components/primitives/icon/Icon';
-/**
- * Sidebar component for displaying a vertical navigation menu or additional content.
- * Should contain a list of links for navigation (dashboard, content, media, users, settings) and can also include user profile information and a logout button.
- * The sidebar should be collapsible to save screen space on smaller devices.
- * The component should be designed to be reusable across different pages of the application, providing a consistent navigation experience.
- * At the bottom of the sidebar should be a button where users can quickly create a new content item, which should be prominently displayed and easily accessible.
- */
-import { Logo } from '@/components/primitives/logo/Logo';
+import clsx from 'clsx';
+import { usePathname } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 
-import { sidebarItems } from './SidebarItems';
+import { SidebarCreateAction } from './components/SidebarCreateAction';
+import { SidebarHeader } from './components/SidebarHeader';
+import { SidebarNav } from './components/SidebarNav';
+import type { SidebarProps, SidebarViewProps } from './Sidebar.types';
+import { getSidebarItems, sidebarItems } from './SidebarItems';
+import { getActiveSidebarHref, mobileSidebarQuery } from './utils/Sidebar.utils';
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<SidebarProps> = ({ activeHref, defaultCollapsed }) => {
+  const pathname = usePathname();
+  const hasUserToggled = useRef(false);
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed ?? false);
+
+  useEffect(() => {
+    if (defaultCollapsed !== undefined) {
+      setIsCollapsed(defaultCollapsed);
+    }
+  }, [defaultCollapsed]);
+
+  useEffect(() => {
+    if (defaultCollapsed !== undefined || typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia(mobileSidebarQuery);
+    const syncCollapsedState = (matches: boolean): void => {
+      if (!hasUserToggled.current) {
+        setIsCollapsed(matches);
+      }
+    };
+    const handleMediaQueryChange = (event: MediaQueryListEvent): void => {
+      syncCollapsedState(event.matches);
+    };
+
+    syncCollapsedState(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleMediaQueryChange);
+
+    return (): void => {
+      mediaQuery.removeEventListener('change', handleMediaQueryChange);
+    };
+  }, [defaultCollapsed]);
+
+  const handleToggle = (): void => {
+    hasUserToggled.current = true;
+    setIsCollapsed((currentCollapsedState) => !currentCollapsedState);
+  };
+
+  const resolvedActiveHref = activeHref ?? getActiveSidebarHref(pathname, getSidebarItems());
+
   return (
-    <aside className="sidebar">
+    <SidebarView
+      activeHref={resolvedActiveHref}
+      isCollapsed={isCollapsed}
+      onToggle={handleToggle}
+    />
+  );
+};
+
+export const SidebarView: React.FC<SidebarViewProps> = ({
+  activeHref,
+  isCollapsed,
+  onToggle,
+}) => {
+  return (
+    <aside className={clsx('sidebar', { 'is-collapsed': isCollapsed })} aria-label="Sidebar">
       <div className="sidebar-top">
-        <Logo assetType="wordmark" />
-        <nav className="sidebar-nav">
-          <ul>
-            {sidebarItems.map((sidebarItem) => (
-              <li key={sidebarItem.href}>
-                <a href={sidebarItem.href} aria-label={sidebarItem.alternativeText}>
-                  <Icon icon={sidebarItem.icon} />
-                  {sidebarItem.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <SidebarHeader isCollapsed={isCollapsed} onToggle={onToggle} />
+        <SidebarNav
+          ariaLabel="Primary navigation"
+          activeHref={activeHref}
+          isCollapsed={isCollapsed}
+          items={sidebarItems.header}
+        />
+        <SidebarCreateAction isCollapsed={isCollapsed} />
       </div>
 
       <div className="sidebar-bottom">
-        <Button
-          variant="primary"
-          href="/content/new"
-          icon="add"
-          iconVariant="white"
-          size="large"
-          ariaLabel="Create new content"
-        >
-          New Content
-        </Button>
+        <div className="sidebar-divider" role="separator" aria-orientation="horizontal"></div>
+
+        <SidebarNav
+          activeHref={activeHref}
+          isCollapsed={isCollapsed}
+          items={sidebarItems.footer}
+        />
       </div>
     </aside>
   );

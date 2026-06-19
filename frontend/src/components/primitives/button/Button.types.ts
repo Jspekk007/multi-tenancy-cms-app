@@ -2,7 +2,7 @@ import { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
 import { IconName } from '../icon/Icons';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'link' | 'outline';
+type Variant = 'primary' | 'secondary' | 'danger' | 'link' | 'outline' | 'ghost';
 type Size = 'small' | 'medium' | 'large';
 
 interface BaseButtonProps {

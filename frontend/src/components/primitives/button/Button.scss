@@ -66,7 +66,7 @@
 
   &.danger {
     background-color: var(--color-danger);
-    color: var(--color-danger-text);
+    color: var(--color-on-danger);
 
     &:hover:not(.disabled, .loading) {
       background-color: var(--color-danger-hover);
@@ -80,7 +80,7 @@
 
     &:hover:not(.disabled, .loading) {
       background-color: var(--color-bg-hover);
-      color: var(--color-on-accent);
+      color: var(--color-surface-subtle);
     }
   }
 
@@ -89,8 +89,8 @@
     color: var(--color-text-default);
 
     &:hover:not(.disabled, .loading) {
-      background-color: var(--color-accent);
-      color: var(--color-on-accent);
+      background-color: var(--color-surface-subtle);
+      color: var(--color-surface-default);
     }
   }
 
@@ -141,7 +141,7 @@
 
     &.outline,
     &.ghost {
-      color: var(--color-on-accent);
+      color: var(--color-surface-subtle);
     }
 
     &.link {
@@ -159,7 +159,21 @@
   }
 
   &.icon-only {
+    width: var(--button-height-md);
+    min-width: var(--button-height-md);
+    padding: 0;
+    flex-shrink: 0;
     justify-content: center;
+
+    &.small {
+      width: var(--button-height-sm);
+      min-width: var(--button-height-sm);
+    }
+
+    &.large {
+      width: var(--button-height-lg);
+      min-width: var(--button-height-lg);
+    }
 
     .button-content > :not(:first-child) {
       display: none;

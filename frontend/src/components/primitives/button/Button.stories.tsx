@@ -17,7 +17,7 @@ const meta: Meta<ButtonProps> = {
   argTypes: {
     variant: {
       control: { type: 'select' },
-      options: ['primary', 'secondary', 'danger', 'link', 'outline'],
+      options: ['primary', 'secondary', 'danger', 'link', 'outline', 'ghost'],
     },
     size: {
       control: { type: 'select' },
@@ -86,7 +86,7 @@ export const IconOnly: Story = {
     children: null,
     iconOnly: true,
     icon: 'arrow-right',
-    iconVariant: 'primary',
+    iconVariant: 'white',
     ariaLabel: 'Fire Button',
   },
 };

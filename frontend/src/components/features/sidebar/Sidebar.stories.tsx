@@ -1,45 +1,101 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { Sidebar } from './Sidebar';
+import type { MouseEventHandler } from 'react';
+import { useEffect, useState } from 'react';
 
-const meta: Meta<typeof Sidebar> = {
+import { SidebarView } from './Sidebar';
+import type { SidebarProps } from './Sidebar.types';
+import { getSidebarItems } from './SidebarItems';
+
+const activeHrefOptions = getSidebarItems().map((item) => item.href);
+
+const SidebarPreview = ({ activeHref, defaultCollapsed }: SidebarProps): JSX.Element => {
+  const [currentActiveHref, setCurrentActiveHref] = useState(
+    activeHref ?? activeHrefOptions[0],
+  );
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed ?? false);
+
+  useEffect(() => {
+    setCurrentActiveHref(activeHref ?? activeHrefOptions[0]);
+  }, [activeHref]);
+
+  useEffect(() => {
+    setIsCollapsed(defaultCollapsed ?? false);
+  }, [defaultCollapsed]);
+
+  const handleClick: MouseEventHandler<HTMLDivElement> = (event) => {
+    const target = event.target;
+
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const link = target.closest('a');
+    const href = link?.getAttribute('href');
+
+    if (!href) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (activeHrefOptions.includes(href)) {
+      setCurrentActiveHref(href);
+    }
+  };
+
+  return (
+    <div onClick={handleClick} style={{ minHeight: '100vh', width: 'fit-content' }}>
+      <SidebarView
+        activeHref={currentActiveHref}
+        isCollapsed={isCollapsed}
+        onToggle={() => setIsCollapsed((currentState) => !currentState)}
+      />
+    </div>
+  );
+};
+
+const meta: Meta<SidebarProps> = {
   title: 'UI/Sidebar',
-  component: Sidebar,
   tags: ['autodocs'],
+  parameters: {
+    layout: 'fullscreen',
+  },
+  render: (args) => <SidebarPreview {...args} />,
   args: {
-    placeholder: 'Enter your text',
+    activeHref: '/dashboard',
+    defaultCollapsed: false,
+  },
+  argTypes: {
+    activeHref: {
+      control: 'select',
+      options: activeHrefOptions,
+    },
+    defaultCollapsed: {
+      control: 'boolean',
+    },
   },
 };
+
 export default meta;
 
 type Story = StoryObj<typeof Sidebar>;
 
 export const Default: Story = {};
 
-export const WithLabel: Story = {
+export const ContentActive: Story = {
   args: {
-    id: 'id',
-    placeholder: 'Your text',
-  },
-  render: (args) => (
-    <div style={{ width: '300px' }}>
-      <label htmlFor="id" style={{ display: 'block', marginBottom: '4px' }}>
-        Label
-      </label>
-      <Sidebar {...args} />
-    </div>
-  ),
-};
-
-export const Disabled: Story = {
-  args: {
-    disabled: true,
-    value: 'sample',
+    activeHref: '/content',
   },
 };
 
-export const Error: Story = {
+export const Collapsed: Story = {
   args: {
-    variant: 'error',
-    value: 'invalid',
+    defaultCollapsed: true,
+  },
+};
+
+export const SupportActive: Story = {
+  args: {
+    activeHref: '/support',
   },
 };

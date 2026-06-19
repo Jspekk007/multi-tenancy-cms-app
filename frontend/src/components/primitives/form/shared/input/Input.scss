@@ -2,14 +2,14 @@
   display: flex;
   align-items: center;
   width: 100%;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--color-border-strong);
   border-radius: 0.5rem;
-  background-color: var(--color-white, #ffffff);
+  background-color: var(--color-surface-panel);
   transition: all 0.2s;
 
   &.is-disabled {
-    background-color: #f3f4f6; // gray-100
-    border-color: #e5e7eb; // gray-200
+    background-color: var(--color-surface-disabled);
+    border-color: var(--color-border-muted);
     cursor: not-allowed;
 
     .input {
@@ -18,17 +18,17 @@
     }
 
     .input-icon {
-      color: #9ca3af;
+      color: var(--color-gray-500);
       cursor: not-allowed;
     }
   }
 
   // Variants
   &.input-error {
-    border-color: #ef4444;
+    border-color: var(--color-danger);
   }
   &.input-success {
-    border-color: #10b981;
+    border-color: var(--color-success);
   }
 
   // Sizes
@@ -69,12 +69,12 @@
     }
 
     &::placeholder {
-      color: #9ca3af;
+      color: var(--color-gray-500);
     }
   }
 
   &:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-color: var(--color-focus-border);
+    box-shadow: 0 0 0 2px var(--color-focus-ring);
   }
 }

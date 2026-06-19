@@ -1,6 +1,6 @@
 .form-error-text {
   font-size: 0.875rem;
-  color: #ef4444; // red-500
+  color: var(--color-danger);
   display: flex;
   align-items: center;
   margin-top: 0.125rem;

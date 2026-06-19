@@ -1,20 +1,25 @@
 .list-item {
   display: flex;
   align-items: center;
+  width: 100%;
   padding: 0.5rem 1rem;
   transition: background-color 0.2s ease;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.5rem;
   cursor: pointer;
   border-radius: var(--radius-md);
+  color: var(--list-item-text, var(--color-text-default));
 
   &:hover {
-    background-color: var(--color-gray-100);
+    background-color: var(--list-item-background-hover, var(--color-bg-hover));
   }
 
   &.selected {
-    background-color: var(--color-gray-200);
+    background-color: var(--list-item-background-selected, var(--color-bg-active));
+  }
+
+  .icon.default {
+    color: var(--list-item-icon, var(--list-item-text, var(--color-text-default)));
   }
 
   .list-item-content {
@@ -34,10 +39,14 @@
   .list-item-label {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-medium);
-    color: var(--color-text-default);
+    color: var(--list-item-text, var(--color-text-default));
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     list-style: none;
+  }
+
+  &.selected .list-item-label {
+    font-weight: var(--font-weight-bold);
   }
 }

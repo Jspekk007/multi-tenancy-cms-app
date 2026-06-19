@@ -1,23 +1,6 @@
-export type IconName =
-  | 'add'
-  | 'alert'
-  | 'arrow-down'
-  | 'arrow-left'
-  | 'arrow-right'
-  | 'arrow-up'
-  | 'check'
-  | 'close'
-  | 'delete'
-  | 'edit'
-  | 'dashboard'
-  | 'content'
-  | 'search'
-  | 'settings'
-  | 'user'
-  | 'eye'
-  | 'eye-off'
-  | 'media'
-  | 'users';
+import type { IconName } from './Icons';
+
+export type { IconName } from './Icons';
 
 export interface IconProps extends React.HTMLAttributes<HTMLDivElement> {
   icon: IconName;

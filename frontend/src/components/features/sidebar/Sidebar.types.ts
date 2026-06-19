@@ -1,12 +1,24 @@
-export type SidebarItem = {
-  label: string;
-  href: string;
-  alternativeText: string;
-  icon: string;
-};
+import type { IconName } from '@/components/primitives/icon/Icons';
 
-export type SidebarItems = SidebarItem[];
+export interface SidebarItem {
+  href: string;
+  label: string;
+  icon: IconName;
+  alternativeText: string;
+}
+
+export interface SidebarCollection {
+  header: SidebarItem[];
+  footer: SidebarItem[];
+}
 
 export interface SidebarProps {
-  items: SidebarItems;
+  activeHref?: string;
+  defaultCollapsed?: boolean;
+}
+
+export interface SidebarViewProps {
+  activeHref?: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
 }

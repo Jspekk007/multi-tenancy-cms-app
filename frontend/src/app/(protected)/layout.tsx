@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AppHeader } from '@/components/features/app-header/AppHeader';
+import { Sidebar } from '@/components/features/sidebar/Sidebar';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function ProtectedLayout({
@@ -18,29 +19,32 @@ export default function ProtectedLayout({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     if (!isLoading && !user) {
       router.push('/login');
     }
-
-    setMounted(true);
   }, [isLoading, user, router]);
 
-  if (!mounted || isLoading) {
-    return (
-      <div className="protected-layout__loading">
-        <div className="protected-layout__spinner" />
-      </div>
-    );
-  }
+  const showContentLoader = !mounted || isLoading;
 
-  if (!user) {
+  if (!showContentLoader && !user) {
     return null;
   }
 
   return (
-    <div className="protected-layout">
+    <div className="protected-layout grid gap-0">
+      <Sidebar />
       <AppHeader />
-      <main className="protected-layout__content">{children}</main>
+      <main className="protected-layout__content" aria-busy={showContentLoader}>
+        {showContentLoader ? (
+          <div className="protected-layout__loading" role="status" aria-label="Loading content">
+            <div className="protected-layout__spinner" aria-hidden="true" />
+          </div>
+        ) : (
+          children
+        )}
+      </main>
     </div>
   );
 }

@@ -16,7 +16,12 @@ const meta: Meta<typeof Icon> = {
         'arrow-left',
         'arrow-right',
         'arrow-up',
+        'bell',
         'media',
+        'panel-left',
+        'help-circle',
+        'rocket',
+        'tenant',
         'check',
         'close',
         'delete',
@@ -27,6 +32,8 @@ const meta: Meta<typeof Icon> = {
         'dashboard',
         'content',
         'users',
+        'support',
+        'logs',
       ] satisfies IconName[],
     },
     variant: {
@@ -99,6 +106,12 @@ export const AllIcons: Story = {
         'arrow-left',
         'arrow-right',
         'arrow-up',
+        'bell',
+        'media',
+        'panel-left',
+        'help-circle',
+        'rocket',
+        'tenant',
         'check',
         'close',
         'delete',
@@ -109,6 +122,8 @@ export const AllIcons: Story = {
         'dashboard',
         'content',
         'users',
+        'support',
+        'logs',
       ].map((iconName) => (
         <Icon key={iconName} {...args} icon={iconName as IconName} />
       ))}

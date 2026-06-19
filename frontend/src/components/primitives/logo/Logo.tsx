@@ -30,13 +30,12 @@ export const Logo: React.FC<LogoProps> = ({
   alt = 'ATLAS Brand Mark',
 }) => {
   const isWordmark = assetType === 'wordmark';
-  const width = DimensionMap[assetType][size];
   const height = isWordmark
     ? DimensionMap[assetType][size] * (40 / 120)
     : DimensionMap[assetType][size];
 
   const src = AssetUrlMap[assetType];
-  const wrapperStyle = { width, height };
+  const wrapperStyle = { height, width: 'auto' };
   const imageStyle = {
     width: '100%',
     height: '100%',
