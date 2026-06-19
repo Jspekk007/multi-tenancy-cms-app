@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from '@storybook/react';
 
 import { Input } from './Input';
 
-const meta: Meta<typeof BaseInput> = {
-  title: 'UI/Form/BaseInput',
-  component: BaseInput,
+const meta: Meta<typeof Input> = {
+  title: 'UI/Form/Input',
+  component: Input,
   args: {
     placeholder: 'Enter text...',
     disabled: false,
@@ -24,7 +24,7 @@ const meta: Meta<typeof BaseInput> = {
 };
 export default meta;
 
-type Story = StoryObj<typeof BaseInput>;
+type Story = StoryObj<typeof Input>;
 
 export const Default: Story = {};
 
