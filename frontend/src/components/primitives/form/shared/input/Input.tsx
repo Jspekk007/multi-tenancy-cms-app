@@ -31,7 +31,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           disabled={disabled}
-          className={`base-input ${className}`.trim()}
+          className={`input ${className}`.trim()}
           aria-invalid={variant === 'error' ? 'true' : undefined}
           {...rest}
         />
