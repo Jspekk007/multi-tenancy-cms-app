@@ -6,9 +6,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default [
   {
+    files: ['**/*'],
     ignores: [
       'node_modules/**',
       'dist/**',
+      '.next/**',
       'build/**',
       'coverage',
       '*.config.js',
@@ -26,6 +28,13 @@ export default [
     ],
   },
   ...rootConfig,
+  {
+    files: ['**/*.js', '**/*.jsx'],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
   {
     files: ['src/**/*.ts', 'src/**/*.d.ts', 'src/**/*.tsx'], // include declaration files
     languageOptions: {

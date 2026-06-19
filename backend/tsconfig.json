@@ -1,7 +1,8 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "module": "es2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
     "sourceMap": false,
     "declarationMap": false,
     "outDir": "dist",

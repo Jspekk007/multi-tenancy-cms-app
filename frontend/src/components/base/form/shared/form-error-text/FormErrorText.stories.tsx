@@ -1,7 +1,9 @@
-import React from 'react';
 import { Meta, StoryObj } from '@storybook/react';
-import { FormErrorText } from './FormErrorText';
+import React from 'react';
+
 import { BaseIcon } from '@/components/base/icon/BaseIcon';
+
+import { FormErrorText } from './FormErrorText';
 
 const meta: Meta<typeof FormErrorText> = {
   title: 'UI/Form/FormErrorText',

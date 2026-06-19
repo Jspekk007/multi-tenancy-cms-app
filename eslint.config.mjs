@@ -6,6 +6,21 @@ import simpleImportSortPlugin from 'eslint-plugin-simple-import-sort'
 
 export default defineFlatConfig([
   {
+    ignores: [
+      'node_modules/**',
+      '.next/**',
+      'dist/**',
+      'build/**',
+      'coverage/**',
+      'frontend/.next/**',
+      '**/*.d.ts',
+      '**/*.spec.*',
+      '**/*.test.*',
+      '**/*.stories.*',
+      '.storybook/**',
+    ],
+  },
+  {
     files: ['**/*.ts', '**/*.js', '**/*.vue', '**/*.tsx', '**/*.jsx', '**/.stories.*'],
     languageOptions: {
       parser: tsParser,

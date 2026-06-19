@@ -1,4 +1,3 @@
-
 name: SAST Scan
 
 on:
@@ -44,6 +43,8 @@ jobs:
       # Step 2: Install TruffleHog (resolve latest Linux binary via GitHub API)
       - name: Install TruffleHog
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
 
@@ -61,7 +62,7 @@ jobs:
           esac
 
           echo "Detecting latest TruffleHog release asset for linux/${ARCHITECTURE}..."
-          ASSET_URL=$(curl -fsSL https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
+          ASSET_URL=$(curl -fsSL -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/trufflesecurity/trufflehog/releases/latest \
             | jq -r --arg arch "$ARCHITECTURE" '
                 .assets[]
                 | select((.name | test("linux"; "i")) and (.name | test($arch; "i")))

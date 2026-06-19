@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
+
 import { Dropdown } from './Dropdown';
 import { DropdownOption } from './Dropdown.types';
 

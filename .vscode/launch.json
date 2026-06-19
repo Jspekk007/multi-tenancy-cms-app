@@ -13,7 +13,6 @@
         ],
         "args": ["${workspaceFolder}/backend/src/main.ts"],
         "cwd": "${workspaceFolder}/backend",
-        "protocol": "inspector",
         "envFile": "${workspaceFolder}/.env",
         "autoAttachChildProcesses": true
       }
