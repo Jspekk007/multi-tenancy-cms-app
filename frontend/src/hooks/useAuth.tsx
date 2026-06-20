@@ -4,8 +4,14 @@ import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
-import { AuthContextType, LoginInput } from '@/types/auth';
-import { RegisterInput } from '@/utils/validators';
+import {
+  AuthContextType,
+  AuthResponse,
+  isTenantSelectionRequired,
+  LoginInput,
+  LoginResponse,
+  RegisterInput,
+} from '@/types/auth';
 
 import { trpc } from '../trpc/trpc';
 
@@ -16,6 +22,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   const [token, setToken] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
+
+  const persistAuthSession = ({ user: userData, token: authToken, refreshToken }: AuthResponse): void => {
+    Cookies.set('token', authToken, { expires: 1 });
+    Cookies.set('refreshToken', refreshToken, { expires: 30 });
+    setToken(authToken);
+    utils.auth.me.setData(undefined, userData);
+  };
 
   const {
     data: user,
@@ -30,21 +43,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   // Mutations
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
-      const { user: userData, token: authToken, refreshToken } = data;
-      Cookies.set('token', authToken, { expires: 1 });
-      Cookies.set('refreshToken', refreshToken, { expires: 30 });
-      setToken(authToken);
-      utils.auth.me.setData(undefined, userData);
+      if (isTenantSelectionRequired(data)) {
+        return;
+      }
+
+      persistAuthSession(data);
     },
   });
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: (data) => {
-      const { user: userData, token: authToken, refreshToken } = data;
-      Cookies.set('token', authToken, { expires: 1 });
-      Cookies.set('refreshToken', refreshToken, { expires: 30 });
-      setToken(authToken);
-      utils.auth.me.setData(undefined, userData);
+      persistAuthSession(data);
     },
   });
 
@@ -61,11 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
 
   const refreshMutation = trpc.auth.refresh.useMutation({
     onSuccess: (data) => {
-      const { user: userData, token: authToken, refreshToken } = data;
-      Cookies.set('token', authToken, { expires: 1 });
-      Cookies.set('refreshToken', refreshToken, { expires: 30 });
-      setToken(authToken);
-      utils.auth.me.setData(undefined, userData);
+      persistAuthSession(data);
     },
     onError: () => {
       handleLogout();
@@ -80,8 +85,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     router.push('/login');
   };
 
-  const login = async (credentials: LoginInput): Promise<void> => {
-    await loginMutation.mutateAsync(credentials);
+  const login = async (credentials: LoginInput): Promise<LoginResponse> => {
+    return await loginMutation.mutateAsync(credentials);
   };
 
   const register = async (registrationData: RegisterInput): Promise<void> => {

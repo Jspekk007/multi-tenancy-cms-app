@@ -10,6 +10,7 @@ export const registerInputSchema = z.object({
 export const loginInputSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string(),
+  tenantId: z.string().min(1, 'Tenant is required').optional(),
 });
 
 export const resetPasswordLinkSchema = z.object({
@@ -42,5 +43,18 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
+export interface AuthTenantOption {
+  id: string;
+  name: string;
+  domain: string;
+  role: string;
+}
+
+export interface TenantSelectionRequiredResponse {
+  requiresTenantSelection: true;
+  tenants: AuthTenantOption[];
+}
+
 export type RegisterInput = z.infer<typeof registerInputSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
+export type LoginResponse = AuthResponse | TenantSelectionRequiredResponse;

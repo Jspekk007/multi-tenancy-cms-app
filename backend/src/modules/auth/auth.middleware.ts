@@ -40,13 +40,35 @@ export const authMiddleware = async (
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 
-    req.user = payload;
-    req.tenantId = payload.tenantId;
-
     const session = await prismaClient.session.findUnique({ where: { id: payload.sessionId } });
     if (!session || session.isRevoked || session.expiresAt <= new Date()) {
       return res.status(401).json({ message: 'Session is not active' });
     }
+
+    if (session.userId !== payload.userId) {
+      return res.status(401).json({ message: 'Session user mismatch' });
+    }
+
+    if (session.tenantId !== payload.tenantId) {
+      return res.status(401).json({ message: 'Session tenant mismatch' });
+    }
+
+    const tenantUser = await prismaClient.tenantUser.findUnique({
+      where: {
+        tenantId_userId: {
+          tenantId: payload.tenantId,
+          userId: payload.userId,
+        },
+      },
+      include: { user: true },
+    });
+
+    if (!tenantUser || !tenantUser.user.isActive) {
+      return res.status(401).json({ message: 'User is not part of the tenant' });
+    }
+
+    req.user = payload;
+    req.tenantId = payload.tenantId;
 
     await sessionService.updateSessionLastUsed(session.id);
     next();
