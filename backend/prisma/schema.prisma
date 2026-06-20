@@ -57,6 +57,7 @@ model TenantUser {
 
   // Ensures a user can only have one role per tenant
   @@unique([tenantId, userId])
+  @@index([userId])
 }
 
 model Session {

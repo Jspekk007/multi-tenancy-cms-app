@@ -1,12 +1,12 @@
 import { protectedProcedure } from '@backend/trpc';
 
-export const tenantsProcedure = protectedProcedure.query(async ({ ctx }) => {
+export const contextProcedure = protectedProcedure.query(async ({ ctx }) => {
   if (ctx.authContext) {
-    return ctx.authContext.tenants;
+    return ctx.authContext;
   }
 
   const { AuthService } = await import('../auth.service');
   const authService = new AuthService();
 
-  return await authService.getUserTenants(ctx.user.userId);
+  return await authService.getAuthContext(ctx.user.userId, ctx.tenantId);
 });

@@ -14,6 +14,11 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
+export interface SwitchTenantResponse {
+  user: AuthUser;
+  token: string;
+}
+
 export interface AuthTenantOption {
   id: string;
   name: string;
@@ -23,6 +28,11 @@ export interface AuthTenantOption {
 
 export interface TenantSelectionRequiredResponse {
   requiresTenantSelection: true;
+  tenants: AuthTenantOption[];
+}
+
+export interface AuthContextResponse {
+  user: AuthUser;
   tenants: AuthTenantOption[];
 }
 

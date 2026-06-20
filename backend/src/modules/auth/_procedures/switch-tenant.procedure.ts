@@ -7,6 +7,8 @@ export const switchTenantProcedure = protectedProcedure
   .mutation(async ({ ctx, input }) => {
     const { AuthService } = await import('../auth.service');
     const authService = new AuthService();
+    const authContext =
+      ctx.authContext ?? (await authService.getAuthContext(ctx.user.userId, ctx.tenantId));
 
-    return await authService.switchTenant(ctx.user.userId, input.tenantId, ctx.user.sessionId);
+    return await authService.switchTenant(authContext, input.tenantId, ctx.user.sessionId);
   });

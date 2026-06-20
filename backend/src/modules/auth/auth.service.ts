@@ -6,12 +6,14 @@ import { Prisma, PrismaClient, User } from '@prisma/client';
 import crypto from 'crypto';
 
 import {
+  AuthContextResponse,
   AuthResponse,
   AuthTenantOption,
   AuthUser,
   LoginInput,
   LoginResponse,
   RegisterInput,
+  SwitchTenantResponse,
 } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
@@ -247,9 +249,6 @@ export class AuthService {
       throw ErrorFactory.unauthorized('Invalid refresh token.');
     }
 
-    // Update last used timestamp
-    await this.sessionService.updateSessionLastUsed(session.id);
-
     // Get user and tenant information
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
@@ -334,95 +333,110 @@ export class AuthService {
   }
 
   async getUserTenants(userId: string): Promise<AuthTenantOption[]> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw ErrorFactory.notFound('User not found.');
-    }
-
-    if (!user.isActive) {
-      throw ErrorFactory.unauthorized('User account is inactive');
-    }
-
     const tenantUsers = await this.prisma.tenantUser.findMany({
-      where: { userId },
-      include: { tenant: true },
+      where: {
+        userId,
+        user: {
+          isActive: true,
+        },
+      },
+      include: {
+        tenant: true,
+      },
     });
+
+    if (!tenantUsers.length) {
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
+    }
 
     return tenantUsers
       .sort((a, b) => a.tenant.name.localeCompare(b.tenant.name))
       .map((tenantUser) => this.mapTenantOption(tenantUser));
   }
 
-  async switchTenant(userId: string, tenantId: string, currentSessionId: string): Promise<AuthResponse> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
+  async switchTenant(
+    authContext: AuthContextResponse,
+    tenantId: string,
+    currentSessionId: string,
+  ): Promise<SwitchTenantResponse> {
+    const selectedTenant = authContext.tenants.find((tenant) => tenant.id === tenantId);
 
-    if (!user) {
-      throw ErrorFactory.notFound('User not found.');
-    }
-
-    if (!user.isActive) {
-      throw ErrorFactory.unauthorized('User account is inactive');
-    }
-
-    const tenantUser = await this.prisma.tenantUser.findUnique({
-      where: {
-        tenantId_userId: {
-          tenantId,
-          userId,
-        },
-      },
-      include: { tenant: true },
-    });
-
-    if (!tenantUser) {
+    if (!selectedTenant) {
       throw ErrorFactory.forbidden('User is not associated with the selected tenant');
     }
 
-    customLogger.info(`User ${user.email} switched to tenant ${tenantUser.tenant.domain}`);
+    const updateResult = await this.prisma.session.updateMany({
+      where: {
+        id: currentSessionId,
+        userId: authContext.user.id,
+        isRevoked: false,
+        expiresAt: { gt: new Date() },
+      },
+      data: {
+        tenantId: selectedTenant.id,
+      },
+    });
 
-    return await this.createAuthResponse(user, tenantUser, currentSessionId);
+    if (updateResult.count !== 1) {
+      throw ErrorFactory.unauthorized('Session is not active');
+    }
+
+    const user: AuthUser = {
+      ...authContext.user,
+      tenantId: selectedTenant.id,
+      domain: selectedTenant.domain,
+      role: selectedTenant.role,
+    };
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: user.tenantId,
+      role: user.role,
+      sessionId: currentSessionId,
+    });
+
+    customLogger.info(`User ${user.email} switched to tenant ${selectedTenant.domain}`);
+
+    return { user, token };
   }
 
   async getCurrentUser(userId: string, tenantId: string): Promise<AuthUser> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
+    const authContext = await this.getAuthContext(userId, tenantId);
+    return authContext.user;
+  }
 
-    if (!user) {
-      throw ErrorFactory.notFound('User not found.');
-    }
-
-    if (!user.isActive) {
-      throw ErrorFactory.unauthorized('User account is inactive');
-    }
-
-    const tenantUser = await this.prisma.tenantUser.findUnique({
+  async getAuthContext(userId: string, tenantId: string): Promise<AuthContextResponse> {
+    const tenantUsers = await this.prisma.tenantUser.findMany({
       where: {
-        tenantId_userId: {
-          tenantId,
-          userId,
+        userId,
+        user: {
+          isActive: true,
         },
       },
-      include: { tenant: true },
+      include: {
+        tenant: true,
+        user: true,
+      },
     });
 
-    if (!tenantUser) {
+    if (!tenantUsers.length) {
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
+    }
+
+    const activeTenantUser = tenantUsers.find((tenantUser) => tenantUser.tenantId === tenantId);
+
+    if (!activeTenantUser) {
       throw ErrorFactory.badRequest('User is not associated with the specified tenant');
     }
 
+    const sortedTenantUsers = tenantUsers.sort((a, b) =>
+      a.tenant.name.localeCompare(b.tenant.name),
+    );
+
     return {
-      id: user.id,
-      email: user.email,
-      tenantId: tenantUser.tenantId,
-      domain: tenantUser.tenant.domain,
-      role: tenantUser.roleId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      user: this.mapAuthUser(activeTenantUser.user, activeTenantUser),
+      tenants: sortedTenantUsers.map((tenantUser) => this.mapTenantOption(tenantUser)),
     };
   }
 }

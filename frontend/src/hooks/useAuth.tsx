@@ -7,11 +7,11 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 import {
   AuthContextType,
   AuthResponse,
-  AuthTenantOption,
   isTenantSelectionRequired,
   LoginInput,
   LoginResponse,
   RegisterInput,
+  SwitchTenantResponse,
 } from '@/types/auth';
 
 import { trpc } from '../trpc/trpc';
@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   const [token, setToken] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
+  const hasToken = Boolean(token || Cookies.get('token'));
 
   const persistAuthSession = ({
     user: userData,
@@ -32,27 +33,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     Cookies.set('token', authToken, { expires: 1 });
     Cookies.set('refreshToken', refreshToken, { expires: 30 });
     setToken(authToken);
-    utils.auth.me.setData(undefined, userData);
+
+    utils.auth.context.setData(undefined, (currentContext) => ({
+      user: userData,
+      tenants: currentContext?.tenants ?? [],
+    }));
+  };
+
+  const persistTenantSwitchSession = ({
+    user: userData,
+    token: authToken,
+  }: SwitchTenantResponse): void => {
+    Cookies.set('token', authToken, { expires: 1 });
+    setToken(authToken);
+
+    utils.auth.context.setData(undefined, (currentContext) => ({
+      user: userData,
+      tenants: currentContext?.tenants ?? tenants,
+    }));
   };
 
   const {
-    data: user,
-    isLoading: isLoadingUser,
-    error: userError,
-  } = trpc.auth.me.useQuery(undefined, {
-    enabled: !!Cookies.get('token'),
+    data: authContext,
+    isLoading: isLoadingAuthContext,
+    error: authContextError,
+  } = trpc.auth.context.useQuery(undefined, {
+    enabled: hasToken,
     retry: false,
     refetchOnWindowFocus: false,
   });
 
-  const { data: tenants = [], isLoading: isLoadingTenants } = trpc.auth.tenants.useQuery(
-    undefined,
-    {
-      enabled: !!Cookies.get('token'),
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-  );
+  const user = authContext?.user ?? null;
+  const tenants = authContext?.tenants ?? [];
 
   const activeTenant =
     tenants.find((tenant) => tenant.id === user?.tenantId) ??
@@ -73,12 +85,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       }
 
       persistAuthSession(data);
+      void utils.auth.context.invalidate();
     },
   });
 
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: (data) => {
       persistAuthSession(data);
+      void utils.auth.context.invalidate();
     },
   });
 
@@ -96,6 +110,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   const refreshMutation = trpc.auth.refresh.useMutation({
     onSuccess: (data) => {
       persistAuthSession(data);
+      void utils.auth.context.invalidate();
     },
     onError: () => {
       handleLogout();
@@ -104,8 +119,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
 
   const switchTenantMutation = trpc.auth.switchTenant.useMutation({
     onSuccess: (data) => {
-      persistAuthSession(data);
-      void utils.invalidate();
+      persistTenantSwitchSession(data);
     },
   });
 
@@ -113,7 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     Cookies.remove('token');
     Cookies.remove('refreshToken');
     setToken(null);
-    utils.auth.me.reset();
+    utils.auth.context.reset();
     router.push('/login');
   };
 
@@ -164,7 +178,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
 
   // Handle auth errors - try refresh token
   useEffect(() => {
-    if (userError) {
+    if (authContextError) {
       const refreshTokenValue = Cookies.get('refreshToken');
       if (refreshTokenValue && !refreshMutation.isPending) {
         refreshMutation.mutate({ refreshToken: refreshTokenValue });
@@ -172,21 +186,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
         handleLogout();
       }
     }
-  }, [userError]);
+  }, [authContextError]);
 
   const isLoading =
-    isLoadingUser ||
+    isLoadingAuthContext ||
     loginMutation.isPending ||
     registerMutation.isPending ||
     switchTenantMutation.isPending;
 
   const value: AuthContextType = {
-    user: (user as AuthContextType['user']) || null,
+    user,
     token,
-    tenants: tenants as AuthTenantOption[],
-    activeTenant: activeTenant as AuthTenantOption | null,
+    tenants,
+    activeTenant,
     isLoading,
-    isLoadingTenants,
+    isLoadingTenants: isLoadingAuthContext,
     isSwitchingTenant: switchTenantMutation.isPending,
     login,
     register,

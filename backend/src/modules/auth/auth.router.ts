@@ -1,3 +1,4 @@
+import { contextProcedure } from '@backend/modules/auth/_procedures/context.procedure';
 import { loginProcedure } from '@backend/modules/auth/_procedures/login.procedure';
 import { logoutProcedure } from '@backend/modules/auth/_procedures/logout.procedure';
 import { meProcedure } from '@backend/modules/auth/_procedures/me.procedure';
@@ -16,5 +17,6 @@ export const authRouter = t.router({
   passwordReset: forgotPasswordProcedure,
   me: meProcedure,
   tenants: tenantsProcedure,
+  context: contextProcedure,
   switchTenant: switchTenantProcedure,
 });
