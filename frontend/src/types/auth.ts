@@ -44,11 +44,16 @@ export interface RegisterInput {
 export interface AuthContextType {
   user: AuthUser | null;
   token: string | null;
+  tenants: AuthTenantOption[];
+  activeTenant: AuthTenantOption | null;
   isLoading: boolean;
+  isLoadingTenants: boolean;
+  isSwitchingTenant: boolean;
   login: (credentials: LoginInput) => Promise<LoginResponse>;
   register: (data: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
+  switchTenant: (tenantId: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<{ message: string }>;
 }
 

@@ -4,6 +4,8 @@ import { meProcedure } from '@backend/modules/auth/_procedures/me.procedure';
 import { refreshProcedure } from '@backend/modules/auth/_procedures/refresh.procedure';
 import { registerProcedure } from '@backend/modules/auth/_procedures/register.procedure';
 import { forgotPasswordProcedure } from '@backend/modules/auth/_procedures/reset.procedure';
+import { switchTenantProcedure } from '@backend/modules/auth/_procedures/switch-tenant.procedure';
+import { tenantsProcedure } from '@backend/modules/auth/_procedures/tenants.procedure';
 import { t } from '@backend/trpc';
 
 export const authRouter = t.router({
@@ -13,4 +15,6 @@ export const authRouter = t.router({
   logout: logoutProcedure,
   passwordReset: forgotPasswordProcedure,
   me: meProcedure,
+  tenants: tenantsProcedure,
+  switchTenant: switchTenantProcedure,
 });

@@ -13,6 +13,10 @@ export const loginInputSchema = z.object({
   tenantId: z.string().min(1, 'Tenant is required').optional(),
 });
 
+export const switchTenantInputSchema = z.object({
+  tenantId: z.string().min(1, 'Tenant is required'),
+});
+
 export const resetPasswordLinkSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
@@ -57,4 +61,5 @@ export interface TenantSelectionRequiredResponse {
 
 export type RegisterInput = z.infer<typeof registerInputSchema>;
 export type LoginInput = z.infer<typeof loginInputSchema>;
+export type SwitchTenantInput = z.infer<typeof switchTenantInputSchema>;
 export type LoginResponse = AuthResponse | TenantSelectionRequiredResponse;

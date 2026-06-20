@@ -7,6 +7,7 @@ import { createContext, ReactNode, useContext, useEffect, useState } from 'react
 import {
   AuthContextType,
   AuthResponse,
+  AuthTenantOption,
   isTenantSelectionRequired,
   LoginInput,
   LoginResponse,
@@ -23,7 +24,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
 
   const utils = trpc.useUtils();
 
-  const persistAuthSession = ({ user: userData, token: authToken, refreshToken }: AuthResponse): void => {
+  const persistAuthSession = ({
+    user: userData,
+    token: authToken,
+    refreshToken,
+  }: AuthResponse): void => {
     Cookies.set('token', authToken, { expires: 1 });
     Cookies.set('refreshToken', refreshToken, { expires: 30 });
     setToken(authToken);
@@ -39,6 +44,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     retry: false,
     refetchOnWindowFocus: false,
   });
+
+  const { data: tenants = [], isLoading: isLoadingTenants } = trpc.auth.tenants.useQuery(
+    undefined,
+    {
+      enabled: !!Cookies.get('token'),
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  const activeTenant =
+    tenants.find((tenant) => tenant.id === user?.tenantId) ??
+    (user
+      ? {
+          id: user.tenantId,
+          name: user.domain,
+          domain: user.domain,
+          role: user.role,
+        }
+      : null);
 
   // Mutations
   const loginMutation = trpc.auth.login.useMutation({
@@ -74,6 +99,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     },
     onError: () => {
       handleLogout();
+    },
+  });
+
+  const switchTenantMutation = trpc.auth.switchTenant.useMutation({
+    onSuccess: (data) => {
+      persistAuthSession(data);
+      void utils.invalidate();
     },
   });
 
@@ -114,6 +146,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     await refreshMutation.mutateAsync({ refreshToken: refreshTokenValue });
   };
 
+  const switchTenant = async (tenantId: string): Promise<void> => {
+    if (tenantId === user?.tenantId) {
+      return;
+    }
+
+    await switchTenantMutation.mutateAsync({ tenantId });
+  };
+
   // Initialize token from cookies on mount
   useEffect(() => {
     const storedToken = Cookies.get('token');
@@ -134,16 +174,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     }
   }, [userError]);
 
-  const isLoading = isLoadingUser || loginMutation.isPending || registerMutation.isPending;
+  const isLoading =
+    isLoadingUser ||
+    loginMutation.isPending ||
+    registerMutation.isPending ||
+    switchTenantMutation.isPending;
 
   const value: AuthContextType = {
     user: (user as AuthContextType['user']) || null,
     token,
+    tenants: tenants as AuthTenantOption[],
+    activeTenant: activeTenant as AuthTenantOption | null,
     isLoading,
+    isLoadingTenants,
+    isSwitchingTenant: switchTenantMutation.isPending,
     login,
     register,
     logout,
     refreshToken,
+    switchTenant,
     requestPasswordReset,
   };
 

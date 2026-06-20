@@ -1,6 +1,6 @@
 import './Dropdown.scss';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 
@@ -22,6 +22,10 @@ export const Dropdown: React.FC<DropdownProps> = ({
   const ref = useRef<HTMLDivElement>(null);
 
   useClickOutside(ref, () => setIsOpen(false));
+
+  useEffect(() => {
+    setCurrent(selected);
+  }, [selected]);
 
   const handleSelect = (option: DropdownOption): void => {
     setCurrent(option);

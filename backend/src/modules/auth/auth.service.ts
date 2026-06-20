@@ -52,15 +52,33 @@ export class AuthService {
     };
   }
 
-  private async createAuthResponse(user: User, tenantUser: TenantMembership): Promise<AuthResponse> {
+  private async createAuthResponse(
+    user: User,
+    tenantUser: TenantMembership,
+    sessionIdToRevoke?: string,
+  ): Promise<AuthResponse> {
     const refreshToken = await this.sessionService.generateRefreshToken();
+    const refreshTokenHash = await this.sessionService.hashRefreshToken(refreshToken);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
 
-    const createdSession = await this.sessionService.createSession({
-      userId: user.id,
-      tenantId: tenantUser.tenantId,
-      refreshToken,
-      expiresAt,
+    const createdSession = await this.prisma.$transaction(async (tx) => {
+      const session = await tx.session.create({
+        data: {
+          userId: user.id,
+          tenantId: tenantUser.tenantId,
+          refreshTokenHash,
+          expiresAt,
+        },
+      });
+
+      if (sessionIdToRevoke) {
+        await tx.session.update({
+          where: { id: sessionIdToRevoke },
+          data: { isRevoked: true },
+        });
+      }
+
+      return session;
     });
 
     const token = generateToken({
@@ -260,8 +278,7 @@ export class AuthService {
       throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
-    await this.sessionService.revokeSession(session.id);
-    const authResponse = await this.createAuthResponse(user, tenantUser);
+    const authResponse = await this.createAuthResponse(user, tenantUser, session.id);
 
     customLogger.info(`Token refreshed for user ${user.email}`);
 
@@ -314,6 +331,61 @@ export class AuthService {
     }
 
     customLogger.info(`User logged out, session ${session.id} revoked`);
+  }
+
+  async getUserTenants(userId: string): Promise<AuthTenantOption[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw ErrorFactory.notFound('User not found.');
+    }
+
+    if (!user.isActive) {
+      throw ErrorFactory.unauthorized('User account is inactive');
+    }
+
+    const tenantUsers = await this.prisma.tenantUser.findMany({
+      where: { userId },
+      include: { tenant: true },
+    });
+
+    return tenantUsers
+      .sort((a, b) => a.tenant.name.localeCompare(b.tenant.name))
+      .map((tenantUser) => this.mapTenantOption(tenantUser));
+  }
+
+  async switchTenant(userId: string, tenantId: string, currentSessionId: string): Promise<AuthResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw ErrorFactory.notFound('User not found.');
+    }
+
+    if (!user.isActive) {
+      throw ErrorFactory.unauthorized('User account is inactive');
+    }
+
+    const tenantUser = await this.prisma.tenantUser.findUnique({
+      where: {
+        tenantId_userId: {
+          tenantId,
+          userId,
+        },
+      },
+      include: { tenant: true },
+    });
+
+    if (!tenantUser) {
+      throw ErrorFactory.forbidden('User is not associated with the selected tenant');
+    }
+
+    customLogger.info(`User ${user.email} switched to tenant ${tenantUser.tenant.domain}`);
+
+    return await this.createAuthResponse(user, tenantUser, currentSessionId);
   }
 
   async getCurrentUser(userId: string, tenantId: string): Promise<AuthUser> {
