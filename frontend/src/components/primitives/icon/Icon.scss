@@ -1,0 +1,48 @@
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: middle;
+  color: currentColor;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+
+  &.default {
+    color: var(--color-text-default);
+  }
+
+  &.primary {
+    color: var(--color-primary);
+  }
+  &.secondary {
+    color: var(--color-secondary);
+  }
+  &.success {
+    color: var(--color-success);
+  }
+  &.warning {
+    color: var(--color-warning);
+  }
+  &.danger {
+    color: var(--color-danger);
+  }
+
+  &.white {
+    color: var(--color-white);
+  }
+
+  &:hover,
+  &:focus {
+    opacity: 0.8;
+    outline: none;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}

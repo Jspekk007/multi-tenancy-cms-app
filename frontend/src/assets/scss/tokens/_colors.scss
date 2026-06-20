@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use './typography' as *;
 
 // _colors.scss
@@ -10,6 +11,7 @@ $color-primary-hover: #2563eb;
 $color-primary-active: #1d4ed8;
 $color-primary-disabled: #93c5fd;
 $color-primary-text: #ffffff;
+$color-on-primary: #ffffff;
 
 // --------------------------
 // Secondary Palette
@@ -19,6 +21,7 @@ $color-secondary-hover: #4b5563;
 $color-secondary-active: #374151;
 $color-secondary-disabled: #cbd5e1;
 $color-secondary-text: #ffffff;
+$color-on-secondary: #ffffff;
 
 // --------------------------
 // Accent Palette
@@ -28,6 +31,7 @@ $color-accent-hover: #7c3aed;
 $color-accent-active: #6d28d9;
 $color-accent-disabled: #d8b4fe;
 $color-accent-text: #ffffff;
+$color-on-accent: #ffffff;
 
 // --------------------------
 // Semantic Colors
@@ -35,10 +39,18 @@ $color-accent-text: #ffffff;
 $color-success: #22c55e;
 $color-success-hover: #16a34a;
 $color-success-active: #15803d;
+$color-success-bg: color.mix($color-success, #ffffff, 12%);
+$color-success-border: color.mix($color-success, #ffffff, 36%);
+$color-success-text: $color-success-active;
+$color-on-success: #ffffff;
 
 $color-warning: #fbbf24;
 $color-warning-hover: #f59e0b;
 $color-warning-active: #d97706;
+$color-warning-bg: color.mix($color-warning, #ffffff, 18%);
+$color-warning-border: color.mix($color-warning, #ffffff, 42%);
+$color-warning-text: #92400e;
+$color-on-warning: #1f2937;
 
 $color-danger: #ef4444;
 $color-danger-active: #b91c1c;
@@ -46,10 +58,15 @@ $color-danger-bg: #fee2e2;
 $color-danger-border: #fca5a5;
 $color-danger-text: #b91c1c;
 $color-danger-hover: #f87171;
+$color-on-danger: #ffffff;
 
 $color-info: #0ea5e9;
 $color-info-hover: #0284c7;
 $color-info-active: #0369a1;
+$color-info-bg: color.mix($color-info, #ffffff, 12%);
+$color-info-border: color.mix($color-info, #ffffff, 36%);
+$color-info-text: $color-info-active;
+$color-on-info: #ffffff;
 
 // --------------------------
 // Grayscale / Backgrounds
@@ -77,6 +94,51 @@ $color-bg-hover: $color-gray-200;
 $color-bg-active: $color-gray-300;
 
 // --------------------------
+// Brand-Tinted Surfaces
+// --------------------------
+$color-brand-surface-subtle: color.mix($color-primary, $color-white, 8%);
+$color-brand-surface-hover: color.mix($color-primary, $color-white, 14%);
+$color-brand-surface-active: color.mix($color-primary, $color-white, 22%);
+$color-brand-surface-strong: color.mix($color-primary, $color-white, 32%);
+$color-brand-surface-border: color.mix($color-primary, $color-white, 18%);
+$color-brand-text: color.mix($color-primary-active, $color-gray-900, 24%);
+$color-brand-text-muted: color.mix($color-primary-active, $color-gray-600, 22%);
+$color-brand-icon: color.mix($color-primary, $color-gray-700, 34%);
+$color-brand-shadow: color.change($color-primary, $alpha: 0.08);
+
+// --------------------------
+// Surface Colors
+// --------------------------
+$color-surface-page: #f8fafc;
+$color-surface-panel: $color-white;
+$color-surface-raised: $color-white;
+$color-surface-subtle: $color-gray-100;
+$color-surface-disabled: $color-gray-200;
+$color-surface-border: #e2e8f0;
+$color-surface-border-strong: #cbd5e1;
+
+// --------------------------
+// Border / Focus Colors
+// --------------------------
+$color-border-default: $color-surface-border;
+$color-border-muted: $color-gray-200;
+$color-border-strong: $color-surface-border-strong;
+$color-focus-border: $color-primary;
+$color-focus-ring: color.change($color-primary, $alpha: 0.2);
+
+// --------------------------
+// Navigation / Sidebar
+// --------------------------
+$color-sidebar-background: $color-brand-surface-subtle;
+$color-sidebar-background-hover: $color-brand-surface-hover;
+$color-sidebar-background-active: $color-brand-surface-active;
+$color-sidebar-border: $color-brand-surface-border;
+$color-sidebar-text: $color-brand-text;
+$color-sidebar-text-muted: $color-brand-text-muted;
+$color-sidebar-icon: $color-brand-icon;
+$color-sidebar-accent: $color-primary-hover;
+
+// --------------------------
 // Text Colors
 // --------------------------
 $color-text-default: $color-gray-900;
@@ -92,6 +154,7 @@ $color-text-link-hover: $color-primary-hover;
   --color-primary-active: #{$color-primary-active};
   --color-primary-disabled: #{$color-primary-disabled};
   --color-primary-text: #{$color-primary-text};
+  --color-on-primary: #{$color-on-primary};
 
   /* Secondary */
   --color-secondary: #{$color-secondary};
@@ -99,6 +162,7 @@ $color-text-link-hover: $color-primary-hover;
   --color-secondary-active: #{$color-secondary-active};
   --color-secondary-disabled: #{$color-secondary-disabled};
   --color-secondary-text: #{$color-secondary-text};
+  --color-on-secondary: #{$color-on-secondary};
 
   /* Accent */
   --color-accent: #{$color-accent};
@@ -106,15 +170,24 @@ $color-text-link-hover: $color-primary-hover;
   --color-accent-active: #{$color-accent-active};
   --color-accent-disabled: #{$color-accent-disabled};
   --color-accent-text: #{$color-accent-text};
+  --color-on-accent: #{$color-on-accent};
 
   /* Semantic */
   --color-success: #{$color-success};
   --color-success-hover: #{$color-success-hover};
   --color-success-active: #{$color-success-active};
+  --color-success-bg: #{$color-success-bg};
+  --color-success-border: #{$color-success-border};
+  --color-success-text: #{$color-success-text};
+  --color-on-success: #{$color-on-success};
 
   --color-warning: #{$color-warning};
   --color-warning-hover: #{$color-warning-hover};
   --color-warning-active: #{$color-warning-active};
+  --color-warning-bg: #{$color-warning-bg};
+  --color-warning-border: #{$color-warning-border};
+  --color-warning-text: #{$color-warning-text};
+  --color-on-warning: #{$color-on-warning};
 
   --color-danger: #{$color-danger};
   --color-danger-hover: #{$color-danger-hover};
@@ -122,10 +195,15 @@ $color-text-link-hover: $color-primary-hover;
   --color-danger-bg: #{$color-danger-bg};
   --color-danger-border: #{$color-danger-border};
   --color-danger-text: #{$color-danger-text};
+  --color-on-danger: #{$color-on-danger};
 
   --color-info: #{$color-info};
   --color-info-hover: #{$color-info-hover};
   --color-info-active: #{$color-info-active};
+  --color-info-bg: #{$color-info-bg};
+  --color-info-border: #{$color-info-border};
+  --color-info-text: #{$color-info-text};
+  --color-on-info: #{$color-on-info};
 
   /* Grayscale */
   --color-gray-100: #{$color-gray-100};
@@ -143,6 +221,43 @@ $color-text-link-hover: $color-primary-hover;
   --color-bg-muted: #{$color-bg-muted};
   --color-bg-hover: #{$color-bg-hover};
   --color-bg-active: #{$color-bg-active};
+
+  /* Brand surfaces */
+  --color-brand-surface-subtle: #{$color-brand-surface-subtle};
+  --color-brand-surface-hover: #{$color-brand-surface-hover};
+  --color-brand-surface-active: #{$color-brand-surface-active};
+  --color-brand-surface-strong: #{$color-brand-surface-strong};
+  --color-brand-surface-border: #{$color-brand-surface-border};
+  --color-brand-text: #{$color-brand-text};
+  --color-brand-text-muted: #{$color-brand-text-muted};
+  --color-brand-icon: #{$color-brand-icon};
+  --color-brand-shadow: #{$color-brand-shadow};
+
+  /* Surfaces */
+  --color-surface-page: #{$color-surface-page};
+  --color-surface-panel: #{$color-surface-panel};
+  --color-surface-raised: #{$color-surface-raised};
+  --color-surface-subtle: #{$color-surface-subtle};
+  --color-surface-disabled: #{$color-surface-disabled};
+  --color-surface-border: #{$color-surface-border};
+  --color-surface-border-strong: #{$color-surface-border-strong};
+
+  /* Borders / focus */
+  --color-border-default: #{$color-border-default};
+  --color-border-muted: #{$color-border-muted};
+  --color-border-strong: #{$color-border-strong};
+  --color-focus-border: #{$color-focus-border};
+  --color-focus-ring: #{$color-focus-ring};
+
+  /* Navigation */
+  --color-sidebar-background: #{$color-sidebar-background};
+  --color-sidebar-background-hover: #{$color-sidebar-background-hover};
+  --color-sidebar-background-active: #{$color-sidebar-background-active};
+  --color-sidebar-border: #{$color-sidebar-border};
+  --color-sidebar-text: #{$color-sidebar-text};
+  --color-sidebar-text-muted: #{$color-sidebar-text-muted};
+  --color-sidebar-icon: #{$color-sidebar-icon};
+  --color-sidebar-accent: #{$color-sidebar-accent};
 
   /* Text */
   --color-text-default: #{$color-text-default};
