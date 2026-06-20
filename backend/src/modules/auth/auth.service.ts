@@ -2,7 +2,7 @@ import { customLogger } from '@backend/lib/logger';
 import { prismaClient } from '@backend/lib/prisma';
 import { ErrorFactory } from '@backend/modules/error/ErrorFactory';
 import { addMailToQueue } from '@backend/queues/emailQueue';
-import { Prisma, PrismaClient, User } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 
 import {
@@ -20,6 +20,12 @@ import { SessionService } from './session/session.service';
 import { RefreshTokenResponse } from './session/session.types';
 
 type TenantMembership = Prisma.TenantUserGetPayload<{ include: { tenant: true } }>;
+type AuthUserRecord = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export class AuthService {
   private prisma: PrismaClient;
@@ -33,7 +39,7 @@ export class AuthService {
   SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
   JWT_SECRET = process.env?.JWT_SECRET;
 
-  private mapAuthUser(user: User, tenantUser: TenantMembership): AuthUser {
+  private mapAuthUser(user: AuthUserRecord, tenantUser: TenantMembership): AuthUser {
     return {
       id: user.id,
       email: user.email,
@@ -55,7 +61,7 @@ export class AuthService {
   }
 
   private async createAuthResponse(
-    user: User,
+    user: AuthUserRecord,
     tenantUser: TenantMembership,
     sessionIdToRevoke?: string,
   ): Promise<AuthResponse> {
