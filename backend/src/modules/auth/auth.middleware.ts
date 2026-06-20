@@ -54,7 +54,7 @@ export const authMiddleware = async (
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 
-    const authRows = await prismaClient.$queryRaw<AuthContextRow[]>`
+    const authRows: AuthContextRow[] = await prismaClient.$queryRaw<AuthContextRow[]>`
       SELECT
         s.id AS "sessionId",
         s."userId" AS "sessionUserId",

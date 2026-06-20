@@ -10,7 +10,7 @@
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "format": "prettier --write .",
     "backend:dev": "yarn workspace backend dev",
-    "backend:build": "yarn workspace backend tsc -p tsconfig.json",
+    "backend:build": "yarn workspace backend build",
     "backend:lint": "yarn workspace backend lint",
     "backend:lint:fix": "yarn workspace backend lint:fix",
     "backend:typecheck": "yarn backend:build",

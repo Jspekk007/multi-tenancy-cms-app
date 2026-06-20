@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 import React, { PropsWithChildren, useState } from 'react';
 import superjson from 'superjson';
 
-import { AppRouter } from '../../../backend/src/routers/app.routers';
+import type { AppRouter } from '../../../backend/src/routers/app.routers';
 import { trpc } from './trpc';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';

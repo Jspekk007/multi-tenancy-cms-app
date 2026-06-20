@@ -19,12 +19,22 @@ import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
 import { RefreshTokenResponse } from './session/session.types';
 
-type TenantMembership = Prisma.TenantUserGetPayload<{ include: { tenant: true } }>;
+type TenantMembership = {
+  tenantId: string;
+  roleId: string;
+  tenant: {
+    name: string;
+    domain: string;
+  };
+};
 type AuthUserRecord = {
   id: string;
   email: string;
   createdAt: Date;
   updatedAt: Date;
+};
+type TenantMembershipWithUser = TenantMembership & {
+  user: AuthUserRecord;
 };
 
 export class AuthService {
@@ -69,7 +79,7 @@ export class AuthService {
     const refreshTokenHash = await this.sessionService.hashRefreshToken(refreshToken);
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
 
-    const createdSession = await this.prisma.$transaction(async (tx) => {
+    const createdSession = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const session = await tx.session.create({
         data: {
           userId: user.id,
@@ -204,7 +214,7 @@ export class AuthService {
       throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
-    const tenantUsers = await this.prisma.tenantUser.findMany({
+    const tenantUsers: TenantMembership[] = await this.prisma.tenantUser.findMany({
       where: { userId: user.id },
       include: { tenant: true },
     });
@@ -269,7 +279,7 @@ export class AuthService {
       throw ErrorFactory.unauthorized('User account is inactive');
     }
 
-    const tenantUser = await this.prisma.tenantUser.findUnique({
+    const tenantUser: TenantMembership | null = await this.prisma.tenantUser.findUnique({
       where: {
         tenantId_userId: {
           tenantId: session.tenantId,
@@ -339,7 +349,7 @@ export class AuthService {
   }
 
   async getUserTenants(userId: string): Promise<AuthTenantOption[]> {
-    const tenantUsers = await this.prisma.tenantUser.findMany({
+    const tenantUsers: TenantMembership[] = await this.prisma.tenantUser.findMany({
       where: {
         userId,
         user: {
@@ -413,7 +423,7 @@ export class AuthService {
   }
 
   async getAuthContext(userId: string, tenantId: string): Promise<AuthContextResponse> {
-    const tenantUsers = await this.prisma.tenantUser.findMany({
+    const tenantUsers: TenantMembershipWithUser[] = await this.prisma.tenantUser.findMany({
       where: {
         userId,
         user: {
