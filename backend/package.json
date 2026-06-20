@@ -26,7 +26,7 @@
     "express": "^5.1.0",
     "ioredis": "^5.9.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemailer": "^7.0.11",
+    "nodemailer": "^9.0.1",
     "pino": "^9.11.0",
     "pino-http": "^10.5.0",
     "prisma": "^6.16.2",
