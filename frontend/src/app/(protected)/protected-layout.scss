@@ -1,26 +1,42 @@
 .protected-layout {
+  grid-template-areas:
+    'sidebar header'
+    'sidebar content';
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100dvh;
   min-height: 100vh;
-  background: #f8fafc;
+  overflow: hidden;
+  background: var(--color-surface-page);
+}
+
+.protected-layout > .sidebar {
+  grid-area: sidebar;
+}
+
+.protected-layout > .app-header {
+  grid-area: header;
 }
 
 .protected-layout__content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem;
+  grid-area: content;
+  min-width: 0;
+  overflow: auto;
+  padding: 1.5rem;
 }
 
 .protected-layout__loading {
-  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: 100%;
 }
 
 .protected-layout__spinner {
   width: 2.5rem;
   height: 2.5rem;
-  border: 3px solid #cbd5e1;
-  border-top-color: #2563eb;
+  border: 3px solid var(--color-border-strong);
+  border-top-color: var(--color-primary-hover);
   border-radius: 999px;
   animation: protected-layout-spin 0.7s linear infinite;
 }
