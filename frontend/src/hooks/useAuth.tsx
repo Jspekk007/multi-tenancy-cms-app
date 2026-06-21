@@ -2,16 +2,16 @@
 
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
 import {
-  AuthContextType,
-  AuthResponse,
+  type AuthContextType,
+  type AuthResponse,
   isTenantSelectionRequired,
-  LoginInput,
-  LoginResponse,
-  RegisterInput,
-  SwitchTenantResponse,
+  type LoginInput,
+  type LoginResponse,
+  type RegisterInput,
+  type SwitchTenantResponse,
 } from '@/types/auth';
 
 import { trpc } from '../trpc/trpc';
@@ -77,6 +77,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
         }
       : null);
 
+  const handleLogout = useCallback((): void => {
+    Cookies.remove('token');
+    Cookies.remove('refreshToken');
+    setToken(null);
+    utils.auth.context.reset();
+    router.push('/login');
+  }, [router, utils.auth.context]);
+
   // Mutations
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
@@ -122,14 +130,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       persistTenantSwitchSession(data);
     },
   });
-
-  const handleLogout = (): void => {
-    Cookies.remove('token');
-    Cookies.remove('refreshToken');
-    setToken(null);
-    utils.auth.context.reset();
-    router.push('/login');
-  };
 
   const login = async (credentials: LoginInput): Promise<LoginResponse> => {
     return await loginMutation.mutateAsync(credentials);
@@ -186,7 +186,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
         handleLogout();
       }
     }
-  }, [authContextError]);
+  }, [authContextError, refreshMutation.mutate, refreshMutation.isPending, handleLogout]);
 
   const isLoading =
     isLoadingAuthContext ||

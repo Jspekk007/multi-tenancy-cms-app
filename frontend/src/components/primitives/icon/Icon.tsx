@@ -1,6 +1,6 @@
 import './Icon.scss';
 
-import { HTMLAttributes } from 'react';
+import type { HTMLAttributes } from 'react';
 
 import { type IconName, Icons } from './Icons';
 

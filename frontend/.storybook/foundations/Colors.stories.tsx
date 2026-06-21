@@ -115,13 +115,9 @@ const tokenGroups: TokenGroup[] = [
   },
   {
     name: 'Text',
-    tokens: [
-      'text-default',
-      'text-muted',
-      'text-inverse',
-      'text-link',
-      'text-link-hover',
-    ].map((color) => ({ label: color, token: `--color-${color}` })),
+    tokens: ['text-default', 'text-muted', 'text-inverse', 'text-link', 'text-link-hover'].map(
+      (color) => ({ label: color, token: `--color-${color}` }),
+    ),
   },
 ];
 

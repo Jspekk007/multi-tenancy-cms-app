@@ -10,10 +10,7 @@ interface AppHeaderQuickHelpProps {
   onOpenChange: (isOpen: boolean) => void;
 }
 
-export const AppHeaderQuickHelp: React.FC<AppHeaderQuickHelpProps> = ({
-  isOpen,
-  onOpenChange,
-}) => {
+export const AppHeaderQuickHelp: React.FC<AppHeaderQuickHelpProps> = ({ isOpen, onOpenChange }) => {
   const helpRef = useRef<HTMLDivElement>(null);
 
   useClickOutside(helpRef, () => {

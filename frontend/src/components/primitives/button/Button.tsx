@@ -1,10 +1,10 @@
 import './Button.scss';
 
 import clsx from 'clsx';
-import { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
 import { Icon } from '../icon/Icon';
-import { ButtonProps } from './Button.types';
+import type { ButtonProps } from './Button.types';
 
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',

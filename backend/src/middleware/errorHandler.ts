@@ -5,7 +5,7 @@ import { normalizeZodError } from '../modules/error/normalizeZodError';
 
 export const errorHandler = (
   err: unknown,
-  req: Request,
+  _req: Request,
   res: Response,
   _next: NextFunction,
 ): Response => {

@@ -31,13 +31,7 @@ export const AppHeaderActions: React.FC<AppHeaderActionsProps> = ({
   return (
     <div className="app-header__actions">
       <div className="app-header__deploy">
-        <Button
-          variant="primary"
-          size="small"
-          icon="rocket"
-          iconVariant="white"
-          ariaLabel="Deploy"
-        >
+        <Button variant="primary" size="small" icon="rocket" iconVariant="white" ariaLabel="Deploy">
           Deploy
         </Button>
       </div>

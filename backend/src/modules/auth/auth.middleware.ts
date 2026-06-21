@@ -1,8 +1,8 @@
 import { customLogger } from '@backend/lib/logger';
 import { prismaClient } from '@backend/lib/prisma';
-import { AuthContextResponse, JWTTokenPayload } from '@backend/modules/auth/auth.types';
+import type { AuthContextResponse, JWTTokenPayload } from '@backend/modules/auth/auth.types';
 import { verifyToken } from '@backend/modules/auth/auth.utils';
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 const PUBLIC_PATHS = [
   '/api/v1/auth.login',
@@ -33,13 +33,14 @@ export const authMiddleware = async (
   req: Request & { user?: JWTTokenPayload } & { headers: { authorization?: string } },
   res: Response,
   next: NextFunction,
-): Promise<Response | void> => {
+): Promise<Response | undefined> => {
   const pathWithoutQuery = req.originalUrl.split('?')[0];
 
   customLogger.debug({ path: pathWithoutQuery }, 'Auth middleware invoked');
 
   if (PUBLIC_PATHS.some((path) => pathWithoutQuery.startsWith(path))) {
-    return next();
+    next();
+    return undefined;
   }
 
   const authHeader = req.headers.authorization;
@@ -50,7 +51,7 @@ export const authMiddleware = async (
   const token = authHeader.split(' ')[1];
   try {
     const payload = verifyToken(token) as JWTTokenPayload;
-    if (!payload || !payload.sessionId) {
+    if (!payload?.sessionId) {
       return res.status(401).json({ message: 'Invalid token payload' });
     }
 

@@ -4,7 +4,12 @@ import { authMiddleware } from '@backend/modules/auth/auth.middleware';
 import { SessionService } from '@backend/modules/auth/session/session.service';
 import { ApiError } from '@backend/modules/error/ApiError';
 import * as trpcExpress from '@trpc/server/adapters/express';
-import express, { NextFunction, Request, RequestHandler, Response } from 'express';
+import express, {
+  type NextFunction,
+  type Request,
+  type RequestHandler,
+  type Response,
+} from 'express';
 import pinoHttp from 'pino-http';
 
 import { appRouter } from './routers/app.routers';
@@ -77,7 +82,7 @@ setInterval(
 /* ---------------------------------------------
    Global Error Handler  <-- IMPORTANT!
 --------------------------------------------- */
-app.use((err: unknown, req: Request, res: Response, _next: NextFunction): void | Response => {
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction): undefined | Response => {
   if (err instanceof ApiError) {
     const payload = err.toResponse();
     return res.status(err.httpStatus).json(payload);
@@ -85,7 +90,7 @@ app.use((err: unknown, req: Request, res: Response, _next: NextFunction): void |
 
   customLogger.error({ err }, 'Unhandled error');
 
-  res.status(500).json({
+  return res.status(500).json({
     message: 'Internal server error',
     code: 'INTERNAL_ERROR',
     status: 500,

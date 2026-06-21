@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import fs from 'node:fs/promises';
 import handlebars from 'handlebars';
 import { convert } from 'html-to-text';
 import path from 'path';

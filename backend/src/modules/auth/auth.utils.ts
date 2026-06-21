@@ -12,4 +12,4 @@ export const generateToken = (payload: object): string => {
   return jwt.sign(payload, config.jwtSecret, { expiresIn: '1h' });
 };
 
-export const verifyToken = (token: string): string | object => jwt.verify(token, config.jwtSecret!);
+export const verifyToken = (token: string): string | object => jwt.verify(token, config.jwtSecret);

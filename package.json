@@ -10,8 +10,9 @@
     "backend"
   ],
   "scripts": {
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "format": "prettier --write .",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "backend:dev": "yarn workspace backend dev",
     "backend:build": "yarn workspace backend build",
     "backend:lint": "yarn workspace backend lint",
@@ -28,41 +29,22 @@
     "dev": "concurrently \"yarn backend:dev\" \"yarn frontend:dev\" \"yarn redis:dev\" \"yarn dev:worker\"",
     "build": "yarn backend:build && yarn frontend:build",
     "typecheck": "yarn backend:typecheck && yarn frontend:typecheck",
-    "validate": "yarn backend:lint && yarn frontend:lint && yarn typecheck",
+    "validate": "yarn lint && yarn typecheck",
     "test": "yarn backend:test && yarn frontend:test",
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.0",
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
-    "@eslint/eslintrc": "^3",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.4",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "concurrently": "^10.0.3",
-    "eslint": "^9.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-define-config": "^2.1.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-simple-import-sort": "^10.0.0",
-    "eslint-plugin-unused-imports": "^3.1.0",
+    "concurrently": "^9.2.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
-    "prettier": "^3.0.0",
-    "semantic-release": "^25.0.5",
+    "semantic-release": "^24.2.7",
     "typescript": "5.9.2"
-  },
-  "lint-staged": {
-    "frontend/**/*.{js,jsx,ts,tsx}": [
-      "cd frontend && yarn lint:fix",
-      "yarn prettier --write"
-    ],
-    "backend/**/*.{js,ts}": [
-      "cd backend && yarn lint:fix",
-      "yarn prettier --write"
-    ]
   },
   "resolutions": {
     "dompurify": "3.2.7",

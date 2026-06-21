@@ -3,7 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink, TRPCClientError } from '@trpc/client';
 import Cookies from 'js-cookie';
-import React, { PropsWithChildren, useState } from 'react';
+import type { PropsWithChildren } from 'react';
+import { useState } from 'react';
 import superjson from 'superjson';
 
 import type { AppRouter } from '../../../backend/src/routers/app.routers';
@@ -45,7 +46,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
   }
 };
 
-export function TRPCProvider({ children }: PropsWithChildren<{}>): JSX.Element {
+export function TRPCProvider({ children }: PropsWithChildren): JSX.Element {
   const [queryClient] = useState(
     () =>
       new QueryClient({

@@ -11,8 +11,8 @@
     "prisma:studio": "prisma studio --schema ./prisma/schema.prisma",
     "prisma:db-push": "prisma db push --schema ./prisma/schema.prisma",
     "build": "yarn prisma:generate && tsc -p tsconfig.json",
-    "lint": "eslint src --ext .ts,.d.ts",
-    "lint:fix": "eslint src --ext .ts,.d.ts --fix",
+    "lint": "biome check src",
+    "lint:fix": "biome check --write src",
     "worker:dev": "tsx watch src/worker.ts"
   },
   "dependencies": {

@@ -1,9 +1,9 @@
 import './Image.scss';
 
 import clsx from 'clsx';
-import React from 'react';
+import type React from 'react';
 
-import { ImageProps } from './Image.types';
+import type { ImageProps } from './Image.types';
 
 export const Image: React.FC<ImageProps> = ({
   src,

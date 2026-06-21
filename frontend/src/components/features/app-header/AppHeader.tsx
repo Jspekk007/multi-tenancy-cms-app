@@ -44,15 +44,8 @@ export const AppHeaderView: React.FC<AppHeaderViewProps> = ({
 
 export const AppHeader: React.FC = () => {
   const router = useRouter();
-  const {
-    user,
-    tenants,
-    activeTenant,
-    logout,
-    switchTenant,
-    isLoadingTenants,
-    isSwitchingTenant,
-  } = useAuth();
+  const { user, tenants, activeTenant, logout, switchTenant, isLoadingTenants, isSwitchingTenant } =
+    useAuth();
 
   const tenantOptions = tenants.map((tenant) => mapTenantToDropdownOption(tenant));
   const selectedTenant = activeTenant ? mapTenantToDropdownOption(activeTenant) : null;
@@ -82,9 +75,7 @@ export const AppHeader: React.FC = () => {
       userEmail={user?.email}
       tenantOptions={tenantOptions}
       selectedTenant={selectedTenant}
-      isTenantSelectorDisabled={
-        isLoadingTenants || isSwitchingTenant || tenantOptions.length <= 1
-      }
+      isTenantSelectorDisabled={isLoadingTenants || isSwitchingTenant || tenantOptions.length <= 1}
       onTenantSelect={handleTenantSelect}
       onAvatarMenuSelect={handleMenuSelect}
     />

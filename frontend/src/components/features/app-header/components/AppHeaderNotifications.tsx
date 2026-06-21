@@ -52,11 +52,7 @@ export const AppHeaderNotifications: React.FC<AppHeaderNotificationsProps> = ({
       />
 
       {isOpen && (
-        <div
-          className="app-header__notifications-popover"
-          role="dialog"
-          aria-label="Notifications"
-        >
+        <div className="app-header__notifications-popover" role="dialog" aria-label="Notifications">
           <div className="app-header__notifications-header">Notifications</div>
           <div className="app-header__notifications-empty">
             <Icon icon="bell" aria-hidden="true" />

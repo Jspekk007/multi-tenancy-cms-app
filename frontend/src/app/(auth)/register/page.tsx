@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { AuthPage } from '@/components/features/pages/auth/AuthPage';
-import { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
+import type { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { validatePassword } from '@/utils/passwordValidation';

@@ -1,9 +1,9 @@
+import crypto from 'node:crypto';
 import { config } from '@backend/lib/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import crypto from 'crypto';
 
-import { CreateSessionParams, SessionData } from './session.types';
+import type { CreateSessionParams, SessionData } from './session.types';
 
 export class SessionService {
   constructor(private prisma: PrismaClient = new PrismaClient()) {}
