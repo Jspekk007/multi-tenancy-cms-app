@@ -1,9 +1,12 @@
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
 import type { StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'path';
 
 const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const config: StorybookConfig = {
   framework: {
@@ -17,7 +20,8 @@ const config: StorybookConfig = {
     '../src/**/*.stories.@(ts|tsx|js|jsx|mdx)',
     '../.storybook/foundations/**/*.stories.@(ts|tsx|js|jsx|mdx)',
   ],
-  addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-docs'],
+  staticDirs: ['../public'],
+  addons: ['@storybook/addon-links', '@storybook/addon-docs', '@storybook/addon-a11y'],
 
   viteFinal(config) {
     config.resolve = {
@@ -28,12 +32,10 @@ const config: StorybookConfig = {
       },
     };
 
-    // 👇 Add this section
     config.css = {
       ...config.css,
       modules: {
-        // Treat files as CSS modules *only* if they end with `.module.scss`
-        scopeBehaviour: 'local', // Use 'local' or 'global' depending on your requirement
+        scopeBehaviour: 'local',
       },
       preprocessorOptions: {
         ...(config.css?.preprocessorOptions || {}),

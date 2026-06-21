@@ -11,7 +11,7 @@
     "typecheck": "yarn --cwd ../backend prisma:generate --no-hints && tsc -p tsconfig.json --noEmit",
     "format": "node ../node_modules/prettier/bin/prettier.cjs --write .",
     "storybook": "storybook dev -p 6006  --no-open",
-    "build-storybook": "storybook build -s public"
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.16",
@@ -35,9 +35,10 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@storybook/addon-docs": "^9.1.15",
-    "@storybook/addon-links": "9.1.13",
-    "@storybook/react-vite": "9.1.13",
+    "@storybook/addon-docs": "10.4.6",
+    "@storybook/addon-a11y": "10.4.6",
+    "@storybook/addon-links": "10.4.6",
+    "@storybook/react-vite": "10.4.6",
     "@tanstack/react-query": "^5.90.12",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/js-cookie": "^3.0.0",
@@ -48,12 +49,12 @@
     "@typescript-eslint/parser": "^8.46.2",
     "@vitejs/plugin-react": "^5.0.4",
     "autoprefixer": "^10.4.0",
-    "eslint-plugin-storybook": "9.1.13",
+    "eslint-plugin-storybook": "10.4.6",
     "eslint-plugin-unused-imports": "^4.3.0",
     "next-transpile-modules": "^10.0.1",
     "postcss": "^8.4.0",
     "sass-embedded": "^1.93.2",
-    "storybook": "9.1.13",
+    "storybook": "10.4.6",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.0.0",
     "vite": "^7.3.5"
