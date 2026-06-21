@@ -11,7 +11,15 @@ export const mailWorker = new Worker<MailPayload>(
         await sendMail(job.data);
         break;
 
-      case 'welcome-email':
+      case 'welcome':
+        await sendMail(job.data);
+        break;
+
+      case 'magic-link':
+        await sendMail(job.data);
+        break;
+
+      case 'notification':
         await sendMail(job.data);
         break;
 

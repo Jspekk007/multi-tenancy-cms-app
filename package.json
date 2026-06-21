@@ -2,6 +2,9 @@
   "name": "multi-tenant-cms",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=22.14.0"
+  },
   "workspaces": [
     "frontend",
     "backend"
@@ -38,7 +41,7 @@
     "@semantic-release/github": "^11.0.4",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-define-config": "^2.1.0",
@@ -48,7 +51,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.0.0",
-    "semantic-release": "^24.2.7",
+    "semantic-release": "^25.0.5",
     "typescript": "5.9.2"
   },
   "lint-staged": {
@@ -63,10 +66,14 @@
   },
   "resolutions": {
     "dompurify": "3.2.7",
-    "@trpc/server": "11.7.2",
-    "@trpc/client": "11.7.2",
-    "@trpc/react-query": "11.7.2",
-    "@trpc/next": "11.7.2"
+    "@trpc/server": "11.18.0",
+    "@trpc/client": "11.18.0",
+    "@trpc/react-query": "11.18.0",
+    "effect": "3.21.0",
+    "postcss": "8.5.14",
+    "qs": "6.15.2",
+    "shell-quote": "1.8.4",
+    "ws": "8.21.0"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
   "nohoist": [

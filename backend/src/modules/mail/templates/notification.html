@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Atlas CMS Notification</title>
+  </head>
+  <body style="margin: 0; background: #f4f4f4; font-family: Helvetica, Arial, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: #f4f4f4;">
+      <tr>
+        <td align="center" style="padding: 24px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; background: #ffffff;">
+            <tr>
+              <td style="padding: 32px; color: #333333; font-size: 16px; line-height: 24px;">
+                {{message}}
+              </td>
+            </tr>
+            {{#if actionUrl}}
+            <tr>
+              <td style="padding: 0 32px 32px;">
+                <a href="{{actionUrl}}" style="display: inline-block; background: #007bff; color: #ffffff; font-weight: bold; text-decoration: none; padding: 12px 18px; border-radius: 4px;">
+                  Open Atlas CMS
+                </a>
+              </td>
+            </tr>
+            {{/if}}
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
