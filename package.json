@@ -72,5 +72,6 @@
   "nohoist": [
     "**/@storybook/**",
     "**/@storybook/**/**"
-  ]
+  ],
+  "dependencies": {}
 }

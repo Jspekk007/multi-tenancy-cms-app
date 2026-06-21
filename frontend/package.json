@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "yarn --cwd ../backend prisma:generate && next build",
+    "build": "yarn --cwd ../backend prisma:generate --no-hints && next build",
     "start": "next start",
     "lint": "node ../node_modules/eslint/bin/eslint.js src --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "node ../node_modules/eslint/bin/eslint.js --fix src --ext .ts,.tsx,.js,.jsx",
-    "typecheck": "yarn --cwd ../backend prisma:generate && tsc -p tsconfig.json --noEmit",
+    "typecheck": "yarn --cwd ../backend prisma:generate --no-hints && tsc -p tsconfig.json --noEmit",
     "format": "node ../node_modules/prettier/bin/prettier.cjs --write .",
     "storybook": "storybook dev -p 6006  --no-open",
     "build-storybook": "storybook build -s public"
