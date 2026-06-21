@@ -79,5 +79,15 @@
     "formatter": {
       "trailingCommas": "none"
     }
+  },
+  "html": {
+    "formatter": {
+      "indentWidth": 2,
+      "indentStyle": "space",
+      "lineWidth": 100
+    },
+    "parser": {
+      "interpolation": true
+    }
   }
 }
