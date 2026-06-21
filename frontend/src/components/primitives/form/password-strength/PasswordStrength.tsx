@@ -34,12 +34,11 @@ export const PasswordStrength = ({
       </p>
 
       {showRequirements && (
-        <ul className="password-requirements" role="list">
+        <ul className="password-requirements">
           {validation.requirements.map((requirement) => (
             <li
               key={requirement.id}
               className={`password-requirements__item ${requirement.isMet ? 'met' : 'unmet'}`}
-              role="listitem"
             >
               <span className="password-requirements__checkbox">
                 {requirement.isMet ? '✓' : '○'}

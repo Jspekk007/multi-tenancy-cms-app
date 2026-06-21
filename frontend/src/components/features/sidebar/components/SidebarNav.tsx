@@ -17,7 +17,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({
   items,
 }) => {
   const itemList = (
-    <ul className="sidebar-list" role="list">
+    <ul className="sidebar-list">
       {items.map(({ href, label, icon, alternativeText }) => {
         const isActive = href === activeHref;
 

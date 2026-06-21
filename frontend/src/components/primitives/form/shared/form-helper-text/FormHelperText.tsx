@@ -1,6 +1,6 @@
 import './FormHelperText.scss';
 
-import { FormHelperTextProps } from './FormHelperText.types';
+import type { FormHelperTextProps } from './FormHelperText.types';
 
 export const FormHelperText: React.FC<FormHelperTextProps> = ({ id, children, ...props }) => {
   return (

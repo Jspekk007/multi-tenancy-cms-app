@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie';
 
-import { ApiError, ApiErrorResponse } from '@/types/error';
+import { ApiError, type ApiErrorResponse } from '@/types/error';
 import { isApiErrorResponse } from '@/utils/isApiErrorResponse';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
@@ -14,7 +14,7 @@ const safeParseJSON = async (res: Response): Promise<ApiErrorResponse | null> =>
   try {
     const contentType = res.headers.get('content-type');
     // Only attempt JSON parsing if the content type is JSON
-    if (!contentType || !contentType.includes('application/json')) {
+    if (!contentType?.includes('application/json')) {
       return null;
     }
     const json = await res.json();

@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react';
-import { defineConfig, PluginOption } from 'vite';
+import { defineConfig, type PluginOption } from 'vite';
 
 const plugins: PluginOption[] = [react() as PluginOption];
 

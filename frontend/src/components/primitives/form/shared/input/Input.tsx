@@ -2,7 +2,7 @@ import './Input.scss';
 
 import { forwardRef } from 'react';
 
-import { InputProps } from './Input.types';
+import type { InputProps } from './Input.types';
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (

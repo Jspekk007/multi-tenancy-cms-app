@@ -1,4 +1,4 @@
-import { DropdownOption } from '../dropdown/Dropdown.types';
+import type { DropdownOption } from '../dropdown/Dropdown.types';
 
 export interface AvatarProps {
   src?: string;

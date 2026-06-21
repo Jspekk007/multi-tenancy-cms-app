@@ -1,4 +1,3 @@
 module.exports = {
-  "frontend/**/*.{js,jsx,ts,tsx}": ["cd frontend && yarn lint"],
-  "backend/**/*.{js,ts}": ["cd backend && yarn lint"],
+  '*': 'biome check --write --files-ignore-unknown=true --no-errors-on-unmatched',
 };

@@ -1,7 +1,5 @@
-export interface InputProps extends Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  'size' | 'prefix' | 'suffix'
-> {
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size' | 'prefix' | 'suffix'> {
   variant?: Variant;
   size?: Size;
   prefix?: React.ReactNode;

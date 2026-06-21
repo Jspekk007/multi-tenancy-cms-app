@@ -1,10 +1,11 @@
 import './Dropdown.scss';
 
-import React, { useEffect, useRef, useState } from 'react';
+import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { useClickOutside } from '@/hooks/useClickOutside';
 
-import { DropdownOption, DropdownProps } from './Dropdown.types';
+import type { DropdownOption, DropdownProps } from './Dropdown.types';
 
 export const Dropdown: React.FC<DropdownProps> = ({
   options,
@@ -60,17 +61,16 @@ export const Dropdown: React.FC<DropdownProps> = ({
       </button>
 
       {isOpen && (
-        <ul
-          className={`dropdown__menu ${triggerContent ? 'dropdown__menu--custom-trigger' : ''}`}
-          role="listbox"
-        >
+        <ul className={`dropdown__menu ${triggerContent ? 'dropdown__menu--custom-trigger' : ''}`}>
           {options.map((opt) => (
-            <li
-              key={opt.value}
-              className={`dropdown__option ${current?.value === opt.value ? 'dropdown__option--selected' : ''}`}
-              onClick={() => handleSelect(opt)}
-            >
-              {opt.label}
+            <li key={opt.value}>
+              <button
+                type="button"
+                className={`dropdown__option ${current?.value === opt.value ? 'dropdown__option--selected' : ''}`}
+                onClick={() => handleSelect(opt)}
+              >
+                {opt.label}
+              </button>
             </li>
           ))}
         </ul>

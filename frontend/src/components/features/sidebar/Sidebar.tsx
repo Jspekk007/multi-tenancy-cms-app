@@ -63,11 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeHref, defaultCollapsed }
   );
 };
 
-export const SidebarView: React.FC<SidebarViewProps> = ({
-  activeHref,
-  isCollapsed,
-  onToggle,
-}) => {
+export const SidebarView: React.FC<SidebarViewProps> = ({ activeHref, isCollapsed, onToggle }) => {
   return (
     <aside className={clsx('sidebar', { 'is-collapsed': isCollapsed })} aria-label="Sidebar">
       <div className="sidebar-top">
@@ -82,13 +78,9 @@ export const SidebarView: React.FC<SidebarViewProps> = ({
       </div>
 
       <div className="sidebar-bottom">
-        <div className="sidebar-divider" role="separator" aria-orientation="horizontal"></div>
+        <hr className="sidebar-divider" />
 
-        <SidebarNav
-          activeHref={activeHref}
-          isCollapsed={isCollapsed}
-          items={sidebarItems.footer}
-        />
+        <SidebarNav activeHref={activeHref} isCollapsed={isCollapsed} items={sidebarItems.footer} />
       </div>
     </aside>
   );

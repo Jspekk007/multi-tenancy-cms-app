@@ -1,14 +1,21 @@
 import './FormFactory.scss';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import React from 'react';
-import { Controller, FieldValues, Path, Resolver, SubmitHandler, useForm } from 'react-hook-form';
+import type React from 'react';
+import {
+  Controller,
+  type FieldValues,
+  type Path,
+  type Resolver,
+  type SubmitHandler,
+  useForm,
+} from 'react-hook-form';
 
 import { Button } from '../../button/Button';
 import { Select } from '../select/Select';
 import { Switch } from '../switch/Switch';
 import { TextInput } from '../text-input/TextInput';
-import { FormFactoryProps, FormField } from './FormFactory.types';
+import type { FormFactoryProps, FormField } from './FormFactory.types';
 
 export const FormFactory = <TFieldValues extends FieldValues>({
   fields,
@@ -32,27 +39,25 @@ export const FormFactory = <TFieldValues extends FieldValues>({
       case 'text':
       case 'password':
         return (
-          <>
-            <Controller
-              key={field.name}
-              name={field.name as Path<TFieldValues>}
-              control={control}
-              render={({ field: controllerField, fieldState }) => (
-                <TextInput
-                  {...controllerField}
-                  value={controllerField.value || ''}
-                  type={field.type}
-                  label={field.label}
-                  placeholder={field.placeholder}
-                  disabled={field.disabled}
-                  error={fieldState.error?.message}
-                  showPasswordToggle={field.type === 'password' ? true : false}
-                  showPasswordStrength={field.showPasswordStrength}
-                  required={field.required ? true : false}
-                />
-              )}
-            />
-          </>
+          <Controller
+            key={field.name}
+            name={field.name as Path<TFieldValues>}
+            control={control}
+            render={({ field: controllerField, fieldState }) => (
+              <TextInput
+                {...controllerField}
+                value={controllerField.value || ''}
+                type={field.type}
+                label={field.label}
+                placeholder={field.placeholder}
+                disabled={field.disabled}
+                error={fieldState.error?.message}
+                showPasswordToggle={field.type === 'password'}
+                showPasswordStrength={field.showPasswordStrength}
+                required={!!field.required}
+              />
+            )}
+          />
         );
       // Additional field types (e.g., select, checkbox) can be handled here
       case 'select':
@@ -70,7 +75,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
                 disabled={field.disabled}
                 onChange={onChange}
                 error={fieldState.error?.message}
-                required={field.required ? true : false}
+                required={!!field.required}
               />
             )}
           />
@@ -89,7 +94,7 @@ export const FormFactory = <TFieldValues extends FieldValues>({
                 disabled={field.disabled}
                 onChange={onChange}
                 error={fieldState.error?.message}
-                required={field.required ? true : false}
+                required={!!field.required}
               />
             )}
           />

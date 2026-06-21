@@ -1,8 +1,8 @@
 import './FormErrorText.scss';
 
-import React from 'react';
+import type React from 'react';
 
-import { FormErrorTextProps } from './FormErrorText.types';
+import type { FormErrorTextProps } from './FormErrorText.types';
 
 export const FormErrorText: React.FC<FormErrorTextProps> = ({ id, icon, children, ...props }) => {
   return (

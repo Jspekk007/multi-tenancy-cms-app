@@ -6,8 +6,7 @@ export interface FormFactoryProps<TFieldValues extends FieldValues> {
   onSubmit: SubmitHandler<TFieldValues>;
   resetButton?: boolean;
   defaultValues?: DefaultValues<TFieldValues>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  schema?: ZodType<any, any, any>;
+  schema?: ZodType<unknown, TFieldValues>;
   isLoading: boolean;
 }
 

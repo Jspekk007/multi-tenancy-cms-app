@@ -1,11 +1,11 @@
+import crypto from 'node:crypto';
 import { customLogger } from '@backend/lib/logger';
 import { prismaClient } from '@backend/lib/prisma';
 import { ErrorFactory } from '@backend/modules/error/ErrorFactory';
 import { addMailToQueue } from '@backend/queues/emailQueue';
-import { Prisma, PrismaClient } from '@prisma/client';
-import crypto from 'crypto';
+import type { Prisma, PrismaClient } from '@prisma/client';
 
-import {
+import type {
   AuthContextResponse,
   AuthResponse,
   AuthTenantOption,
@@ -17,7 +17,7 @@ import {
 } from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
-import { RefreshTokenResponse } from './session/session.types';
+import type { RefreshTokenResponse } from './session/session.types';
 
 type TenantMembership = {
   tenantId: string;

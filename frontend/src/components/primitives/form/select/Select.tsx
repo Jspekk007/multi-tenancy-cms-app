@@ -1,11 +1,11 @@
 import './Select.scss';
 
-import React from 'react';
+import type React from 'react';
 
 import { Dropdown } from '../../dropdown/Dropdown';
-import { DropdownOption } from '../../dropdown/Dropdown.types';
+import type { DropdownOption } from '../../dropdown/Dropdown.types';
 import { FormLabel } from '../shared/form-label/FormLabel';
-import { SelectProps } from './Select.types';
+import type { SelectProps } from './Select.types';
 
 /**
  * Controlled Select built on top of a reusable Dropdown.

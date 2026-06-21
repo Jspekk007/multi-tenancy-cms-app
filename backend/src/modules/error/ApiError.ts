@@ -1,5 +1,5 @@
-import type { ApiErrorResponse } from "./ApiErrorResponse";
-import { type ErrorCode } from "./ErrorCodes";
+import type { ApiErrorResponse } from './ApiErrorResponse';
+import type { ErrorCode } from './ErrorCodes';
 
 interface ApiErrorInput {
   message: string;

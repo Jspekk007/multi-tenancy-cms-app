@@ -3,7 +3,7 @@ import React from 'react';
 import { FormErrorText } from '../form-error-text/FormErrorText';
 import { FormHelperText } from '../form-helper-text/FormHelperText';
 import { FormLabel } from '../form-label/FormLabel';
-import { FormFieldWrapperProps } from './FormFieldWrapper.types';
+import type { FormFieldWrapperProps } from './FormFieldWrapper.types';
 
 export const FormFieldWrapper: React.FC<FormFieldWrapperProps> = ({
   label,

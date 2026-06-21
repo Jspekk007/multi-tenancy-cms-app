@@ -1,7 +1,45 @@
 import type { Meta, StoryObj } from '@storybook/react';
 
-import { Icon } from './Icon';
+import { Icon, type IconProps } from './Icon';
 import type { IconName } from './Icon.types';
+
+type IconVariant = NonNullable<IconProps['variant']>;
+
+const iconOptions = [
+  'add',
+  'alert',
+  'arrow-down',
+  'arrow-left',
+  'arrow-right',
+  'arrow-up',
+  'bell',
+  'media',
+  'panel-left',
+  'help-circle',
+  'rocket',
+  'tenant',
+  'check',
+  'close',
+  'delete',
+  'edit',
+  'search',
+  'settings',
+  'user',
+  'dashboard',
+  'content',
+  'users',
+  'support',
+  'logs',
+] as const satisfies readonly IconName[];
+
+const variantOptions = [
+  'primary',
+  'secondary',
+  'success',
+  'warning',
+  'danger',
+  'white',
+] as const satisfies readonly IconVariant[];
 
 const meta: Meta<typeof Icon> = {
   title: 'UI/Icon',
@@ -9,36 +47,11 @@ const meta: Meta<typeof Icon> = {
   argTypes: {
     icon: {
       control: 'select',
-      options: [
-        'add',
-        'alert',
-        'arrow-down',
-        'arrow-left',
-        'arrow-right',
-        'arrow-up',
-        'bell',
-        'media',
-        'panel-left',
-        'help-circle',
-        'rocket',
-        'tenant',
-        'check',
-        'close',
-        'delete',
-        'edit',
-        'search',
-        'settings',
-        'user',
-        'dashboard',
-        'content',
-        'users',
-        'support',
-        'logs',
-      ] satisfies IconName[],
+      options: iconOptions,
     },
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'success', 'warning', 'danger', 'white'],
+      options: variantOptions,
     },
     rotate: {
       control: { type: 'number', min: 0, max: 360, step: 15 },
@@ -97,35 +110,10 @@ export const WithCustomClass: Story = {
 // ------------------------------
 // All icons showcase
 export const AllIcons: Story = {
-  render: (args: any) => (
+  render: (args: IconProps) => (
     <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-      {[
-        'add',
-        'alert',
-        'arrow-down',
-        'arrow-left',
-        'arrow-right',
-        'arrow-up',
-        'bell',
-        'media',
-        'panel-left',
-        'help-circle',
-        'rocket',
-        'tenant',
-        'check',
-        'close',
-        'delete',
-        'edit',
-        'search',
-        'settings',
-        'user',
-        'dashboard',
-        'content',
-        'users',
-        'support',
-        'logs',
-      ].map((iconName) => (
-        <Icon key={iconName} {...args} icon={iconName as IconName} />
+      {iconOptions.map((iconName) => (
+        <Icon key={iconName} {...args} icon={iconName} />
       ))}
     </div>
   ),
@@ -139,10 +127,10 @@ export const AllIcons: Story = {
 // ------------------------------
 // All variants showcase
 export const AllVariants: Story = {
-  render: (args: any) => (
+  render: (args: IconProps) => (
     <div style={{ display: 'flex', gap: '1rem', backgroundColor: '#111', padding: '1rem' }}>
-      {['primary', 'secondary', 'success', 'warning', 'danger', 'white'].map((v) => (
-        <Icon key={v} {...args} variant={v as any} />
+      {variantOptions.map((variant) => (
+        <Icon key={variant} {...args} variant={variant} />
       ))}
     </div>
   ),
