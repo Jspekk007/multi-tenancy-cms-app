@@ -10,18 +10,22 @@
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "format": "prettier --write .",
     "backend:dev": "yarn workspace backend dev",
-    "backend:build": "yarn workspace backend tsc -p tsconfig.json",
+    "backend:build": "yarn workspace backend build",
     "backend:lint": "yarn workspace backend lint",
     "backend:lint:fix": "yarn workspace backend lint:fix",
+    "backend:typecheck": "yarn backend:build",
     "backend:test": "yarn workspace backend test",
     "frontend:dev": "yarn workspace frontend dev",
     "frontend:build": "yarn workspace frontend build",
     "frontend:lint": "yarn workspace frontend lint",
+    "frontend:typecheck": "yarn workspace frontend typecheck",
     "frontend:test": "yarn workspace frontend test",
     "redis:dev": "docker-compose up redis",
     "dev:worker": "yarn workspace backend worker:dev",
     "dev": "concurrently \"yarn backend:dev\" \"yarn frontend:dev\" \"yarn redis:dev\" \"yarn dev:worker\"",
     "build": "yarn backend:build && yarn frontend:build",
+    "typecheck": "yarn backend:typecheck && yarn frontend:typecheck",
+    "validate": "yarn backend:lint && yarn frontend:lint && yarn typecheck",
     "test": "yarn backend:test && yarn frontend:test",
     "prepare": "husky install"
   },
@@ -68,5 +72,6 @@
   "nohoist": [
     "**/@storybook/**",
     "**/@storybook/**/**"
-  ]
+  ],
+  "dependencies": {}
 }

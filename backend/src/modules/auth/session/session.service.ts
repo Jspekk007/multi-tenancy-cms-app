@@ -26,7 +26,7 @@ export class SessionService {
     return this.prisma.session.create({
       data: {
         userId: params.userId,
-        tenantId: params.tenantId || null,
+        tenantId: params.tenantId,
         refreshTokenHash,
         expiresAt: params.expiresAt,
         ipAddress: params.ipAddress || null,

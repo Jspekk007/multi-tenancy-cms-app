@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { DropdownOption } from '@/components/primitives/dropdown/Dropdown.types';
 
 import { AppHeaderView } from './AppHeader';
-import { defaultTenantOption } from './AppHeader.constants';
+import { defaultTenantOption, tenantOptions } from './AppHeader.constants';
 
 interface AppHeaderStoryArgs {
   userEmail: string;
@@ -16,6 +16,7 @@ const AppHeaderPreview = ({ userEmail }: AppHeaderStoryArgs): JSX.Element => {
   return (
     <AppHeaderView
       userEmail={userEmail}
+      tenantOptions={tenantOptions}
       selectedTenant={selectedTenant}
       onTenantSelect={setSelectedTenant}
       onAvatarMenuSelect={() => undefined}
