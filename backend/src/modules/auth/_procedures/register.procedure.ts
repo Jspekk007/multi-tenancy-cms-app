@@ -3,9 +3,9 @@ import { publicProcedure } from '@backend/trpc';
 
 export const registerProcedure = publicProcedure
   .input(registerInputSchema)
-  .mutation(async ({ input }) => {
+  .mutation(async ({ ctx, input }) => {
     const { AuthService } = await import('../auth.service');
     const authService = new AuthService();
 
-    return await authService.register(input);
+    return await authService.register(input, ctx.tenantSlug);
   });

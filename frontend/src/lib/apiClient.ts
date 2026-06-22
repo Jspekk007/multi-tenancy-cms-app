@@ -1,5 +1,10 @@
-import Cookies from 'js-cookie';
-
+import {
+  clearAuthCookies,
+  getAccessToken,
+  getRefreshToken,
+  setAuthCookies,
+} from '@/lib/authCookies';
+import { getCurrentTenantSlug } from '@/lib/tenantUrl';
 import { ApiError, type ApiErrorResponse } from '@/types/error';
 import { isApiErrorResponse } from '@/utils/isApiErrorResponse';
 
@@ -30,13 +35,17 @@ const safeParseJSON = async (res: Response): Promise<ApiErrorResponse | null> =>
 };
 
 const tryRefreshToken = async (): Promise<boolean> => {
-  const refreshToken = Cookies.get('refreshToken');
+  const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
+  const tenantSlug = getCurrentTenantSlug();
 
   try {
     const response = await fetch(`${API_BASE_URL}/auth.refresh`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(tenantSlug ? { 'X-Tenant-Slug': tenantSlug } : {}),
+      },
       credentials: 'include',
       body: JSON.stringify({ refreshToken }),
     });
@@ -46,8 +55,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
     const data = await response.json();
     if (!data?.token || !data?.refreshToken) return false;
 
-    Cookies.set('token', data.token);
-    Cookies.set('refreshToken', data.refreshToken);
+    setAuthCookies(data.token, data.refreshToken);
     return true;
   } catch {
     return false;
@@ -55,8 +63,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
 };
 
 const handleLogout = (): void => {
-  Cookies.remove('token');
-  Cookies.remove('refreshToken');
+  clearAuthCookies();
 
   if (typeof window !== 'undefined') {
     window.location.href = '/login';
@@ -65,7 +72,8 @@ const handleLogout = (): void => {
 
 export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {
   const { auth = true, retry = true, headers, ...rest } = options;
-  const authToken = Cookies.get('token');
+  const authToken = getAccessToken();
+  const tenantSlug = getCurrentTenantSlug();
 
   // Normalize headers (same as before)
   const normalizedHeaders: Record<string, string> = {
@@ -77,6 +85,10 @@ export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}):
 
   if (auth && authToken) {
     normalizedHeaders.Authorization = `Bearer ${authToken}`;
+  }
+
+  if (tenantSlug) {
+    normalizedHeaders['X-Tenant-Slug'] = tenantSlug;
   }
 
   try {

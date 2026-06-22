@@ -3,6 +3,7 @@ import { prismaClient } from '@backend/lib/prisma';
 import { authMiddleware } from '@backend/modules/auth/auth.middleware';
 import { SessionService } from '@backend/modules/auth/session/session.service';
 import { ApiError } from '@backend/modules/error/ApiError';
+import { tenantHostMiddleware } from '@backend/modules/tenants/tenant-host.middleware';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import express, {
   type NextFunction,
@@ -19,15 +20,46 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 const httpLogger = pinoHttp({ logger: customLogger });
 
+const allowedFrontendOrigins = new Set(
+  [process.env.FRONTEND_URL, ...(process.env.FRONTEND_URLS?.split(',') ?? [])].filter(
+    Boolean,
+  ) as string[],
+);
+
+const isAllowedLocalFrontendOrigin = (origin: string): boolean => {
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname.toLowerCase();
+
+    return (
+      url.protocol === 'http:' &&
+      url.port === '3000' &&
+      (hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === 'lvh.me' ||
+        hostname.endsWith('.localhost') ||
+        hostname.endsWith('.lvh.me'))
+    );
+  } catch {
+    return false;
+  }
+};
+
 /* ---------------------------------------------
    CORS
 --------------------------------------------- */
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  const origin = req.headers.origin;
+
+  if (origin && (allowedFrontendOrigins.has(origin) || isAllowedLocalFrontendOrigin(origin))) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Tenant-Slug',
   );
   res.header('Access-Control-Allow-Credentials', 'true');
 
@@ -43,6 +75,7 @@ app.use((req, res, next) => {
 --------------------------------------------- */
 app.use(express.json());
 app.use(httpLogger);
+app.use(tenantHostMiddleware);
 
 /* ---------------------------------------------
    Authentication Middleware

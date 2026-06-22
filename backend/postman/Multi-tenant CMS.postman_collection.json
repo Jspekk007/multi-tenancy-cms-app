@@ -116,7 +116,7 @@
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"My Company\",\n  \"domain\": \"mycompany.com\",\n  \"email\": \"admin@mycompany.com\",\n  \"password\": \"admin123\"\n}"
+              "raw": "{\n  \"name\": \"My Company\",\n  \"email\": \"admin@mycompany.com\",\n  \"password\": \"admin123\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/register",

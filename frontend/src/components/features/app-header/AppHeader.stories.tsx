@@ -4,21 +4,21 @@ import { useState } from 'react';
 import type { DropdownOption } from '@/components/primitives/dropdown/Dropdown.types';
 
 import { AppHeaderView } from './AppHeader';
-import { defaultTenantOption, tenantOptions } from './AppHeader.constants';
+import { defaultSiteOption, siteOptions } from './AppHeader.constants';
 
 interface AppHeaderStoryArgs {
   userEmail: string;
 }
 
 const AppHeaderPreview = ({ userEmail }: AppHeaderStoryArgs): JSX.Element => {
-  const [selectedTenant, setSelectedTenant] = useState<DropdownOption>(defaultTenantOption);
+  const [selectedSite, setSelectedSite] = useState<DropdownOption>(defaultSiteOption);
 
   return (
     <AppHeaderView
       userEmail={userEmail}
-      tenantOptions={tenantOptions}
-      selectedTenant={selectedTenant}
-      onTenantSelect={setSelectedTenant}
+      siteOptions={siteOptions}
+      selectedSite={selectedSite}
+      onSiteSelect={setSelectedSite}
       onAvatarMenuSelect={() => undefined}
     />
   );

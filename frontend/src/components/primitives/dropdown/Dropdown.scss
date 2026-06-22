@@ -75,6 +75,8 @@
   cursor: pointer;
   transition: background 0.15s;
   list-style: none;
+  width: 100%;
+  text-align: left;
 
   &:hover {
     background: var(--color-surface-subtle);

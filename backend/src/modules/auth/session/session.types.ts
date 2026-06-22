@@ -39,11 +39,17 @@ export interface RefreshTokenResponse {
     id: string;
     email: string;
     tenantId: string;
-    domain: string;
+    tenantName: string;
+    tenantSlug: string;
     role: string;
     createdAt: Date;
     updatedAt: Date;
   };
+  sites: Array<{
+    id: string;
+    name: string;
+    slug: string;
+  }>;
 }
 
 export type RefreshTokenInput = z.infer<typeof refreshTokenInputSchema>;

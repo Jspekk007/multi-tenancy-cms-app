@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AuthPage } from '@/components/features/pages/auth/AuthPage';
 import type { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
 import { useAuth } from '@/hooks/useAuth';
+import { navigateToTenant } from '@/lib/tenantUrl';
 import { getErrorMessage } from '@/utils/errorUtils';
 import { validatePassword } from '@/utils/passwordValidation';
 
@@ -40,13 +41,6 @@ const registerFormFields: FormField[] = [
     placeholder: 'Confirm your password',
     required: true,
   },
-  {
-    name: 'domain',
-    label: 'Domain',
-    type: 'text',
-    placeholder: 'yourdomain.com',
-    required: true,
-  },
 ];
 
 const registerSchema = z
@@ -63,7 +57,6 @@ const registerSchema = z
       }
     }),
     confirmPassword: z.string(),
-    domain: z.string().min(3, 'Domain must be at least 3 characters'),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
@@ -82,8 +75,11 @@ export default function RegisterPage(): JSX.Element {
     try {
       setIsSubmitting(true);
       setError('');
-      await register(data);
-      router.push('/dashboard');
+      const response = await register(data);
+      navigateToTenant(response.user.tenantSlug, '/dashboard', {
+        token: response.token,
+        refreshToken: response.refreshToken,
+      });
     } catch (err: unknown) {
       const userFriendlyError = getErrorMessage(err);
       setError(userFriendlyError || 'Registration failed. Please try again.');

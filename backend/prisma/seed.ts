@@ -14,19 +14,58 @@ const tenantSeeds = [
     key: 'globalProduction',
     id: 'tenant_global_production',
     name: 'Global Production',
-    domain: 'global-production.local',
+    slug: 'global-production',
   },
   {
     key: 'northwindEditorial',
     id: 'tenant_northwind_editorial',
     name: 'Northwind Editorial',
-    domain: 'northwind-editorial.local',
+    slug: 'northwind-editorial',
   },
   {
     key: 'acmeContentOps',
     id: 'tenant_acme_content_ops',
     name: 'Acme Content Ops',
-    domain: 'acme-content-ops.local',
+    slug: 'acme-content-ops',
+  },
+] as const;
+
+const siteSeeds = [
+  {
+    id: 'site_global_marketing',
+    tenantKey: 'globalProduction',
+    name: 'Marketing Site',
+    slug: 'marketing',
+  },
+  {
+    id: 'site_global_docs',
+    tenantKey: 'globalProduction',
+    name: 'Docs Portal',
+    slug: 'docs',
+  },
+  {
+    id: 'site_northwind_editorial',
+    tenantKey: 'northwindEditorial',
+    name: 'Editorial Site',
+    slug: 'editorial',
+  },
+  {
+    id: 'site_northwind_careers',
+    tenantKey: 'northwindEditorial',
+    name: 'Careers Site',
+    slug: 'careers',
+  },
+  {
+    id: 'site_acme_content_hub',
+    tenantKey: 'acmeContentOps',
+    name: 'Content Hub',
+    slug: 'content-hub',
+  },
+  {
+    id: 'site_acme_campaigns',
+    tenantKey: 'acmeContentOps',
+    name: 'Campaigns',
+    slug: 'campaigns',
   },
 ] as const;
 
@@ -122,18 +161,45 @@ async function main(): Promise<void> {
   await prisma.$transaction(async (tx) => {
     for (const tenant of tenantSeeds) {
       const record = await tx.tenant.upsert({
-        where: { domain: tenant.domain },
+        where: { id: tenant.id },
         update: {
           name: tenant.name,
+          slug: tenant.slug,
         },
         create: {
           id: tenant.id,
           name: tenant.name,
-          domain: tenant.domain,
+          slug: tenant.slug,
         },
       });
 
       tenantIds.set(tenant.key, record.id);
+    }
+
+    for (const site of siteSeeds) {
+      const tenantId = tenantIds.get(site.tenantKey);
+
+      if (!tenantId) {
+        throw new Error(`Missing tenant for site ${site.id}`);
+      }
+
+      await tx.site.upsert({
+        where: {
+          tenantId_slug: {
+            tenantId,
+            slug: site.slug,
+          },
+        },
+        update: {
+          name: site.name,
+        },
+        create: {
+          id: site.id,
+          tenantId,
+          name: site.name,
+          slug: site.slug,
+        },
+      });
     }
 
     for (const role of roleSeeds) {

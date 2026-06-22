@@ -3,9 +3,9 @@ import { publicProcedure } from '@backend/trpc';
 
 export const refreshProcedure = publicProcedure
   .input(refreshTokenInputSchema)
-  .mutation(async ({ input }) => {
+  .mutation(async ({ ctx, input }) => {
     const { AuthService } = await import('../auth.service');
     const authService = new AuthService();
 
-    return await authService.refreshToken(input.refreshToken);
+    return await authService.refreshToken(input.refreshToken, ctx.tenantSlug);
   });

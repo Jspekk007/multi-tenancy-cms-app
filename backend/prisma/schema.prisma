@@ -11,14 +11,28 @@ datasource db {
 model Tenant {
   id        String       @id @default(cuid())
   name      String
-  domain    String       @unique
+  slug      String       @unique
   // A tenant can have many members (TenantUser)
   members   TenantUser[]
   // Roles are defined per tenant
   roles     Role[]
   sessions  Session[]
+  sites     Site[]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+}
+
+model Site {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
 }
 
 model Role {

@@ -50,6 +50,23 @@ yarn dev:frontend
 yarn dev:backend
 ```
 
+## Local Tenant URLs
+
+The frontend supports tenant subdomains in local development. Start from the root
+login/register URL and the app will redirect authenticated users to their tenant URL:
+
+```text
+http://localhost:3000/login
+http://localhost:3000/register
+http://global-production.lvh.me:3000/dashboard
+http://northwind-editorial.lvh.me:3000/dashboard
+```
+
+`lvh.me` resolves back to `127.0.0.1` and supports subdomains. `Tenant.slug` is
+resolved from the hostname and the backend still validates every request against
+the authenticated `tenantId`. The app header dropdown represents the selected
+site/project inside the active tenant.
+
 ## Available Scripts
 
 - `yarn dev` - Start both frontend and backend in development mode

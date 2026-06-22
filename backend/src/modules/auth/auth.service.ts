@@ -2,12 +2,17 @@ import crypto from 'node:crypto';
 import { customLogger } from '@backend/lib/logger';
 import { prismaClient } from '@backend/lib/prisma';
 import { ErrorFactory } from '@backend/modules/error/ErrorFactory';
+import {
+  isReservedTenantSlug,
+  normalizeTenantSlug,
+} from '@backend/modules/tenants/tenant-slug.utils';
 import { addMailToQueue } from '@backend/queues/emailQueue';
 import type { Prisma, PrismaClient } from '@prisma/client';
 
 import type {
   AuthContextResponse,
   AuthResponse,
+  AuthSiteOption,
   AuthTenantOption,
   AuthUser,
   LoginInput,
@@ -24,7 +29,7 @@ type TenantMembership = {
   roleId: string;
   tenant: {
     name: string;
-    domain: string;
+    slug: string;
   };
 };
 type AuthUserRecord = {
@@ -35,6 +40,12 @@ type AuthUserRecord = {
 };
 type TenantMembershipWithUser = TenantMembership & {
   user: AuthUserRecord;
+};
+
+type SiteOptionRecord = {
+  id: string;
+  name: string;
+  slug: string;
 };
 
 export class AuthService {
@@ -54,7 +65,8 @@ export class AuthService {
       id: user.id,
       email: user.email,
       tenantId: tenantUser.tenantId,
-      domain: tenantUser.tenant.domain,
+      tenantName: tenantUser.tenant.name,
+      tenantSlug: tenantUser.tenant.slug,
       role: tenantUser.roleId,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -65,9 +77,67 @@ export class AuthService {
     return {
       id: tenantUser.tenantId,
       name: tenantUser.tenant.name,
-      domain: tenantUser.tenant.domain,
+      slug: tenantUser.tenant.slug,
       role: tenantUser.roleId,
     };
+  }
+
+  private mapSiteOption(site: SiteOptionRecord): AuthSiteOption {
+    return {
+      id: site.id,
+      name: site.name,
+      slug: site.slug,
+    };
+  }
+
+  private async getTenantSites(tenantId: string): Promise<AuthSiteOption[]> {
+    const sites = await this.prisma.site.findMany({
+      where: { tenantId },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    return sites.map((site) => this.mapSiteOption(site));
+  }
+
+  private async createUniqueTenantSlug(
+    tx: Prisma.TransactionClient,
+    value: string,
+    isExplicitSlug = false,
+  ): Promise<string> {
+    let baseSlug = normalizeTenantSlug(value);
+
+    if (isExplicitSlug && isReservedTenantSlug(baseSlug)) {
+      throw ErrorFactory.badRequest('Organization URL is reserved.');
+    }
+
+    if (isReservedTenantSlug(baseSlug)) {
+      baseSlug = `${baseSlug}-workspace`;
+    }
+
+    if (isExplicitSlug) {
+      const existingTenant = await tx.tenant.findUnique({ where: { slug: baseSlug } });
+
+      if (existingTenant) {
+        throw ErrorFactory.conflict('Organization URL already exists.');
+      }
+
+      return baseSlug;
+    }
+
+    let slug = baseSlug;
+    let suffix = 2;
+
+    while (await tx.tenant.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+
+    return slug;
   }
 
   private async createAuthResponse(
@@ -106,42 +176,54 @@ export class AuthService {
       role: tenantUser.roleId,
       sessionId: createdSession.id,
     });
+    const sites = await this.getTenantSites(tenantUser.tenantId);
 
     return {
       user: this.mapAuthUser(user, tenantUser),
       token,
       refreshToken,
+      sites,
     };
   }
 
-  async register(input: RegisterInput): Promise<AuthResponse> {
+  async register(input: RegisterInput, requestedTenantSlug?: string): Promise<AuthResponse> {
     const normalizedEmail = input.email.toLowerCase();
     const hashedPassword = await hashPassword(input.password);
 
     customLogger.info('Register process started');
 
     customLogger.info(
-      `Attempting to sign up user with email: ${normalizedEmail} and domain: ${input.domain}`,
+      `Attempting to sign up user with email: ${normalizedEmail} for organization: ${input.name}`,
     );
 
     const existingUser = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
-    const existingDomain = await this.prisma.tenant.findUnique({
-      where: { domain: input.domain },
-    });
-
-    if (existingUser || existingDomain) {
-      throw ErrorFactory.conflict('User or Domain already exists.');
+    if (existingUser) {
+      throw ErrorFactory.conflict('User already exists.');
     }
 
     const { user, tenantUser } = await this.prisma.$transaction(
       async (tx: Prisma.TransactionClient) => {
+        const tenantSlug = await this.createUniqueTenantSlug(
+          tx,
+          requestedTenantSlug ?? input.name,
+          Boolean(requestedTenantSlug),
+        );
+
         const createdTenant = await tx.tenant.create({
           data: {
             name: input.name,
-            domain: input.domain,
+            slug: tenantSlug,
+          },
+        });
+
+        await tx.site.create({
+          data: {
+            name: 'Main Site',
+            slug: 'main',
+            tenantId: createdTenant.id,
           },
         });
 
@@ -170,9 +252,7 @@ export class AuthService {
           },
         });
 
-        customLogger.info(
-          `User ${createdUser.email} signed up for tenant ${createdTenant.name} (${createdTenant.domain})`,
-        );
+        customLogger.info(`User ${createdUser.email} signed up for tenant ${createdTenant.name}`);
 
         await addMailToQueue({
           to: createdUser.email,
@@ -180,7 +260,7 @@ export class AuthService {
           template: 'welcome',
           context: {
             name: createdUser.email || 'User',
-            domain: createdTenant.domain,
+            organizationName: createdTenant.name,
           },
         });
 
@@ -194,7 +274,7 @@ export class AuthService {
     return await this.createAuthResponse(user, tenantUser);
   }
 
-  async login(input: LoginInput): Promise<LoginResponse> {
+  async login(input: LoginInput, tenantSlug?: string): Promise<LoginResponse> {
     const normalizedEmail = input.email.toLowerCase();
     customLogger.info(`Login attempt for email: ${normalizedEmail}`);
 
@@ -227,9 +307,19 @@ export class AuthService {
       a.tenant.name.localeCompare(b.tenant.name),
     );
 
-    if (input.tenantId) {
+    const requestedTenantId =
+      input.tenantId ??
+      (tenantSlug
+        ? sortedTenantUsers.find((tenantUser) => tenantUser.tenant.slug === tenantSlug)?.tenantId
+        : undefined);
+
+    if (tenantSlug && !requestedTenantId) {
+      throw ErrorFactory.forbidden('User is not associated with this organization');
+    }
+
+    if (requestedTenantId) {
       const selectedTenantUser = sortedTenantUsers.find(
-        (tenantUser) => tenantUser.tenantId === input.tenantId,
+        (tenantUser) => tenantUser.tenantId === requestedTenantId,
       );
 
       if (!selectedTenantUser) {
@@ -237,7 +327,7 @@ export class AuthService {
       }
 
       customLogger.info(
-        `User ${user.email} logged in successfully for tenant ${selectedTenantUser.tenant.domain}`,
+        `User ${user.email} logged in successfully for tenant ${selectedTenantUser.tenant.name}`,
       );
 
       return await this.createAuthResponse(user, selectedTenantUser);
@@ -251,13 +341,13 @@ export class AuthService {
     }
 
     customLogger.info(
-      `User ${user.email} logged in successfully for tenant ${sortedTenantUsers[0].tenant.domain}`,
+      `User ${user.email} logged in successfully for tenant ${sortedTenantUsers[0].tenant.name}`,
     );
 
     return await this.createAuthResponse(user, sortedTenantUsers[0]);
   }
 
-  async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+  async refreshToken(refreshToken: string, tenantSlug?: string): Promise<RefreshTokenResponse> {
     customLogger.info('Refresh token attempt');
 
     const session = await this.sessionService.findSessionByToken(refreshToken);
@@ -291,6 +381,10 @@ export class AuthService {
 
     if (!tenantUser) {
       throw ErrorFactory.badRequest('User is not associated with any tenant');
+    }
+
+    if (tenantSlug && tenantUser.tenant.slug !== tenantSlug) {
+      throw ErrorFactory.forbidden('Session does not match this organization URL');
     }
 
     const authResponse = await this.createAuthResponse(user, tenantUser, session.id);
@@ -400,9 +494,11 @@ export class AuthService {
     const user: AuthUser = {
       ...authContext.user,
       tenantId: selectedTenant.id,
-      domain: selectedTenant.domain,
+      tenantName: selectedTenant.name,
+      tenantSlug: selectedTenant.slug,
       role: selectedTenant.role,
     };
+    const sites = await this.getTenantSites(selectedTenant.id);
 
     const token = generateToken({
       userId: user.id,
@@ -412,9 +508,9 @@ export class AuthService {
       sessionId: currentSessionId,
     });
 
-    customLogger.info(`User ${user.email} switched to tenant ${selectedTenant.domain}`);
+    customLogger.info(`User ${user.email} switched to tenant ${selectedTenant.name}`);
 
-    return { user, token };
+    return { user, token, sites };
   }
 
   async getCurrentUser(userId: string, tenantId: string): Promise<AuthUser> {
@@ -449,10 +545,12 @@ export class AuthService {
     const sortedTenantUsers = tenantUsers.sort((a, b) =>
       a.tenant.name.localeCompare(b.tenant.name),
     );
+    const sites = await this.getTenantSites(activeTenantUser.tenantId);
 
     return {
       user: this.mapAuthUser(activeTenantUser.user, activeTenantUser),
       tenants: sortedTenantUsers.map((tenantUser) => this.mapTenantOption(tenantUser)),
+      sites,
     };
   }
 }

@@ -4,9 +4,9 @@ import { loginInputSchema } from '../auth.types';
 
 export const loginProcedure = publicProcedure
   .input(loginInputSchema)
-  .mutation(async ({ input }) => {
+  .mutation(async ({ ctx, input }) => {
     const { AuthService } = await import('../auth.service');
     const authService = new AuthService();
 
-    return await authService.login(input);
+    return await authService.login(input, ctx.tenantSlug);
   });

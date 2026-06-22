@@ -13,6 +13,7 @@ declare global {
     interface Request {
       user?: AuthenticatedUser;
       tenantId?: string;
+      tenantSlug?: string;
       authContext?: AuthContextResponse;
     }
   }
@@ -23,6 +24,7 @@ export interface Context {
   res: CreateExpressContextOptions['res'];
   user?: AuthenticatedUser;
   tenantId?: string;
+  tenantSlug?: string;
   authContext?: AuthContextResponse;
 }
 
@@ -114,6 +116,7 @@ export const createContext = (opts: CreateExpressContextOptions): Context => {
     res,
     user: req.user as AuthenticatedUser | undefined,
     tenantId: req.tenantId as string | undefined,
+    tenantSlug: req.tenantSlug,
     authContext: req.authContext,
   };
 };

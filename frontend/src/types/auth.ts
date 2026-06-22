@@ -1,8 +1,9 @@
 export interface AuthUser {
   id: string;
   email: string;
-  domain: string;
   tenantId: string;
+  tenantName: string;
+  tenantSlug: string;
   role: string;
   createdAt: Date;
   updatedAt: Date;
@@ -12,18 +13,26 @@ export interface AuthResponse {
   user: AuthUser;
   token: string;
   refreshToken: string;
+  sites: AuthSiteOption[];
 }
 
 export interface SwitchTenantResponse {
   user: AuthUser;
   token: string;
+  sites: AuthSiteOption[];
 }
 
 export interface AuthTenantOption {
   id: string;
   name: string;
-  domain: string;
+  slug: string;
   role: string;
+}
+
+export interface AuthSiteOption {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 export interface TenantSelectionRequiredResponse {
@@ -34,6 +43,7 @@ export interface TenantSelectionRequiredResponse {
 export interface AuthContextResponse {
   user: AuthUser;
   tenants: AuthTenantOption[];
+  sites: AuthSiteOption[];
 }
 
 export type LoginResponse = AuthResponse | TenantSelectionRequiredResponse;
@@ -46,7 +56,6 @@ export interface LoginInput {
 
 export interface RegisterInput {
   name: string;
-  domain: string;
   email: string;
   password: string;
 }
@@ -56,14 +65,18 @@ export interface AuthContextType {
   token: string | null;
   tenants: AuthTenantOption[];
   activeTenant: AuthTenantOption | null;
+  sites: AuthSiteOption[];
+  activeSite: AuthSiteOption | null;
   isLoading: boolean;
   isLoadingTenants: boolean;
+  isLoadingSites: boolean;
   isSwitchingTenant: boolean;
   login: (credentials: LoginInput) => Promise<LoginResponse>;
-  register: (data: RegisterInput) => Promise<void>;
+  register: (data: RegisterInput) => Promise<AuthResponse>;
   logout: () => Promise<void>;
   refreshToken: () => Promise<void>;
   switchTenant: (tenantId: string) => Promise<void>;
+  selectSite: (siteId: string) => void;
   requestPasswordReset: (email: string) => Promise<{ message: string }>;
 }
 

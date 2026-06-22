@@ -1,5 +1,5 @@
 import type { DropdownOption } from '@/components/primitives/dropdown/Dropdown.types';
-import type { AuthTenantOption } from '@/types/auth';
+import type { AuthSiteOption } from '@/types/auth';
 
 export const getAvatarInitials = (email?: string): string => {
   if (!email) return 'U';
@@ -8,9 +8,9 @@ export const getAvatarInitials = (email?: string): string => {
   return localPart.slice(0, 2).toUpperCase();
 };
 
-export const mapTenantToDropdownOption = (tenant: AuthTenantOption): DropdownOption => {
+export const mapSiteToDropdownOption = (site: AuthSiteOption): DropdownOption => {
   return {
-    label: tenant.name,
-    value: tenant.id,
+    label: site.name,
+    value: site.id,
   };
 };

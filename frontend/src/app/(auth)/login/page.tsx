@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AuthPage } from '@/components/features/pages/auth/AuthPage';
 import type { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
 import { useAuth } from '@/hooks/useAuth';
+import { navigateToTenant } from '@/lib/tenantUrl';
 import { type AuthTenantOption, isTenantSelectionRequired } from '@/types/auth';
 import { getErrorMessage } from '@/utils/errorUtils';
 
@@ -33,7 +34,7 @@ const loginSchema = z.object({
 });
 
 const tenantSelectionSchema = z.object({
-  tenantId: z.string().min(1, 'Tenant is required'),
+  tenantId: z.string().min(1, 'Organization is required'),
 });
 
 interface LoginFormData {
@@ -50,11 +51,11 @@ interface PendingCredentials {
 const createTenantSelectionFields = (tenantOptions: AuthTenantOption[]): FormField[] => [
   {
     name: 'tenantId',
-    label: 'Tenant',
+    label: 'Organization',
     type: 'select',
     required: true,
     options: tenantOptions.map((tenant) => ({
-      label: `${tenant.name} (${tenant.domain})`,
+      label: tenant.name,
       value: tenant.id,
     })),
   },
@@ -81,7 +82,7 @@ const LoginPage = (): JSX.Element => {
 
       if (isTenantSelectionStep) {
         if (!pendingCredentials || !data.tenantId) {
-          setError('Select a tenant to continue.');
+          setError('Select an organization to continue.');
           return;
         }
 
@@ -91,11 +92,14 @@ const LoginPage = (): JSX.Element => {
         });
 
         if (isTenantSelectionRequired(response)) {
-          setError('Select a tenant to continue.');
+          setError('Select an organization to continue.');
           return;
         }
 
-        router.push('/dashboard');
+        navigateToTenant(response.user.tenantSlug, '/dashboard', {
+          token: response.token,
+          refreshToken: response.refreshToken,
+        });
         return;
       }
 
@@ -118,7 +122,10 @@ const LoginPage = (): JSX.Element => {
         return;
       }
 
-      router.push('/dashboard');
+      navigateToTenant(response.user.tenantSlug, '/dashboard', {
+        token: response.token,
+        refreshToken: response.refreshToken,
+      });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
@@ -136,7 +143,7 @@ const LoginPage = (): JSX.Element => {
   return (
     <AuthPage<LoginFormData>
       key={isTenantSelectionStep ? 'tenant-selection' : 'credentials'}
-      title={isTenantSelectionStep ? 'Select Tenant' : 'Login to Atlas'}
+      title={isTenantSelectionStep ? 'Select Organization' : 'Login to Atlas'}
       fields={activeFields}
       schema={activeSchema}
       onSubmit={onSubmit}
