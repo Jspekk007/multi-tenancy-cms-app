@@ -48,6 +48,30 @@ interface PendingCredentials {
   password: string;
 }
 
+interface LoginIntent {
+  tenantSlug?: string;
+  returnTo: string;
+}
+
+const DEFAULT_RETURN_TO = '/dashboard';
+
+const normalizeReturnTo = (value: string | null): string =>
+  value?.startsWith('/') && !value.startsWith('//') ? value : DEFAULT_RETURN_TO;
+
+const getLoginIntent = (): LoginIntent => {
+  if (typeof window === 'undefined') {
+    return { returnTo: DEFAULT_RETURN_TO };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const tenantSlug = params.get('tenant')?.trim() || undefined;
+
+  return {
+    ...(tenantSlug ? { tenantSlug } : {}),
+    returnTo: normalizeReturnTo(params.get('returnTo')),
+  };
+};
+
 const createTenantSelectionFields = (tenantOptions: AuthTenantOption[]): FormField[] => [
   {
     name: 'tenantId',
@@ -68,6 +92,8 @@ const LoginPage = (): JSX.Element => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [tenantOptions, setTenantOptions] = useState<AuthTenantOption[]>([]);
   const [pendingCredentials, setPendingCredentials] = useState<PendingCredentials | null>(null);
+  const [loginIntent, setLoginIntent] = useState<LoginIntent>({ returnTo: DEFAULT_RETURN_TO });
+  const [isLoginIntentLoaded, setIsLoginIntentLoaded] = useState<boolean>(false);
 
   const isTenantSelectionStep = tenantOptions.length > 0 && pendingCredentials !== null;
   const activeFields = isTenantSelectionStep
@@ -96,7 +122,7 @@ const LoginPage = (): JSX.Element => {
           return;
         }
 
-        navigateToTenant(response.user.tenantSlug, '/dashboard', {
+        navigateToTenant(response.user.tenantSlug, loginIntent.returnTo, {
           token: response.token,
           refreshToken: response.refreshToken,
         });
@@ -111,6 +137,7 @@ const LoginPage = (): JSX.Element => {
       const response = await login({
         email: data.email,
         password: data.password,
+        ...(loginIntent.tenantSlug ? { tenantSlug: loginIntent.tenantSlug } : {}),
       });
 
       if (isTenantSelectionRequired(response)) {
@@ -122,7 +149,7 @@ const LoginPage = (): JSX.Element => {
         return;
       }
 
-      navigateToTenant(response.user.tenantSlug, '/dashboard', {
+      navigateToTenant(response.user.tenantSlug, loginIntent.returnTo, {
         token: response.token,
         refreshToken: response.refreshToken,
       });
@@ -135,10 +162,15 @@ const LoginPage = (): JSX.Element => {
   };
 
   useEffect(() => {
-    if (user && !isLoading) {
+    setLoginIntent(getLoginIntent());
+    setIsLoginIntentLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (user && !isLoading && isLoginIntentLoaded && !loginIntent.tenantSlug) {
       router.push('/dashboard');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, isLoginIntentLoaded, loginIntent.tenantSlug]);
 
   return (
     <AuthPage<LoginFormData>

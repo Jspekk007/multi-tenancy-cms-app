@@ -43,6 +43,16 @@ export const getCurrentTenantSlug = (): string | null => {
 const getConfiguredTenantBaseHost = (): string | undefined =>
   process.env.NEXT_PUBLIC_TENANT_BASE_HOST?.replace(/^\./, '').toLowerCase();
 
+const getRootHostname = (hostname: string): string => {
+  const normalizedHostname = hostname.toLowerCase();
+
+  if (normalizedHostname.endsWith('.lvh.me') || normalizedHostname.endsWith('.localhost')) {
+    return 'localhost';
+  }
+
+  return normalizedHostname.split('.').slice(1).join('.') || normalizedHostname;
+};
+
 const getTenantBaseHost = (): string | undefined => {
   const configuredBaseHost = getConfiguredTenantBaseHost();
   if (configuredBaseHost) {
@@ -68,6 +78,50 @@ const getTenantBaseHost = (): string | undefined => {
   }
 
   return undefined;
+};
+
+const createRootLoginUrl = (tenantSlug: string, returnTo: string): string => {
+  if (typeof window === 'undefined') {
+    return '/login';
+  }
+
+  const configuredMainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL;
+  const loginUrl = configuredMainAppUrl
+    ? new URL('/login', configuredMainAppUrl)
+    : new URL('/login', window.location.origin);
+
+  if (!configuredMainAppUrl) {
+    loginUrl.hostname = getRootHostname(window.location.hostname);
+  }
+
+  loginUrl.searchParams.set('tenant', tenantSlug);
+  loginUrl.searchParams.set('returnTo', returnTo);
+
+  return loginUrl.toString();
+};
+
+export const getLoginUrlForCurrentLocation = (returnTo?: string): string => {
+  if (typeof window === 'undefined') {
+    return '/login';
+  }
+
+  const tenantSlug = getCurrentTenantSlug();
+  if (!tenantSlug) {
+    return '/login';
+  }
+
+  return createRootLoginUrl(
+    tenantSlug,
+    returnTo ?? `${window.location.pathname}${window.location.search}`,
+  );
+};
+
+export const redirectToLogin = (returnTo?: string): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.location.assign(getLoginUrlForCurrentLocation(returnTo));
 };
 
 export const getSharedCookieDomain = (): string | undefined => {

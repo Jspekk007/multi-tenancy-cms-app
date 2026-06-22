@@ -307,13 +307,18 @@ export class AuthService {
       a.tenant.name.localeCompare(b.tenant.name),
     );
 
+    const requestedTenantSlug = input.tenantSlug
+      ? normalizeTenantSlug(input.tenantSlug)
+      : tenantSlug;
+
     const requestedTenantId =
       input.tenantId ??
-      (tenantSlug
-        ? sortedTenantUsers.find((tenantUser) => tenantUser.tenant.slug === tenantSlug)?.tenantId
+      (requestedTenantSlug
+        ? sortedTenantUsers.find((tenantUser) => tenantUser.tenant.slug === requestedTenantSlug)
+            ?.tenantId
         : undefined);
 
-    if (tenantSlug && !requestedTenantId) {
+    if (requestedTenantSlug && !requestedTenantId) {
       throw ErrorFactory.forbidden('User is not associated with this organization');
     }
 

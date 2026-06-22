@@ -4,7 +4,7 @@ import {
   getRefreshToken,
   setAuthCookies,
 } from '@/lib/authCookies';
-import { getCurrentTenantSlug } from '@/lib/tenantUrl';
+import { getCurrentTenantSlug, redirectToLogin } from '@/lib/tenantUrl';
 import { ApiError, type ApiErrorResponse } from '@/types/error';
 import { isApiErrorResponse } from '@/utils/isApiErrorResponse';
 
@@ -64,10 +64,7 @@ const tryRefreshToken = async (): Promise<boolean> => {
 
 const handleLogout = (): void => {
   clearAuthCookies();
-
-  if (typeof window !== 'undefined') {
-    window.location.href = '/login';
-  }
+  redirectToLogin();
 };
 
 export const apiFetch = async <T>(endpoint: string, options: FetchOptions = {}): Promise<T> => {

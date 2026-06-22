@@ -10,6 +10,7 @@ export const loginInputSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string(),
   tenantId: z.string().min(1, 'Organization is required').optional(),
+  tenantSlug: z.string().min(1, 'Organization is required').optional(),
 });
 
 export const switchTenantInputSchema = z.object({

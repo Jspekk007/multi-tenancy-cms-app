@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
+import { redirectToLogin } from '@/lib/tenantUrl';
 
 export default function HomePage(): JSX.Element | null {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function HomePage(): JSX.Element | null {
       if (user) {
         router.push('/dashboard');
       } else {
-        router.push('/login');
+        redirectToLogin();
       }
     }
   }, [user, isLoading, router]);

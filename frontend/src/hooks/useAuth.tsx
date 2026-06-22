@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
 import {
@@ -10,6 +9,7 @@ import {
   setAccessToken,
   setAuthCookies,
 } from '@/lib/authCookies';
+import { redirectToLogin } from '@/lib/tenantUrl';
 import {
   type AuthContextType,
   type AuthResponse,
@@ -25,7 +25,6 @@ import { trpc } from '../trpc/trpc';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element => {
-  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
 
@@ -103,8 +102,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     setToken(null);
     setSelectedSiteId(null);
     utils.auth.context.reset();
-    router.push('/login');
-  }, [router, utils.auth.context]);
+    redirectToLogin();
+  }, [utils.auth.context]);
 
   // Mutations
   const loginMutation = trpc.auth.login.useMutation({

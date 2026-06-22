@@ -7,7 +7,7 @@ import { AuthProvider } from '@/components/AuthProvider';
 
 import { TRPCProvider } from '../trpc/TRPCProvider';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], preload: false });
 
 export const metadata: Metadata = {
   title: 'Atlas CMS - Multi-Tenant Content Management System',

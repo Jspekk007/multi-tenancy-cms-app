@@ -13,17 +13,14 @@ import {
   getRefreshToken,
   setAuthCookies,
 } from '../lib/authCookies';
-import { getCurrentTenantSlug } from '../lib/tenantUrl';
+import { getCurrentTenantSlug, redirectToLogin } from '../lib/tenantUrl';
 import { trpc } from './trpc';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
 
 const handleLogout = (): void => {
   clearAuthCookies();
-
-  if (typeof window !== 'undefined') {
-    window.location.href = '/login';
-  }
+  redirectToLogin();
 };
 
 const tryRefreshToken = async (): Promise<boolean> => {

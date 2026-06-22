@@ -16,7 +16,8 @@ const config: StorybookConfig = {
     '../src/**/*.stories.@(ts|tsx|js|jsx|mdx)',
     '../.storybook/foundations/**/*.stories.@(ts|tsx|js|jsx|mdx)',
   ],
-  addons: ['@storybook/addon-links', '@storybook/addon-essentials', '@storybook/addon-docs'],
+  staticDirs: ['../public'],
+  addons: ['@storybook/addon-links', '@storybook/addon-docs'],
 
   viteFinal(config) {
     config.resolve = {
