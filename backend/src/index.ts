@@ -20,29 +20,38 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 const httpLogger = pinoHttp({ logger: customLogger });
 
+const normalizeOrigin = (origin: string): string | null => {
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return null;
+  }
+};
+
 const allowedFrontendOrigins = new Set(
-  [process.env.FRONTEND_URL, ...(process.env.FRONTEND_URLS?.split(',') ?? [])].filter(
-    Boolean,
-  ) as string[],
+  [process.env.FRONTEND_URL, ...(process.env.FRONTEND_URLS?.split(',') ?? [])]
+    .map((origin) => origin?.trim())
+    .filter((origin): origin is string => Boolean(origin))
+    .map(normalizeOrigin)
+    .filter((origin): origin is string => Boolean(origin)),
 );
 
-const isAllowedLocalFrontendOrigin = (origin: string): boolean => {
-  try {
-    const url = new URL(origin);
-    const hostname = url.hostname.toLowerCase();
+const isAllowedOrigin = (origin: string): boolean => {
+  const normalizedOrigin = normalizeOrigin(origin);
 
-    return (
-      url.protocol === 'http:' &&
-      url.port === '3000' &&
-      (hostname === 'localhost' ||
-        hostname === '127.0.0.1' ||
-        hostname === 'lvh.me' ||
-        hostname.endsWith('.localhost') ||
-        hostname.endsWith('.lvh.me'))
-    );
-  } catch {
+  if (!normalizedOrigin) {
     return false;
   }
+
+  if (allowedFrontendOrigins.has(normalizedOrigin)) {
+    return true;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return /^http:\/\/[a-z0-9-]+\.lvh\.me:3000$/.test(normalizedOrigin);
+  }
+
+  return false;
 };
 
 /* ---------------------------------------------
@@ -51,9 +60,10 @@ const isAllowedLocalFrontendOrigin = (origin: string): boolean => {
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  if (origin && (allowedFrontendOrigins.has(origin) || isAllowedLocalFrontendOrigin(origin))) {
+  if (origin && isAllowedOrigin(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Vary', 'Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -61,7 +71,6 @@ app.use((req, res, next) => {
     'Access-Control-Allow-Headers',
     'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Tenant-Slug',
   );
-  res.header('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);

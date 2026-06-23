@@ -90,18 +90,6 @@ export function middleware(request: NextRequest): NextResponse {
     return redirectToAbsoluteUrl(buildRootUrl(request, pathname));
   }
 
-  if (
-    !token &&
-    !tenantSlug &&
-    pathname === '/login' &&
-    (request.nextUrl.searchParams.has('tenant') || request.nextUrl.searchParams.has('returnTo'))
-  ) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.search = '';
-
-    return NextResponse.redirect(loginUrl);
-  }
-
   // If user is not authenticated and trying to access protected route
   if (!token && !isPublicRoute) {
     if (tenantSlug) {
