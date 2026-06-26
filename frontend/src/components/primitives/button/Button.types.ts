@@ -1,6 +1,6 @@
-import { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
+import type { AnchorHTMLAttributes, ButtonHTMLAttributes } from 'react';
 
-import { IconName } from '../icon/Icons';
+import type { IconName } from '../icon/Icons';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'link' | 'outline' | 'ghost';
 type Size = 'small' | 'medium' | 'large';

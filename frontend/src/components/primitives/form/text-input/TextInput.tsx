@@ -1,14 +1,13 @@
 import './TextInput.scss';
 
-import { forwardRef, useState } from 'react';
-import { useEffect } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 
 import { Input } from '@/components/primitives/form/shared/input/Input';
 import { Icon } from '@/components/primitives/icon/Icon';
 
 import { PasswordStrength } from '../password-strength/PasswordStrength';
 import { FormLabel } from '../shared/form-label/FormLabel';
-import { TextInputProps } from './TextInput.types';
+import type { TextInputProps } from './TextInput.types';
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
   (

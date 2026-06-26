@@ -1,9 +1,9 @@
 import { initTRPC, TRPCError } from '@trpc/server';
-import { CreateExpressContextOptions } from '@trpc/server/adapters/express';
-import { Request } from 'express';
+import type { CreateExpressContextOptions } from '@trpc/server/adapters/express';
+import type { Request } from 'express';
 import superjson from 'superjson';
 
-import type { JWTTokenPayload } from './modules/auth/auth.types';
+import type { AuthContextResponse, JWTTokenPayload } from './modules/auth/auth.types';
 import { ApiError } from './modules/error/ApiError';
 
 type AuthenticatedUser = JWTTokenPayload;
@@ -13,6 +13,7 @@ declare global {
     interface Request {
       user?: AuthenticatedUser;
       tenantId?: string;
+      authContext?: AuthContextResponse;
     }
   }
 }
@@ -22,11 +23,13 @@ export interface Context {
   res: CreateExpressContextOptions['res'];
   user?: AuthenticatedUser;
   tenantId?: string;
+  authContext?: AuthContextResponse;
 }
 
 export interface AuthenticatedContext extends Context {
   user: AuthenticatedUser;
   tenantId: string;
+  authContext?: AuthContextResponse;
 }
 
 export const t = initTRPC.context<Context>().create({
@@ -111,5 +114,6 @@ export const createContext = (opts: CreateExpressContextOptions): Context => {
     res,
     user: req.user as AuthenticatedUser | undefined,
     tenantId: req.tenantId as string | undefined,
+    authContext: req.authContext,
   };
 };

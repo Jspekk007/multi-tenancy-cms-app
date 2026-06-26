@@ -61,9 +61,9 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "yarn" # Enable caching based on yarn.lock
 
       - name: Restore Frontend Cache
@@ -79,8 +79,8 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
-      # Run ESLint specifically on the frontend workspace
-      - name: Run ESLint on frontend
+      # Run Biome specifically on the frontend workspace
+      - name: Run Biome on frontend
         run: yarn frontend:lint
 
       # Build the frontend application

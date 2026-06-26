@@ -1,16 +1,16 @@
 import './AuthPage.scss';
 
-import { FieldValues, SubmitHandler } from 'react-hook-form';
-import { ZodType } from 'zod';
+import type { FieldValues, SubmitHandler } from 'react-hook-form';
+import type { ZodType } from 'zod';
 
 import { FormFactory } from '@/components/primitives/form/form-factory/FormFactory';
-import { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
+import type { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
 import { Logo } from '@/components/primitives/logo/Logo';
 
 interface AuthPageProps<T extends FieldValues> {
   title?: string;
   fields: FormField[];
-  schema: ZodType;
+  schema: ZodType<unknown, T>;
   onSubmit: SubmitHandler<T>;
   error?: string | null;
   isLoading: boolean;

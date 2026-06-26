@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 
 import { AuthPage } from '@/components/features/pages/auth/AuthPage';
-import { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
+import type { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
 import { Logo } from '@/components/primitives/logo/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/utils/errorUtils';
@@ -77,16 +77,14 @@ const ForgotPasswordPage = (): JSX.Element => {
         </div>
       )}
       {!isSuccess && (
-        <>
-          <AuthPage<ForgotPasswordFormData>
-            title="Forgot Password"
-            fields={forgotPasswordFormFields}
-            schema={forgotPasswordSchema}
-            onSubmit={onSubmit}
-            isLoading={isSubmitting}
-            error={error}
-          />
-        </>
+        <AuthPage<ForgotPasswordFormData>
+          title="Forgot Password"
+          fields={forgotPasswordFormFields}
+          schema={forgotPasswordSchema}
+          onSubmit={onSubmit}
+          isLoading={isSubmitting}
+          error={error}
+        />
       )}
     </>
   );

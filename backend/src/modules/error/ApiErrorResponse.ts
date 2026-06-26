@@ -1,4 +1,4 @@
-import type { ErrorCode } from "./ErrorCodes";
+import type { ErrorCode } from './ErrorCodes';
 
 export interface ApiErrorResponse {
   message: string;

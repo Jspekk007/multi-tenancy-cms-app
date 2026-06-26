@@ -1,7 +1,7 @@
 // components/base/logo/Logo.tsx
 import './Logo.scss';
 
-import React from 'react';
+import type React from 'react';
 
 import { Image } from '../image/Image';
 

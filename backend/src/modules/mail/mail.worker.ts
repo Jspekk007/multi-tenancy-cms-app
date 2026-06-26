@@ -1,7 +1,7 @@
 import { redisConfig } from '@backend/lib/redis.config';
 import { sendMail } from '@backend/modules/mail/mail.service';
-import { MailPayload } from '@backend/modules/mail/mail.types';
-import { Job, Worker } from 'bullmq';
+import type { MailPayload } from '@backend/modules/mail/mail.types';
+import { type Job, Worker } from 'bullmq';
 
 export const mailWorker = new Worker<MailPayload>(
   'mail-queue',
@@ -11,7 +11,15 @@ export const mailWorker = new Worker<MailPayload>(
         await sendMail(job.data);
         break;
 
-      case 'welcome-email':
+      case 'welcome':
+        await sendMail(job.data);
+        break;
+
+      case 'magic-link':
+        await sendMail(job.data);
+        break;
+
+      case 'notification':
         await sendMail(job.data);
         break;
 

@@ -8,6 +8,7 @@ export const domainSchema = z.string().min(3, 'Domain must be at least 3 charact
 export const loginSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
+  tenantId: z.string().min(1, 'Tenant is required').optional(),
 });
 
 export const registerSchema = z.object({

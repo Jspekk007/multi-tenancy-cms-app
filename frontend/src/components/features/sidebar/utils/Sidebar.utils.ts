@@ -2,10 +2,8 @@ import type { SidebarItem } from '../Sidebar.types';
 
 export const mobileSidebarQuery = '(max-width: 768px)';
 
-export const getSidebarItemClassName = (
-  href: string,
-  activeHref?: string,
-): string | undefined => (href === activeHref ? 'selected' : undefined);
+export const getSidebarItemClassName = (href: string, activeHref?: string): string | undefined =>
+  href === activeHref ? 'selected' : undefined;
 
 const isSidebarItemActive = (pathname: string, href: string): boolean => {
   return pathname === href || pathname.startsWith(`${href}/`);

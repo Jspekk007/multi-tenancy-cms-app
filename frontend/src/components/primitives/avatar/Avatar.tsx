@@ -2,7 +2,7 @@ import './Avatar.scss';
 
 import { Dropdown } from '../dropdown/Dropdown';
 import { Icon } from '../icon/Icon';
-import { AvatarProps } from './Avatar.types';
+import type { AvatarProps } from './Avatar.types';
 
 const defaultMenuOptions = [
   { label: 'Profile', value: 'profile' },
@@ -26,7 +26,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       ) : initials ? (
         <div className="avatar-initials">{initials}</div>
       ) : (
-        <div className="avatar-placeholder" aria-label={alt}>
+        <div className="avatar-placeholder" role="img" aria-label={alt}>
           <Icon icon="user" />
         </div>
       )}

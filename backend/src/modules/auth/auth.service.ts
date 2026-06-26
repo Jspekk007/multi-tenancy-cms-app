@@ -1,14 +1,41 @@
+import crypto from 'node:crypto';
 import { customLogger } from '@backend/lib/logger';
 import { prismaClient } from '@backend/lib/prisma';
 import { ErrorFactory } from '@backend/modules/error/ErrorFactory';
 import { addMailToQueue } from '@backend/queues/emailQueue';
-import { Prisma, PrismaClient } from '@prisma/client';
-import crypto from 'crypto';
+import type { Prisma, PrismaClient } from '@prisma/client';
 
-import { AuthResponse, AuthUser, LoginInput, RegisterInput } from './auth.types';
+import type {
+  AuthContextResponse,
+  AuthResponse,
+  AuthTenantOption,
+  AuthUser,
+  LoginInput,
+  LoginResponse,
+  RegisterInput,
+  SwitchTenantResponse,
+} from './auth.types';
 import { generateToken, hashPassword, verifyPassword } from './auth.utils';
 import { SessionService } from './session/session.service';
-import { RefreshTokenResponse } from './session/session.types';
+import type { RefreshTokenResponse } from './session/session.types';
+
+type TenantMembership = {
+  tenantId: string;
+  roleId: string;
+  tenant: {
+    name: string;
+    domain: string;
+  };
+};
+type AuthUserRecord = {
+  id: string;
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+type TenantMembershipWithUser = TenantMembership & {
+  user: AuthUserRecord;
+};
 
 export class AuthService {
   private prisma: PrismaClient;
@@ -21,6 +48,71 @@ export class AuthService {
 
   SALT_ROUNDS = Number(process.env?.BCRYPT_SALT_ROUNDS) || 10;
   JWT_SECRET = process.env?.JWT_SECRET;
+
+  private mapAuthUser(user: AuthUserRecord, tenantUser: TenantMembership): AuthUser {
+    return {
+      id: user.id,
+      email: user.email,
+      tenantId: tenantUser.tenantId,
+      domain: tenantUser.tenant.domain,
+      role: tenantUser.roleId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  private mapTenantOption(tenantUser: TenantMembership): AuthTenantOption {
+    return {
+      id: tenantUser.tenantId,
+      name: tenantUser.tenant.name,
+      domain: tenantUser.tenant.domain,
+      role: tenantUser.roleId,
+    };
+  }
+
+  private async createAuthResponse(
+    user: AuthUserRecord,
+    tenantUser: TenantMembership,
+    sessionIdToRevoke?: string,
+  ): Promise<AuthResponse> {
+    const refreshToken = await this.sessionService.generateRefreshToken();
+    const refreshTokenHash = await this.sessionService.hashRefreshToken(refreshToken);
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+
+    const createdSession = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const session = await tx.session.create({
+        data: {
+          userId: user.id,
+          tenantId: tenantUser.tenantId,
+          refreshTokenHash,
+          expiresAt,
+        },
+      });
+
+      if (sessionIdToRevoke) {
+        await tx.session.update({
+          where: { id: sessionIdToRevoke },
+          data: { isRevoked: true },
+        });
+      }
+
+      return session;
+    });
+
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      tenantId: tenantUser.tenantId,
+      role: tenantUser.roleId,
+      sessionId: createdSession.id,
+    });
+
+    return {
+      user: this.mapAuthUser(user, tenantUser),
+      token,
+      refreshToken,
+    };
+  }
 
   async register(input: RegisterInput): Promise<AuthResponse> {
     const normalizedEmail = input.email.toLowerCase();
@@ -44,7 +136,7 @@ export class AuthService {
       throw ErrorFactory.conflict('User or Domain already exists.');
     }
 
-    const { tenant, user, tenantUser } = await this.prisma.$transaction(
+    const { user, tenantUser } = await this.prisma.$transaction(
       async (tx: Prisma.TransactionClient) => {
         const createdTenant = await tx.tenant.create({
           data: {
@@ -93,47 +185,16 @@ export class AuthService {
         });
 
         return {
-          tenant: createdTenant,
           user: createdUser,
           tenantUser: createdTenantUser,
         };
       },
     );
 
-    const refreshToken = await this.sessionService.generateRefreshToken();
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
-
-    const createdSession = await this.sessionService.createSession({
-      userId: user.id,
-      tenantId: tenant.id,
-      refreshToken,
-      expiresAt,
-    });
-
-    const token = generateToken({
-      userId: user.id,
-      email: user.email,
-      tenantId: tenant.id,
-      role: tenantUser.roleId,
-      sessionId: createdSession.id,
-    });
-
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        tenantId: tenant.id,
-        domain: tenant.domain,
-        role: tenantUser.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      token,
-      refreshToken,
-    };
+    return await this.createAuthResponse(user, tenantUser);
   }
 
-  async login(input: LoginInput): Promise<AuthResponse> {
+  async login(input: LoginInput): Promise<LoginResponse> {
     const normalizedEmail = input.email.toLowerCase();
     customLogger.info(`Login attempt for email: ${normalizedEmail}`);
 
@@ -145,51 +206,55 @@ export class AuthService {
       throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
+    if (!user.isActive) {
+      throw ErrorFactory.unauthorized('User account is inactive');
+    }
+
     if (!(await verifyPassword(input.password, user.passwordHash))) {
       throw ErrorFactory.unauthorized('Invalid email or password');
     }
 
-    const tenantUser = await this.prisma.tenantUser.findFirst({
+    const tenantUsers: TenantMembership[] = await this.prisma.tenantUser.findMany({
       where: { userId: user.id },
       include: { tenant: true },
     });
-    if (!tenantUser) {
+
+    if (!tenantUsers.length) {
       throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
-    customLogger.info(`User ${user.email} logged in successfully`);
+    const sortedTenantUsers = tenantUsers.sort((a, b) =>
+      a.tenant.name.localeCompare(b.tenant.name),
+    );
 
-    const refreshToken = await this.sessionService.generateRefreshToken();
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+    if (input.tenantId) {
+      const selectedTenantUser = sortedTenantUsers.find(
+        (tenantUser) => tenantUser.tenantId === input.tenantId,
+      );
 
-    const createdSession = await this.sessionService.createSession({
-      userId: user.id,
-      tenantId: tenantUser.tenantId,
-      refreshToken,
-      expiresAt,
-    });
+      if (!selectedTenantUser) {
+        throw ErrorFactory.forbidden('User is not associated with the selected tenant');
+      }
 
-    const token = generateToken({
-      userId: user.id,
-      email: user.email,
-      tenantId: tenantUser.tenantId,
-      role: tenantUser.roleId,
-      sessionId: createdSession.id,
-    });
+      customLogger.info(
+        `User ${user.email} logged in successfully for tenant ${selectedTenantUser.tenant.domain}`,
+      );
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        tenantId: tenantUser.tenantId,
-        domain: tenantUser.tenant.domain,
-        role: tenantUser.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-      token,
-      refreshToken,
-    };
+      return await this.createAuthResponse(user, selectedTenantUser);
+    }
+
+    if (sortedTenantUsers.length > 1) {
+      return {
+        requiresTenantSelection: true,
+        tenants: sortedTenantUsers.map((tenantUser) => this.mapTenantOption(tenantUser)),
+      };
+    }
+
+    customLogger.info(
+      `User ${user.email} logged in successfully for tenant ${sortedTenantUsers[0].tenant.domain}`,
+    );
+
+    return await this.createAuthResponse(user, sortedTenantUsers[0]);
   }
 
   async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
@@ -200,9 +265,6 @@ export class AuthService {
       throw ErrorFactory.unauthorized('Invalid refresh token.');
     }
 
-    // Update last used timestamp
-    await this.sessionService.updateSessionLastUsed(session.id);
-
     // Get user and tenant information
     const user = await this.prisma.user.findUnique({
       where: { id: session.userId },
@@ -212,10 +274,17 @@ export class AuthService {
       throw ErrorFactory.notFound('User not found.');
     }
 
-    const tenantUser = await this.prisma.tenantUser.findFirst({
+    if (!user.isActive) {
+      await this.sessionService.revokeSession(session.id);
+      throw ErrorFactory.unauthorized('User account is inactive');
+    }
+
+    const tenantUser: TenantMembership | null = await this.prisma.tenantUser.findUnique({
       where: {
-        userId: user.id,
-        tenantId: session.tenantId || undefined,
+        tenantId_userId: {
+          tenantId: session.tenantId,
+          userId: user.id,
+        },
       },
       include: { tenant: true },
     });
@@ -224,42 +293,11 @@ export class AuthService {
       throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
-    // Generate new tokens
-    const newRefreshToken = this.sessionService.generateRefreshToken();
-    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
-
-    // Revoke old session and create new one
-    await this.sessionService.revokeSession(session.id);
-    const newSession = await this.sessionService.createSession({
-      userId: user.id,
-      tenantId: tenantUser.tenantId,
-      refreshToken: newRefreshToken,
-      expiresAt,
-    });
-
-    const newToken = generateToken({
-      userId: user.id,
-      email: user.email,
-      tenantId: tenantUser.tenantId,
-      role: tenantUser.roleId,
-      sessionId: newSession.id,
-    });
+    const authResponse = await this.createAuthResponse(user, tenantUser, session.id);
 
     customLogger.info(`Token refreshed for user ${user.email}`);
 
-    return {
-      token: newToken,
-      refreshToken: newRefreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        tenantId: tenantUser.tenantId,
-        domain: tenantUser.tenant.domain,
-        role: tenantUser.roleId,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      },
-    };
+    return authResponse;
   }
 
   async requestPasswordResetLink(email: string): Promise<void> {
@@ -310,32 +348,111 @@ export class AuthService {
     customLogger.info(`User logged out, session ${session.id} revoked`);
   }
 
-  async getCurrentUser(userId: string): Promise<AuthUser> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+  async getUserTenants(userId: string): Promise<AuthTenantOption[]> {
+    const tenantUsers: TenantMembership[] = await this.prisma.tenantUser.findMany({
+      where: {
+        userId,
+        user: {
+          isActive: true,
+        },
+      },
+      include: {
+        tenant: true,
+      },
     });
 
-    if (!user) {
-      throw ErrorFactory.notFound('User not found.');
-    }
-
-    const tenantUser = await this.prisma.tenantUser.findFirst({
-      where: { userId: user.id },
-      include: { tenant: true },
-    });
-
-    if (!tenantUser) {
+    if (!tenantUsers.length) {
       throw ErrorFactory.badRequest('User is not associated with any tenant');
     }
 
-    return {
-      id: user.id,
+    return tenantUsers
+      .sort((a, b) => a.tenant.name.localeCompare(b.tenant.name))
+      .map((tenantUser) => this.mapTenantOption(tenantUser));
+  }
+
+  async switchTenant(
+    authContext: AuthContextResponse,
+    tenantId: string,
+    currentSessionId: string,
+  ): Promise<SwitchTenantResponse> {
+    const selectedTenant = authContext.tenants.find((tenant) => tenant.id === tenantId);
+
+    if (!selectedTenant) {
+      throw ErrorFactory.forbidden('User is not associated with the selected tenant');
+    }
+
+    const updateResult = await this.prisma.session.updateMany({
+      where: {
+        id: currentSessionId,
+        userId: authContext.user.id,
+        isRevoked: false,
+        expiresAt: { gt: new Date() },
+      },
+      data: {
+        tenantId: selectedTenant.id,
+      },
+    });
+
+    if (updateResult.count !== 1) {
+      throw ErrorFactory.unauthorized('Session is not active');
+    }
+
+    const user: AuthUser = {
+      ...authContext.user,
+      tenantId: selectedTenant.id,
+      domain: selectedTenant.domain,
+      role: selectedTenant.role,
+    };
+
+    const token = generateToken({
+      userId: user.id,
       email: user.email,
-      tenantId: tenantUser.tenantId,
-      domain: tenantUser.tenant.domain,
-      role: tenantUser.roleId,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+      tenantId: user.tenantId,
+      role: user.role,
+      sessionId: currentSessionId,
+    });
+
+    customLogger.info(`User ${user.email} switched to tenant ${selectedTenant.domain}`);
+
+    return { user, token };
+  }
+
+  async getCurrentUser(userId: string, tenantId: string): Promise<AuthUser> {
+    const authContext = await this.getAuthContext(userId, tenantId);
+    return authContext.user;
+  }
+
+  async getAuthContext(userId: string, tenantId: string): Promise<AuthContextResponse> {
+    const tenantUsers: TenantMembershipWithUser[] = await this.prisma.tenantUser.findMany({
+      where: {
+        userId,
+        user: {
+          isActive: true,
+        },
+      },
+      include: {
+        tenant: true,
+        user: true,
+      },
+    });
+
+    if (!tenantUsers.length) {
+      throw ErrorFactory.badRequest('User is not associated with any tenant');
+    }
+
+    const activeTenantUser = tenantUsers.find((tenantUser) => tenantUser.tenantId === tenantId);
+
+    if (!activeTenantUser) {
+      throw ErrorFactory.badRequest('User is not associated with the specified tenant');
+    }
+
+    const sortedTenantUsers = tenantUsers.sort((a, b) =>
+      a.tenant.name.localeCompare(b.tenant.name),
+    );
+
+    return {
+      user: this.mapAuthUser(activeTenantUser.user, activeTenantUser),
+      tenants: sortedTenantUsers.map((tenantUser) => this.mapTenantOption(tenantUser)),
     };
   }
 }

@@ -16,6 +16,7 @@ model Tenant {
   members   TenantUser[]
   // Roles are defined per tenant
   roles     Role[]
+  sessions  Session[]
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 }
@@ -56,6 +57,7 @@ model TenantUser {
 
   // Ensures a user can only have one role per tenant
   @@unique([tenantId, userId])
+  @@index([userId])
 }
 
 model Session {
@@ -72,7 +74,8 @@ model Session {
   isRevoked Boolean  @default(false)
 
   // Context metadata
-  tenantId   String? // useful if a user belongs to multiple tenants
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
   ipAddress  String? // capture client IP at login
   userAgent  String? // browser/device info
   deviceName String? // friendly name (e.g., "MacBook Pro", "iPhone")

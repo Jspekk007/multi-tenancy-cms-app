@@ -11,7 +11,7 @@ export const logoutInputSchema = z.object({
 export interface SessionData {
   id: string;
   userId: string;
-  tenantId: string | null;
+  tenantId: string;
   refreshTokenHash: string;
   createdAt: Date;
   expiresAt: Date;
@@ -24,7 +24,7 @@ export interface SessionData {
 
 export interface CreateSessionParams {
   userId: string;
-  tenantId?: string;
+  tenantId: string;
   refreshToken: string;
   expiresAt: Date;
   ipAddress?: string;
