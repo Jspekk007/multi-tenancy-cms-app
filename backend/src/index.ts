@@ -13,6 +13,8 @@ import express, {
 } from 'express';
 import pinoHttp from 'pino-http';
 
+import { rateLimiter } from './middleware/rateLimiter';
+
 import { appRouter } from './routers/app.routers';
 import { createContext } from './trpc';
 
@@ -85,7 +87,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(httpLogger);
 app.use(tenantHostMiddleware);
-
+app.use(rateLimiter());
 /* ---------------------------------------------
    Authentication Middleware
 --------------------------------------------- */
