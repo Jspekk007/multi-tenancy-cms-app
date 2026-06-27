@@ -171,6 +171,17 @@ const createLocalAuthHandoffUrl = (
   return url.toString();
 };
 
+const DEFAULT_TENANT_PATH = '/dashboard';
+
+const sanitizeTenantPath = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || /[\u0000-\u001F\\]/.test(trimmed)) {
+    return DEFAULT_TENANT_PATH;
+  }
+
+  return trimmed;
+};
+
 export const buildTenantUrl = (tenantSlug: string, path = '/dashboard'): string => {
   if (typeof window === 'undefined') {
     return path;
@@ -195,11 +206,12 @@ export const navigateToTenant = (
   path = '/dashboard',
   auth?: TenantNavigationAuth,
 ): void => {
-  const url = buildTenantUrl(tenantSlug, path);
+  const safePath = sanitizeTenantPath(path);
+  const url = buildTenantUrl(tenantSlug, safePath);
 
   if (url.startsWith('http')) {
     if (auth && requiresLocalAuthHandoff(url, auth)) {
-      window.location.assign(createLocalAuthHandoffUrl(url, path, auth));
+      window.location.assign(createLocalAuthHandoffUrl(url, safePath, auth));
       return;
     }
 
