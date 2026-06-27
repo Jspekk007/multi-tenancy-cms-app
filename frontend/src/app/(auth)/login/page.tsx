@@ -55,8 +55,23 @@ interface LoginIntent {
 
 const DEFAULT_RETURN_TO = '/dashboard';
 
-const normalizeReturnTo = (value: string | null): string =>
-  value?.startsWith('/') && !value.startsWith('//') ? value : DEFAULT_RETURN_TO;
+const normalizeReturnTo = (value: string | null): string => {
+  if (!value) {
+    return DEFAULT_RETURN_TO;
+  }
+
+  const trimmedValue = value.trim();
+  const hasInvalidStart = !trimmedValue.startsWith('/') || trimmedValue.startsWith('//');
+  const hasBackslash = trimmedValue.includes('\\');
+  const hasControlChars = /[\u0000-\u001F\u007F]/.test(trimmedValue);
+  const hasTraversal = /(?:^|\/)\.\.(?:\/|$)/.test(trimmedValue);
+
+  if (hasInvalidStart || hasBackslash || hasControlChars || hasTraversal) {
+    return DEFAULT_RETURN_TO;
+  }
+
+  return trimmedValue;
+};
 
 const getLoginIntent = (): LoginIntent => {
   if (typeof window === 'undefined') {
