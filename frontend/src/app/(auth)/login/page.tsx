@@ -54,6 +54,7 @@ interface LoginIntent {
 }
 
 const DEFAULT_RETURN_TO = '/dashboard';
+const CONTROL_CHARACTER_PATTERN = /\p{Control}/u;
 
 const normalizeReturnTo = (value: string | null): string => {
   if (!value) {
@@ -63,7 +64,7 @@ const normalizeReturnTo = (value: string | null): string => {
   const trimmedValue = value.trim();
   const hasInvalidStart = !trimmedValue.startsWith('/') || trimmedValue.startsWith('//');
   const hasBackslash = trimmedValue.includes('\\');
-  const hasControlChars = /[\u0000-\u001F\u007F]/.test(trimmedValue);
+  const hasControlChars = CONTROL_CHARACTER_PATTERN.test(trimmedValue);
   const hasTraversal = /(?:^|\/)\.\.(?:\/|$)/.test(trimmedValue);
 
   if (hasInvalidStart || hasBackslash || hasControlChars || hasTraversal) {

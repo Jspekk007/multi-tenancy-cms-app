@@ -172,10 +172,18 @@ const createLocalAuthHandoffUrl = (
 };
 
 const DEFAULT_TENANT_PATH = '/dashboard';
+const CONTROL_CHARACTER_PATTERN = /\p{Control}/u;
 
 const sanitizeTenantPath = (value: string): string => {
   const trimmed = value.trim();
-  if (!trimmed.startsWith('/') || trimmed.startsWith('//') || /[\u0000-\u001F\\]/.test(trimmed)) {
+  const hasControlChars = CONTROL_CHARACTER_PATTERN.test(trimmed);
+
+  if (
+    !trimmed.startsWith('/') ||
+    trimmed.startsWith('//') ||
+    trimmed.includes('\\') ||
+    hasControlChars
+  ) {
     return DEFAULT_TENANT_PATH;
   }
 
