@@ -9,16 +9,37 @@ datasource db {
 }
 
 model Tenant {
-  id        String       @id @default(cuid())
-  name      String
-  domain    String       @unique
+  id             String          @id @default(cuid())
+  name           String
+  slug           String          @unique
   // A tenant can have many members (TenantUser)
-  members   TenantUser[]
+  members        TenantUser[]
   // Roles are defined per tenant
-  roles     Role[]
-  sessions  Session[]
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  roles          Role[]
+  sessions       Session[]
+  sites          Site[]
+  contentItems   ContentItem[]
+  assets         Asset[]
+  activityEvents ActivityEvent[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Site {
+  id           String        @id @default(cuid())
+  name         String
+  slug         String
+  tenantId     String
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  contentItems ContentItem[]
+  assets       Asset[]
+  activityEvents ActivityEvent[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([tenantId, slug])
+  @@unique([tenantId, id])
+  @@index([tenantId])
 }
 
 model Role {
@@ -32,31 +53,39 @@ model Role {
 }
 
 model User {
-  id                  String               @id @default(cuid())
-  email               String               @unique
-  passwordHash        String
+  id                       String               @id @default(cuid())
+  email                    String               @unique
+  passwordHash             String
   // A user can be a member of many tenants
-  tenants             TenantUser[]
-  sessions            Session[]
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  lastLogin           DateTime?
-  isActive            Boolean              @default(true)
-  passwordResetTokens PasswordResetToken[]
+  tenants                  TenantUser[]
+  sessions                 Session[]
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  lastLogin                DateTime?
+  isActive                 Boolean              @default(true)
+  passwordResetTokens      PasswordResetToken[]
 }
 
 // This is our new "join" model
 model TenantUser {
-  id       String @id @default(cuid())
-  tenantId String
-  tenant   Tenant @relation(fields: [tenantId], references: [id])
-  userId   String
-  user     User   @relation(fields: [userId], references: [id])
-  roleId   String
-  role     Role   @relation(fields: [roleId], references: [id])
+  id           String    @id @default(cuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  roleId       String
+  role         Role      @relation(fields: [roleId], references: [id])
+  createdContentItems      ContentItem[]   @relation("ContentCreatedByMembership")
+  updatedContentItems      ContentItem[]   @relation("ContentUpdatedByMembership")
+  publishedContentItems    ContentItem[]   @relation("ContentPublishedByMembership")
+  uploadedAssets           Asset[]         @relation("AssetUploadedByMembership")
+  activityEvents           ActivityEvent[] @relation("ActivityActorMembership")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
 
   // Ensures a user can only have one role per tenant
   @@unique([tenantId, userId])
+  @@unique([tenantId, id])
   @@index([userId])
 }
 
@@ -94,4 +123,86 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ActivityEventType {
+  CONTENT_CREATED
+  CONTENT_UPDATED
+  CONTENT_PUBLISHED
+  ASSET_UPLOADED
+  MEMBER_JOINED
+  MEMBER_ACTIVE
+}
+
+model ContentItem {
+  id                      String        @id @default(cuid())
+  tenantId                String
+  tenant                  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  siteId                  String
+  site                    Site          @relation(fields: [tenantId, siteId], references: [tenantId, id], onDelete: Restrict)
+  title                   String
+  status                  ContentStatus @default(DRAFT)
+  createdByTenantUserId   String?
+  createdBy               TenantUser?   @relation("ContentCreatedByMembership", fields: [tenantId, createdByTenantUserId], references: [tenantId, id], onDelete: Restrict)
+  updatedByTenantUserId   String?
+  updatedBy               TenantUser?   @relation("ContentUpdatedByMembership", fields: [tenantId, updatedByTenantUserId], references: [tenantId, id], onDelete: Restrict)
+  publishedByTenantUserId String?
+  publishedBy             TenantUser?   @relation("ContentPublishedByMembership", fields: [tenantId, publishedByTenantUserId], references: [tenantId, id], onDelete: Restrict)
+  publishedAt             DateTime?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, siteId, createdAt])
+  @@index([tenantId, siteId, updatedAt])
+  @@index([tenantId, siteId, publishedAt])
+  @@index([tenantId, siteId, status])
+  @@index([tenantId, siteId])
+}
+
+model Asset {
+  id                     String      @id @default(cuid())
+  tenantId               String
+  tenant                 Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  siteId                 String
+  site                   Site        @relation(fields: [tenantId, siteId], references: [tenantId, id], onDelete: Restrict)
+  fileName               String
+  mimeType               String?
+  byteSize               BigInt      @default(0)
+  storageKey             String
+  uploadedByTenantUserId String?
+  uploadedBy             TenantUser? @relation("AssetUploadedByMembership", fields: [tenantId, uploadedByTenantUserId], references: [tenantId, id], onDelete: Restrict)
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+
+  @@unique([tenantId, storageKey])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, siteId])
+}
+
+model ActivityEvent {
+  id                String            @id @default(cuid())
+  tenantId          String
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  siteId            String?
+  site              Site?             @relation(fields: [tenantId, siteId], references: [tenantId, id], onDelete: Restrict)
+  actorTenantUserId String?
+  actorTenantUser   TenantUser?       @relation("ActivityActorMembership", fields: [tenantId, actorTenantUserId], references: [tenantId, id], onDelete: Restrict)
+  type              ActivityEventType
+  entityType        String?
+  entityId          String?
+  description       String
+  metadata          Json?
+  createdAt         DateTime          @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, siteId, createdAt])
+  @@index([tenantId, siteId, type, createdAt])
+  @@index([tenantId, siteId, actorTenantUserId, createdAt])
 }

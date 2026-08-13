@@ -5,6 +5,7 @@ declare global {
     interface Request {
       user?: JWTTokenPayload;
       tenantId?: string;
+      tenantSlug?: string;
       authContext?: AuthContextResponse;
     }
   }

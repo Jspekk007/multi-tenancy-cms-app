@@ -1,14 +1,14 @@
 import type { DropdownOption } from '@/components/primitives/dropdown/Dropdown.types';
 
-export const defaultTenantOption: DropdownOption = {
-  label: 'Global Production',
-  value: 'global-production',
+export const defaultSiteOption: DropdownOption = {
+  label: 'Marketing Site',
+  value: 'marketing',
 };
 
-export const tenantOptions: DropdownOption[] = [
-  defaultTenantOption,
-  { label: 'Global Staging', value: 'global-staging' },
-  { label: 'Sandbox', value: 'sandbox' },
+export const siteOptions: DropdownOption[] = [
+  defaultSiteOption,
+  { label: 'Docs Portal', value: 'docs' },
+  { label: 'Careers Site', value: 'careers' },
 ];
 
 export const avatarMenuOptions: DropdownOption[] = [

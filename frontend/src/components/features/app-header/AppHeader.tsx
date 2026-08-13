@@ -11,14 +11,14 @@ import type { AppHeaderViewProps } from './AppHeader.types';
 import { AppHeaderActions } from './components/AppHeaderActions';
 import { AppHeaderSearch } from './components/AppHeaderSearch';
 import { AppHeaderTenantSelector } from './components/AppHeaderTenantSelector';
-import { mapTenantToDropdownOption } from './utils/AppHeader.utils';
+import { mapSiteToDropdownOption } from './utils/AppHeader.utils';
 
 export const AppHeaderView: React.FC<AppHeaderViewProps> = ({
   userEmail,
-  tenantOptions,
-  selectedTenant,
-  isTenantSelectorDisabled,
-  onTenantSelect,
+  siteOptions,
+  selectedSite,
+  isSiteSelectorDisabled,
+  onSiteSelect,
   onAvatarMenuSelect,
 }) => {
   return (
@@ -26,10 +26,10 @@ export const AppHeaderView: React.FC<AppHeaderViewProps> = ({
       <div className="app-header__inner">
         <div className="app-header__left">
           <AppHeaderTenantSelector
-            tenantOptions={tenantOptions}
-            selectedTenant={selectedTenant}
-            disabled={isTenantSelectorDisabled}
-            onTenantSelect={onTenantSelect}
+            siteOptions={siteOptions}
+            selectedSite={selectedSite}
+            disabled={isSiteSelectorDisabled}
+            onSiteSelect={onSiteSelect}
           />
           <div className="app-header__divider" aria-hidden="true"></div>
         </div>
@@ -44,14 +44,13 @@ export const AppHeaderView: React.FC<AppHeaderViewProps> = ({
 
 export const AppHeader: React.FC = () => {
   const router = useRouter();
-  const { user, tenants, activeTenant, logout, switchTenant, isLoadingTenants, isSwitchingTenant } =
-    useAuth();
+  const { user, sites, activeSite, logout, selectSite, isLoadingSites } = useAuth();
 
-  const tenantOptions = tenants.map((tenant) => mapTenantToDropdownOption(tenant));
-  const selectedTenant = activeTenant ? mapTenantToDropdownOption(activeTenant) : null;
+  const siteOptions = sites.map((site) => mapSiteToDropdownOption(site));
+  const selectedSite = activeSite ? mapSiteToDropdownOption(activeSite) : null;
 
-  const handleTenantSelect = (option: DropdownOption): void => {
-    void switchTenant(option.value);
+  const handleSiteSelect = (option: DropdownOption): void => {
+    selectSite(option.value);
   };
 
   const handleMenuSelect = async (option: DropdownOption): Promise<void> => {
@@ -73,10 +72,10 @@ export const AppHeader: React.FC = () => {
   return (
     <AppHeaderView
       userEmail={user?.email}
-      tenantOptions={tenantOptions}
-      selectedTenant={selectedTenant}
-      isTenantSelectorDisabled={isLoadingTenants || isSwitchingTenant || tenantOptions.length <= 1}
-      onTenantSelect={handleTenantSelect}
+      siteOptions={siteOptions}
+      selectedSite={selectedSite}
+      isSiteSelectorDisabled={isLoadingSites || siteOptions.length <= 1}
+      onSiteSelect={handleSiteSelect}
       onAvatarMenuSelect={handleMenuSelect}
     />
   );

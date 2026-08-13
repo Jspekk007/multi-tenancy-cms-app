@@ -1,17 +1,8 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import type { NextConfig } from 'next';
 
-// Define __dirname for environment context (good practice for your file system ops)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // ----------------------------------------------------
-  // 1. CRITICAL FIX: Add transpilePackages for tRPC
-  // This tells Next.js to process @trpc/server's dependencies,
-  // resolving the 'unstable-core-do-not-import' error.
-  // ----------------------------------------------------
+const nextConfig: NextConfig = {
   transpilePackages: ['@trpc/server'],
+
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
   },
@@ -34,6 +25,7 @@ const nextConfig = {
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     const scriptSrc = isDev ? "'self' 'unsafe-inline' 'unsafe-eval'" : "'self' 'unsafe-inline'";
+
     return [
       {
         source: '/(.*)',
@@ -62,6 +54,7 @@ const nextConfig = {
       },
     ];
   },
+
   async rewrites() {
     return [
       {
@@ -70,6 +63,7 @@ const nextConfig = {
       },
     ];
   },
+
   async redirects() {
     return [
       {
@@ -80,5 +74,5 @@ const nextConfig = {
     ];
   },
 };
+
 export default nextConfig;
-//# sourceMappingURL=next.config.mjs.map

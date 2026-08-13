@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AuthPage } from '@/components/features/pages/auth/AuthPage';
 import type { FormField } from '@/components/primitives/form/form-factory/FormFactory.types';
 import { useAuth } from '@/hooks/useAuth';
+import { navigateToTenant } from '@/lib/tenantUrl';
 import { type AuthTenantOption, isTenantSelectionRequired } from '@/types/auth';
 import { getErrorMessage } from '@/utils/errorUtils';
 
@@ -33,7 +34,7 @@ const loginSchema = z.object({
 });
 
 const tenantSelectionSchema = z.object({
-  tenantId: z.string().min(1, 'Tenant is required'),
+  tenantId: z.string().min(1, 'Organization is required'),
 });
 
 interface LoginFormData {
@@ -47,14 +48,54 @@ interface PendingCredentials {
   password: string;
 }
 
+interface LoginIntent {
+  tenantSlug?: string;
+  returnTo: string;
+}
+
+const DEFAULT_RETURN_TO = '/dashboard';
+const CONTROL_CHARACTER_PATTERN = /\p{Control}/u;
+
+const normalizeReturnTo = (value: string | null): string => {
+  if (!value) {
+    return DEFAULT_RETURN_TO;
+  }
+
+  const trimmedValue = value.trim();
+  const hasInvalidStart = !trimmedValue.startsWith('/') || trimmedValue.startsWith('//');
+  const hasBackslash = trimmedValue.includes('\\');
+  const hasControlChars = CONTROL_CHARACTER_PATTERN.test(trimmedValue);
+  const hasTraversal = /(?:^|\/)\.\.(?:\/|$)/.test(trimmedValue);
+
+  if (hasInvalidStart || hasBackslash || hasControlChars || hasTraversal) {
+    return DEFAULT_RETURN_TO;
+  }
+
+  return trimmedValue;
+};
+
+const getLoginIntent = (): LoginIntent => {
+  if (typeof window === 'undefined') {
+    return { returnTo: DEFAULT_RETURN_TO };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const tenantSlug = params.get('tenant')?.trim() || undefined;
+
+  return {
+    ...(tenantSlug ? { tenantSlug } : {}),
+    returnTo: normalizeReturnTo(params.get('returnTo')),
+  };
+};
+
 const createTenantSelectionFields = (tenantOptions: AuthTenantOption[]): FormField[] => [
   {
     name: 'tenantId',
-    label: 'Tenant',
+    label: 'Organization',
     type: 'select',
     required: true,
     options: tenantOptions.map((tenant) => ({
-      label: `${tenant.name} (${tenant.domain})`,
+      label: tenant.name,
       value: tenant.id,
     })),
   },
@@ -67,6 +108,8 @@ const LoginPage = (): JSX.Element => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [tenantOptions, setTenantOptions] = useState<AuthTenantOption[]>([]);
   const [pendingCredentials, setPendingCredentials] = useState<PendingCredentials | null>(null);
+  const [loginIntent, setLoginIntent] = useState<LoginIntent>({ returnTo: DEFAULT_RETURN_TO });
+  const [isLoginIntentLoaded, setIsLoginIntentLoaded] = useState<boolean>(false);
 
   const isTenantSelectionStep = tenantOptions.length > 0 && pendingCredentials !== null;
   const activeFields = isTenantSelectionStep
@@ -81,7 +124,7 @@ const LoginPage = (): JSX.Element => {
 
       if (isTenantSelectionStep) {
         if (!pendingCredentials || !data.tenantId) {
-          setError('Select a tenant to continue.');
+          setError('Select an organization to continue.');
           return;
         }
 
@@ -91,11 +134,14 @@ const LoginPage = (): JSX.Element => {
         });
 
         if (isTenantSelectionRequired(response)) {
-          setError('Select a tenant to continue.');
+          setError('Select an organization to continue.');
           return;
         }
 
-        router.push('/dashboard');
+        navigateToTenant(response.user.tenantSlug, loginIntent.returnTo, {
+          token: response.token,
+          refreshToken: response.refreshToken,
+        });
         return;
       }
 
@@ -107,6 +153,7 @@ const LoginPage = (): JSX.Element => {
       const response = await login({
         email: data.email,
         password: data.password,
+        ...(loginIntent.tenantSlug ? { tenantSlug: loginIntent.tenantSlug } : {}),
       });
 
       if (isTenantSelectionRequired(response)) {
@@ -118,7 +165,10 @@ const LoginPage = (): JSX.Element => {
         return;
       }
 
-      router.push('/dashboard');
+      navigateToTenant(response.user.tenantSlug, loginIntent.returnTo, {
+        token: response.token,
+        refreshToken: response.refreshToken,
+      });
     } catch (err: unknown) {
       const errorMessage = getErrorMessage(err);
       setError(errorMessage);
@@ -128,15 +178,20 @@ const LoginPage = (): JSX.Element => {
   };
 
   useEffect(() => {
-    if (user && !isLoading) {
+    setLoginIntent(getLoginIntent());
+    setIsLoginIntentLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (user && !isLoading && isLoginIntentLoaded && !loginIntent.tenantSlug) {
       router.push('/dashboard');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, isLoginIntentLoaded, loginIntent.tenantSlug]);
 
   return (
     <AuthPage<LoginFormData>
       key={isTenantSelectionStep ? 'tenant-selection' : 'credentials'}
-      title={isTenantSelectionStep ? 'Select Tenant' : 'Login to Atlas'}
+      title={isTenantSelectionStep ? 'Select Organization' : 'Login to Atlas'}
       fields={activeFields}
       schema={activeSchema}
       onSubmit={onSubmit}

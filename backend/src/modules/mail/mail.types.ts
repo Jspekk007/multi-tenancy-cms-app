@@ -15,7 +15,7 @@ type NotificationData = {
 
 type WelcomeData = {
   template: 'welcome';
-  context: { name: string; domain: string };
+  context: { name: string; organizationName: string };
 };
 
 export type MailPayload = { to: string; subject: string } & (

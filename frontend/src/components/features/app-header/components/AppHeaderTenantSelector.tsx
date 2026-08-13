@@ -3,33 +3,31 @@ import type { DropdownOption } from '@/components/primitives/dropdown/Dropdown.t
 import { Icon } from '@/components/primitives/icon/Icon';
 
 interface AppHeaderTenantSelectorProps {
-  tenantOptions: DropdownOption[];
-  selectedTenant: DropdownOption | null;
+  siteOptions: DropdownOption[];
+  selectedSite: DropdownOption | null;
   disabled?: boolean;
-  onTenantSelect: (option: DropdownOption) => void;
+  onSiteSelect: (option: DropdownOption) => void;
 }
 
 export const AppHeaderTenantSelector: React.FC<AppHeaderTenantSelectorProps> = ({
-  tenantOptions,
-  selectedTenant,
+  siteOptions,
+  selectedSite,
   disabled = false,
-  onTenantSelect,
+  onSiteSelect,
 }) => {
   return (
     <Dropdown
-      options={tenantOptions}
-      selected={selectedTenant}
-      onSelect={onTenantSelect}
+      options={siteOptions}
+      selected={selectedSite}
+      onSelect={onSiteSelect}
       disabled={disabled}
-      triggerAriaLabel="Select tenant"
+      triggerAriaLabel="Select site"
       triggerClassName="app-header__tenant-trigger"
       triggerContent={
         <span className="app-header__tenant-content">
           <Icon icon="tenant" aria-hidden="true" />
-          <span className="app-header__tenant-label">Tenant:</span>
-          <strong className="app-header__tenant-name">
-            {selectedTenant?.label ?? 'Loading...'}
-          </strong>
+          <span className="app-header__tenant-label">Site:</span>
+          <strong className="app-header__tenant-name">{selectedSite?.label ?? 'Loading...'}</strong>
           <Icon icon="arrow-down" className="app-header__tenant-chevron" aria-hidden="true" />
         </span>
       }

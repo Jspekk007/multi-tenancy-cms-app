@@ -25,7 +25,7 @@ type AuthContextRow = {
   userIsActive: boolean;
   tenantId: string;
   tenantName: string;
-  tenantDomain: string;
+  tenantSlug: string;
   roleId: string;
 };
 
@@ -69,7 +69,7 @@ export const authMiddleware = async (
         u."isActive" AS "userIsActive",
         tu."tenantId" AS "tenantId",
         t.name AS "tenantName",
-        t.domain AS "tenantDomain",
+        t.slug AS "tenantSlug",
         tu."roleId" AS "roleId"
       FROM "Session" s
       INNER JOIN "User" u ON u.id = s."userId"
@@ -103,12 +103,27 @@ export const authMiddleware = async (
       return res.status(401).json({ message: 'User is not part of the tenant' });
     }
 
+    if (req.tenantSlug && activeTenant.tenantSlug !== req.tenantSlug) {
+      return res.status(403).json({ message: 'Session does not match this organization URL' });
+    }
+
+    const sites = await prismaClient.site.findMany({
+      where: { tenantId: activeTenant.tenantId },
+      orderBy: { name: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
     const authContext: AuthContextResponse = {
       user: {
         id: session.userId,
         email: session.userEmail,
         tenantId: activeTenant.tenantId,
-        domain: activeTenant.tenantDomain,
+        tenantName: activeTenant.tenantName,
+        tenantSlug: activeTenant.tenantSlug,
         role: activeTenant.roleId,
         createdAt: session.userCreatedAt,
         updatedAt: session.userUpdatedAt,
@@ -116,9 +131,10 @@ export const authMiddleware = async (
       tenants: authRows.map((tenant) => ({
         id: tenant.tenantId,
         name: tenant.tenantName,
-        domain: tenant.tenantDomain,
+        slug: tenant.tenantSlug,
         role: tenant.roleId,
       })),
+      sites,
     };
 
     req.user = payload;

@@ -2,9 +2,9 @@ import type { DropdownOption } from '@/components/primitives/dropdown/Dropdown.t
 
 export interface AppHeaderViewProps {
   userEmail?: string;
-  tenantOptions: DropdownOption[];
-  selectedTenant: DropdownOption | null;
-  isTenantSelectorDisabled?: boolean;
-  onTenantSelect: (option: DropdownOption) => void;
+  siteOptions: DropdownOption[];
+  selectedSite: DropdownOption | null;
+  isSiteSelectorDisabled?: boolean;
+  onSiteSelect: (option: DropdownOption) => void;
   onAvatarMenuSelect: (option: DropdownOption) => void;
 }

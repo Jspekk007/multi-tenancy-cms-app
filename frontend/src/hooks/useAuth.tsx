@@ -1,9 +1,15 @@
 'use client';
 
-import Cookies from 'js-cookie';
-import { useRouter } from 'next/navigation';
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 
+import {
+  clearAuthCookies,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setAuthCookies,
+} from '@/lib/authCookies';
+import { redirectToLogin } from '@/lib/tenantUrl';
 import {
   type AuthContextType,
   type AuthResponse,
@@ -19,37 +25,49 @@ import { trpc } from '../trpc/trpc';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element => {
-  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
-  const hasToken = Boolean(token || Cookies.get('token'));
+  const hasToken = Boolean(token || getAccessToken());
 
   const persistAuthSession = ({
     user: userData,
     token: authToken,
     refreshToken,
+    sites,
   }: AuthResponse): void => {
-    Cookies.set('token', authToken, { expires: 1 });
-    Cookies.set('refreshToken', refreshToken, { expires: 30 });
+    setAuthCookies(authToken, refreshToken);
     setToken(authToken);
 
     utils.auth.context.setData(undefined, (currentContext) => ({
       user: userData,
-      tenants: currentContext?.tenants ?? [],
+      tenants: currentContext?.tenants.length
+        ? currentContext.tenants
+        : [
+            {
+              id: userData.tenantId,
+              name: userData.tenantName,
+              slug: userData.tenantSlug,
+              role: userData.role,
+            },
+          ],
+      sites,
     }));
   };
 
   const persistTenantSwitchSession = ({
     user: userData,
     token: authToken,
+    sites,
   }: SwitchTenantResponse): void => {
-    Cookies.set('token', authToken, { expires: 1 });
+    setAccessToken(authToken);
     setToken(authToken);
 
     utils.auth.context.setData(undefined, (currentContext) => ({
       user: userData,
       tenants: currentContext?.tenants ?? tenants,
+      sites,
     }));
   };
 
@@ -65,25 +83,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
 
   const user = authContext?.user ?? null;
   const tenants = authContext?.tenants ?? [];
+  const sites = authContext?.sites ?? [];
 
   const activeTenant =
     tenants.find((tenant) => tenant.id === user?.tenantId) ??
     (user
       ? {
           id: user.tenantId,
-          name: user.domain,
-          domain: user.domain,
+          name: user.tenantName,
+          slug: user.tenantSlug,
           role: user.role,
         }
       : null);
+  const activeSite = sites.find((site) => site.id === selectedSiteId) ?? sites[0] ?? null;
 
   const handleLogout = useCallback((): void => {
-    Cookies.remove('token');
-    Cookies.remove('refreshToken');
+    clearAuthCookies();
     setToken(null);
+    setSelectedSiteId(null);
     utils.auth.context.reset();
-    router.push('/login');
-  }, [router, utils.auth.context]);
+    redirectToLogin();
+  }, [utils.auth.context]);
 
   // Mutations
   const loginMutation = trpc.auth.login.useMutation({
@@ -135,12 +155,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     return await loginMutation.mutateAsync(credentials);
   };
 
-  const register = async (registrationData: RegisterInput): Promise<void> => {
-    await registerMutation.mutateAsync(registrationData);
+  const register = async (registrationData: RegisterInput): Promise<AuthResponse> => {
+    return await registerMutation.mutateAsync(registrationData);
   };
 
   const logout = async (): Promise<void> => {
-    const refreshToken = Cookies.get('refreshToken');
+    const refreshToken = getRefreshToken();
     if (refreshToken) {
       await logoutMutation.mutateAsync({ refreshToken });
     } else {
@@ -153,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   };
 
   const refreshToken = async (): Promise<void> => {
-    const refreshTokenValue = Cookies.get('refreshToken');
+    const refreshTokenValue = getRefreshToken();
     if (!refreshTokenValue) {
       throw new Error('No refresh token');
     }
@@ -168,9 +188,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     await switchTenantMutation.mutateAsync({ tenantId });
   };
 
+  const selectSite = (siteId: string): void => {
+    const site = sites.find((item) => item.id === siteId);
+    if (!site || !user) {
+      return;
+    }
+
+    setSelectedSiteId(site.id);
+    window.localStorage.setItem(`atlas:selected-site:${user.tenantId}`, site.id);
+  };
+
   // Initialize token from cookies on mount
   useEffect(() => {
-    const storedToken = Cookies.get('token');
+    const storedToken = getAccessToken();
     if (storedToken) {
       setToken(storedToken);
     }
@@ -179,7 +209,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
   // Handle auth errors - try refresh token
   useEffect(() => {
     if (authContextError) {
-      const refreshTokenValue = Cookies.get('refreshToken');
+      const refreshTokenValue = getRefreshToken();
       if (refreshTokenValue && !refreshMutation.isPending) {
         refreshMutation.mutate({ refreshToken: refreshTokenValue });
       } else if (!refreshTokenValue) {
@@ -187,6 +217,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
       }
     }
   }, [authContextError, refreshMutation.mutate, refreshMutation.isPending, handleLogout]);
+
+  useEffect(() => {
+    if (!user || !sites.length) {
+      setSelectedSiteId(null);
+      return;
+    }
+
+    const storageKey = `atlas:selected-site:${user.tenantId}`;
+    const storedSiteId = window.localStorage.getItem(storageKey);
+    const nextSiteId =
+      storedSiteId && sites.some((site) => site.id === storedSiteId) ? storedSiteId : sites[0].id;
+
+    setSelectedSiteId(nextSiteId);
+    window.localStorage.setItem(storageKey, nextSiteId);
+  }, [sites, user]);
 
   const isLoading =
     isLoadingAuthContext ||
@@ -199,14 +244,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }): JSX.Element
     token,
     tenants,
     activeTenant,
+    sites,
+    activeSite,
     isLoading,
     isLoadingTenants: isLoadingAuthContext,
+    isLoadingSites: isLoadingAuthContext,
     isSwitchingTenant: switchTenantMutation.isPending,
     login,
     register,
     logout,
     refreshToken,
     switchTenant,
+    selectSite,
     requestPasswordReset,
   };
 

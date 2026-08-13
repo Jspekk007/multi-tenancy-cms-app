@@ -3,6 +3,7 @@ import { prismaClient } from '@backend/lib/prisma';
 import { authMiddleware } from '@backend/modules/auth/auth.middleware';
 import { SessionService } from '@backend/modules/auth/session/session.service';
 import { ApiError } from '@backend/modules/error/ApiError';
+import { tenantHostMiddleware } from '@backend/modules/tenants/tenant-host.middleware';
 import * as trpcExpress from '@trpc/server/adapters/express';
 import express, {
   type NextFunction,
@@ -12,6 +13,8 @@ import express, {
 } from 'express';
 import pinoHttp from 'pino-http';
 
+import { rateLimiter } from './middleware/rateLimiter';
+
 import { appRouter } from './routers/app.routers';
 import { createContext } from './trpc';
 
@@ -19,17 +22,57 @@ const PORT = process.env.PORT || 4000;
 const app = express();
 const httpLogger = pinoHttp({ logger: customLogger });
 
+const normalizeOrigin = (origin: string): string | null => {
+  try {
+    return new URL(origin).origin;
+  } catch {
+    return null;
+  }
+};
+
+const allowedFrontendOrigins = new Set(
+  [process.env.FRONTEND_URL, ...(process.env.FRONTEND_URLS?.split(',') ?? [])]
+    .map((origin) => origin?.trim())
+    .filter((origin): origin is string => Boolean(origin))
+    .map(normalizeOrigin)
+    .filter((origin): origin is string => Boolean(origin)),
+);
+
+const isAllowedOrigin = (origin: string): boolean => {
+  const normalizedOrigin = normalizeOrigin(origin);
+
+  if (!normalizedOrigin) {
+    return false;
+  }
+
+  if (allowedFrontendOrigins.has(normalizedOrigin)) {
+    return true;
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    return /^http:\/\/[a-z0-9-]+\.lvh\.me:3000$/.test(normalizedOrigin);
+  }
+
+  return false;
+};
+
 /* ---------------------------------------------
    CORS
 --------------------------------------------- */
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+  const origin = req.headers.origin;
+
+  if (origin && isAllowedOrigin(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Vary', 'Origin');
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header(
     'Access-Control-Allow-Headers',
-    'Origin, X-Requested-With, Content-Type, Accept, Authorization',
+    'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Tenant-Slug',
   );
-  res.header('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -43,7 +86,8 @@ app.use((req, res, next) => {
 --------------------------------------------- */
 app.use(express.json());
 app.use(httpLogger);
-
+app.use(tenantHostMiddleware);
+app.use(rateLimiter());
 /* ---------------------------------------------
    Authentication Middleware
 --------------------------------------------- */

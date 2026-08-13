@@ -2,19 +2,18 @@
 
 import './protected-layout.scss';
 
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AppHeader } from '@/components/features/app-header/AppHeader';
 import { Sidebar } from '@/components/features/sidebar/Sidebar';
 import { useAuth } from '@/hooks/useAuth';
+import { redirectToLogin } from '@/lib/tenantUrl';
 
 export default function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }): JSX.Element | null {
-  const router = useRouter();
   const { user, isLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
 
@@ -22,9 +21,9 @@ export default function ProtectedLayout({
     setMounted(true);
 
     if (!isLoading && !user) {
-      router.push('/login');
+      redirectToLogin();
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, user]);
 
   const showContentLoader = !mounted || isLoading;
 
